@@ -1,0 +1,94 @@
+        *, ::before, ::after { box-sizing: border-box; }
+        html, body { background-color: #050509; color: #f3f1fa; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; }
+        body {
+            background-image:
+                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,77,141,0.10), transparent 60%),
+                radial-gradient(ellipse 900px 500px at 100% 10%, rgba(53,199,255,0.08), transparent 60%);
+            background-attachment: fixed;
+        }
+
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: #050509; }
+        ::-webkit-scrollbar-thumb { background: #26263a; border-radius: 9999px; }
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        /* Story ring gradient - unseen (bright) vs seen (dull) — keyed to the three post styles */
+        .story-ring-unseen { background: linear-gradient(45deg, #ff4d8d, #9d7bff, #35c7ff); }
+        .story-ring-seen { background: #26263a; }
+
+        @keyframes storyProgress { from { width: 0%; } to { width: 100%; } }
+
+        /* FEATURE: REVERSE REVEAL STORY — blur clears only for viewers who actually stay */
+        @keyframes revealBlurClear {
+            from { filter: blur(26px) saturate(0.6); }
+            to { filter: blur(0px) saturate(1); }
+        }
+        .reveal-slowly-media { animation-fill-mode: forwards; animation-timing-function: linear; }
+
+        /* FEATURE: MILESTONE CONFETTI */
+        @keyframes confettiFall {
+            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
+        }
+        .confetti-piece {
+            position: absolute;
+            top: 0;
+            width: 8px;
+            height: 14px;
+            border-radius: 2px;
+            animation: confettiFall linear forwards;
+        }
+
+        /* Signature motif: every panel carries a thin tri-color gradient seam along its top edge —
+           the one consistent, deliberate accent that ties the whole app's visual identity together. */
+        .glass-panel {
+            background: rgba(15, 15, 24, 0.97);
+            backdrop-filter: blur(14px);
+            -webkit-backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            position: relative;
+        }
+        .glass-panel::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 14px; right: 14px;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(255,77,141,0.55), rgba(157,123,255,0.55), rgba(53,199,255,0.55));
+            border-radius: 9999px;
+            pointer-events: none;
+        }
+        .fast-transition { transition: transform 0.1s ease, background-color 0.1s ease, opacity 0.1s ease; }
+        
+        .reel-container {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100%;
+        }
+        .reel-item {
+            scroll-snap-align: start;
+            height: 100%;
+            position: relative;
+        }
+
+        /* In-App Floating Notification Banner Animation */
+        @keyframes slideDown {
+            from { transform: translateY(-100%); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .animate-slide-down {
+            animation: slideDown 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        /* ===== LIGHT THEME OVERRIDES (Dark/Light Theme Toggle Feature) ===== */
+        html.light-theme, html.light-theme body { background-color: #f4f3f8 !important; color: #17141f !important; background-image: none !important; }
+        html.light-theme .glass-panel { background: rgba(255,255,255,0.97) !important; border: 1px solid rgba(0,0,0,0.07) !important; }
+        html.light-theme .bg-darker, html.light-theme .bg-slate-950, html.light-theme .bg-slate-950\/80, html.light-theme .bg-slate-950\/60 { background-color: #eeecf3 !important; }
+        html.light-theme .bg-slate-900, html.light-theme .bg-slate-900\/90, html.light-theme .bg-slate-900\/95, html.light-theme .bg-slate-900\/60, html.light-theme .bg-slate-900\/80, html.light-theme .bg-slate-900\/50 { background-color: #ffffff !important; }
+        html.light-theme .bg-slate-800, html.light-theme .bg-slate-800\/80, html.light-theme .bg-slate-800\/50 { background-color: #e7e5ee !important; }
+        html.light-theme .border-slate-800, html.light-theme .border-slate-800\/50, html.light-theme .border-slate-800\/80, html.light-theme .border-slate-700 { border-color: #d8d5e3 !important; }
+        html.light-theme .text-slate-200, html.light-theme .text-slate-100, html.light-theme .text-slate-300 { color: #221f2e !important; }
+        html.light-theme .text-slate-400, html.light-theme .text-slate-500 { color: #504b60 !important; }
+        html.light-theme ::-webkit-scrollbar-track { background: #f4f3f8; }
+        html.light-theme ::-webkit-scrollbar-thumb { background: #d8d5e3; }
+        html.light-theme .story-ring-seen { background: #d8d5e3; }
