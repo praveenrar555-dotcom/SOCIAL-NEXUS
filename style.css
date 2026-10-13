@@ -28,27 +28,6 @@
 
         @keyframes storyProgress { from { width: 0%; } to { width: 100%; } }
 
-        /* FEATURE: REVERSE REVEAL STORY — blur clears only for viewers who actually stay */
-        @keyframes revealBlurClear {
-            from { filter: blur(26px) saturate(0.6); }
-            to { filter: blur(0px) saturate(1); }
-        }
-        .reveal-slowly-media { animation-fill-mode: forwards; animation-timing-function: linear; }
-
-        /* FEATURE: MILESTONE CONFETTI */
-        @keyframes confettiFall {
-            0% { transform: translateY(-10vh) rotate(0deg); opacity: 1; }
-            100% { transform: translateY(110vh) rotate(540deg); opacity: 0; }
-        }
-        .confetti-piece {
-            position: absolute;
-            top: 0;
-            width: 8px;
-            height: 14px;
-            border-radius: 2px;
-            animation: confettiFall linear forwards;
-        }
-
         /* Signature motif: every panel carries a thin tri-color gradient seam along its top edge —
            the one consistent, deliberate accent that ties the whole app's visual identity together. */
         .glass-panel {
@@ -197,16 +176,6 @@
         }
 
         /* ===================================================================
-           FEATURE: GROWTH FOREST — shared ground + soft haze for the multi-tree
-           forest scene (three.js canvas sits on top of this).
-           =================================================================== */
-        .forest-backdrop {
-            background:
-                radial-gradient(ellipse 800px 380px at 50% 100%, rgba(16,86,56,0.35), transparent 70%),
-                linear-gradient(#050c08, #050509 60%);
-        }
-
-        /* ===================================================================
            FEATURE: HANDSHAKE CONNECT — pulsing "listening for nearby phone" ring
            and the big shared code display.
            =================================================================== */
@@ -228,8 +197,3 @@
         }
         .handshake-match-card { animation: handshakeMatchPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-/* FEATURE: EMERGENCY ALERT — subtle red glow on the header icon when an alert is active.
-   Purely additive; doesn't touch any existing class or selector. */
-#emergencyAlertBtn:has(#emergencyAlertBadge:not(.hidden)) {
-    color: #f87171;
-}

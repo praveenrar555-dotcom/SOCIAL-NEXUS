@@ -97,6 +97,7 @@
         }
         let activeChatUser = localStorage.getItem('nexus_active_chat') || null;
         let currentTab = localStorage.getItem('nexus_tab') || 'feed';
+        if (currentTab === 'ai') currentTab = 'feed'; // the AI tab no longer exists
         let messagePollingInterval = null;
         let selectedFileObject = null;
         let selectedFileObjects = []; // FEATURE: MULTI-IMAGE CAROUSEL POSTS — holds all files chosen for the current post
@@ -106,18 +107,9 @@
         let globalProfilesCache = {};
         let globalProfilesFullCache = {}; // username -> full profile row (adds is_private support)
         let closeFriendsCache = new Set(); // FEATURE: CLOSE FRIENDS — usernames *this* user has marked as close friends
-        let closeFriendsFeatureAvailable = true; // flips to false if the close_friends table isn't set up in Supabase yet
-        let anonQuestionsCache = []; // FEATURE: ANONYMOUS Q&A
-        let anonQaFeatureAvailable = true;
-        let timeCapsulesCache = []; // FEATURE: TIME CAPSULE
-        let timeCapsuleFeatureAvailable = true;
+        let closeFriendsFeatureAvailable = true;
 
-        // FEATURE: SILENT SUPPORT PING — anonymous, one-way "thinking of you" signal.
-        // No likes/comments/DM semantics; receiver only ever sees a private aggregate count.
-        let supportPingFeatureAvailable = true;
-        let supportPingCountCache = {}; // username -> count (only ever fetched for the logged-in user's own profile)
-
-        // FEATURE: PROFILE FLIP — flips the profile card to reveal newly-added features.
+        // FEATURE: PROFILE FLIP — flips the profile card to reveal the extra features panel.
         let profileFlipped = false;
 
         // FEATURE: MULTI-PERSONA IDENTITY — one account, 3 independently-followable "faces"
@@ -136,8 +128,7 @@
         }
         let personaFollowAvailable = true; // flips to false if follows/follow_requests.persona column isn't set up yet
         let ghostModeEnabled = localStorage.getItem('nexus_ghost_mode') === '1'; // FEATURE: GHOST MODE — purely local, no read receipts/view tracking while on
-        let reelSoundMuted = localStorage.getItem('nexus_reel_muted') !== '0'; // FEATURE: REEL SOUND TOGGLE — muted by default (like Instagram), remembers choice locally
-        let lastSmartReplyTrigger = null; // FEATURE: AI SMART REPLIES — tracks last message id we generated chips for
+        let reelSoundMuted = localStorage.getItem('nexus_reel_muted') !== '0';
         let globalFollowsCache = [];
         let globalLikesCache = [];
         let globalCommentsCache = [];
@@ -181,15 +172,8 @@
         let storyProgressStart = 0;
         const STORY_DURATION_MS = 5000;
         let selectedStoryFileObject = null;
-        let revealSlowlyOptionEnabled = false; // FEATURE: REVERSE REVEAL STORY — upload-time toggle
-
-        // FEATURE: HONEST USAGE MIRROR state
-        let usageActiveTickInterval = null;
-        let usageDwellObserver = null;
-        let usageDwellEntryTimestamps = {};
 
         let globalGroupsCache = [];
-        let globalBotsCache = []; // FEATURE: BOTS/AUTOMATION
         let globalGroupMembersCache = [];
         let globalGroupMessagesCache = [];
         let activeGroupId = null;
@@ -201,27 +185,6 @@
         let activeReactionSource = 'dm'; // 'dm' or 'group'
 
         let disappearingChatsSet = new Set(JSON.parse(localStorage.getItem('nexus_disappearing_chats') || '[]'));
-
-        // ===== FEATURE: GIFs & STICKERS =====
-        // GIF search uses the GIPHY API. (Tenor's API — what most apps used to use for this —
-        // was permanently shut down by Google on 30 June 2026, so it can't be used anymore.)
-        // The key below is GIPHY's public "beta" key — it works immediately for testing but is
-        // rate-limited and NOT meant for a live app. Get your own free key in ~2 minutes at
-        // https://developers.giphy.com (Create an App → select "API" → copy the key) and swap
-        // it in here before you ship. See stickers_gifs_migration.sql for the required DB setup.
-        const GIPHY_API_KEY = 'dc6zaTOxFJmzC';
-        let gifStickerTargetContext = 'dm'; // 'dm' or 'group' — which chat the picker sends into
-        let gifSearchDebounceTimer = null;
-        let stickerPacksCache = []; // [{ id, name, owner, is_public, stickers: [{id, image_url}] }]
-        let activeStickerPackId = null;
-        let selectedStickerUploadFiles = [];
-        // A few built-in, copyright-safe starter packs (generated as emoji stickers) that the
-        // user can one-tap "download" into their own sticker library — see addStarterStickerPack().
-        const STARTER_STICKER_PACKS = [
-            { key: 'reactions', name: 'Reactions Pack', emojis: ['😂', '🔥', '❤️', '👍', '😮', '🙏', '💯', '😭'] },
-            { key: 'desi', name: 'Desi Vibes Pack', emojis: ['🙌', '😎', '🥳', '🤙', '💃', '🕺', '🎉', '✨'] },
-            { key: 'love', name: 'Love Pack', emojis: ['😍', '💕', '😘', '🥰', '💘', '😻', '💖', '🌹'] }
-        ];
 
         // ---- NEW FEATURE STATE: Nested Comments, Msg Edit, Voice Notes, Search, Suggested Users, Block/Report, Private Accounts, Theme, Analytics ----
         let globalCommentLikesCache = [];
@@ -641,8 +604,6 @@
 
                 updateChatRequestUI(activeChatUser); // FEATURE: MESSAGE REQUESTS
 
-                // FEATURE: BOTS/AUTOMATION — if this chat partner is a bot, auto-generate its reply
-                maybeTriggerBotReply(activeChatUser, text);
                 // FEATURE: AI AUTO-REPLY WHEN AWAY — if this chat partner has Away Mode on
                 maybeTriggerAwayAutoReply(activeChatUser, text);
             });
@@ -717,10 +678,8 @@
             document.getElementById('displayUsername').innerText = username;
             addSavedAccount(username); // make sure this account shows up in the switcher
             renderGhostModeToggle();
-            startUsageActiveTracking(); // FEATURE: HONEST USAGE MIRROR
             initOfflineMode(); // FEATURE: OFFLINE MODE
             initScreenshotAlert(); // FEATURE: SCREENSHOT ALERT
-            initPanicMode(); // FEATURE: PANIC MODE
             applyLanguage(getSavedLanguage()); // FEATURE: MULTI-LANGUAGE UI
             renderReelMusicLibrary(); // FEATURE: MUSIC/SOUND LIBRARY
 
@@ -900,21 +859,10 @@
             // scoped to just the tables that genuinely affect the shared feed/explore/badges,
             // so the server stops sending this client events it was always going to ignore.
             const globalRefreshHandler = (payload) => {
-                // FEATURE: LIVE GLOBAL PULSE — piggybacks on this already-existing catch-all
-                // channel instead of opening a second subscription, just to notice real 'posts'
-                // inserts (from ANY user, not just people we follow) and pulse the radar.
-                if (payload && payload.table === 'posts' && payload.eventType === 'INSERT' && payload.new) {
-                    handleGlobalPulseEvent(payload.new);
-                }
-                // FEATURE: EMERGENCY ALERT — same piggyback trick, just watching for
-                // emergency_alerts inserts/updates (radius widening) instead of posts.
-                if (payload && payload.table === 'emergency_alerts' && payload.new) {
-                    handleEmergencyAlertEvent(payload.new);
-                }
                 scheduleGlobalDataRefresh();
             };
             let globalChangesChannel = supabaseClient.channel('public:all_changes');
-            ['posts', 'post_likes', 'comments', 'follows', 'follow_requests', 'stories', 'emergency_alerts']
+            ['posts', 'post_likes', 'comments', 'follows', 'follow_requests', 'stories']
                 .forEach(t => {
                     globalChangesChannel = globalChangesChannel.on('postgres_changes', { event: '*', schema: 'public', table: t }, globalRefreshHandler);
                 });
@@ -1188,7 +1136,6 @@
                 // been run) — same per-query try/catch as before, just fired in parallel too.
                 await Promise.all([
                     (async () => { try { const { data: gjr } = await supabaseClient.from('group_join_requests').select('*'); globalGroupJoinRequestsCache = gjr || []; } catch(e) { globalGroupJoinRequestsCache = []; } })(),
-                    (async () => { try { const { data: bots } = await supabaseClient.from('bots').select('*'); globalBotsCache = bots || []; } catch(e) { globalBotsCache = []; } })(),
                     (async () => { try { const { data: cl } = await supabaseClient.from('comment_likes').select('*'); globalCommentLikesCache = cl || []; } catch(e) { globalCommentLikesCache = []; } })(),
                     (async () => { try { const { data: bl } = await supabaseClient.from('blocked_users').select('*'); globalBlockedCache = bl || []; } catch(e) { globalBlockedCache = []; } })(),
                     (async () => { try { const { data: fr } = await supabaseClient.from('follow_requests').select('*'); globalFollowRequestsCache = fr || []; } catch(e) { globalFollowRequestsCache = []; } })(),
@@ -1218,46 +1165,6 @@
                             closeFriendsFeatureAvailable = false;
                         }
                     })(),
-                    (async () => {
-                        // FEATURE: ANONYMOUS Q&A — optional table
-                        try {
-                            const { data: aq, error: aqErr } = await supabaseClient.from('anon_questions').select('*').order('created_at', { ascending: false });
-                            if (aqErr) throw aqErr;
-                            anonQuestionsCache = aq || [];
-                            anonQaFeatureAvailable = true;
-                        } catch (e) {
-                            anonQuestionsCache = [];
-                            anonQaFeatureAvailable = false;
-                        }
-                    })(),
-                    (async () => {
-                        // FEATURE: TIME CAPSULE — optional table
-                        try {
-                            const { data: tc, error: tcErr } = await supabaseClient.from('time_capsules').select('*')
-                                .or(`from_username.eq.${currentUser},to_username.eq.${currentUser}`)
-                                .order('unlock_at', { ascending: true });
-                            if (tcErr) throw tcErr;
-                            timeCapsulesCache = tc || [];
-                            timeCapsuleFeatureAvailable = true;
-                        } catch (e) {
-                            timeCapsulesCache = [];
-                            timeCapsuleFeatureAvailable = false;
-                        }
-                    })(),
-                    (async () => {
-                        // FEATURE: SILENT SUPPORT PING — optional table. We only ever need our OWN
-                        // private received-count here; sender identity is never fetched for anyone.
-                        try {
-                            const { error: spErr, count } = await supabaseClient.from('support_pings')
-                                .select('id', { count: 'exact', head: true })
-                                .eq('receiver_username', currentUser);
-                            if (spErr) throw spErr;
-                            supportPingCountCache[currentUser] = count || 0;
-                            supportPingFeatureAvailable = true;
-                        } catch (e) {
-                            supportPingFeatureAvailable = false;
-                        }
-                    })()
                 ]);
 
                 detectAndNotifyNewActivity();
@@ -1885,7 +1792,7 @@
                 pauseAllReels();
             }
 
-            ['feed', 'chat', 'reels', 'calls', 'groups', 'explore', 'ai'].forEach(t => {
+            ['feed', 'chat', 'reels', 'calls', 'groups', 'explore'].forEach(t => {
                 document.getElementById('section-' + t).classList.add('hidden');
                 const btn = document.getElementById('tab-' + t);
                 btn.className = "px-2 py-1 rounded-md text-[11px] font-bold fast-transition text-slate-400 hover:text-slate-200 shrink-0";
@@ -1915,9 +1822,6 @@
             } else if (tab === 'explore') {
                 renderExplore();
                 if(messagePollingInterval) clearInterval(messagePollingInterval);
-            } else if (tab === 'ai') {
-                if(messagePollingInterval) clearInterval(messagePollingInterval);
-                if (typeof initAiAssistant === 'function') initAiAssistant();
             } else {
                 if(messagePollingInterval) clearInterval(messagePollingInterval);
             }
@@ -2736,14 +2640,11 @@
                 editAvatarBtn.classList.add('flex');
                 document.getElementById('editUsernameInput').value = currentUser;
                 const myFull = globalProfilesFullCache[currentUser] || {};
-                document.getElementById('moodTextInput').value = myFull.mood || '';
-                selectMoodEmoji(myFull.mood_emoji || '😊');
 
                 // Reflect current private-account state on the toggle switch
                 renderPrivateAccountToggle();
                 renderGhostModeToggle();
                 renderAwayModeToggle();
-                renderSecretAdmirer();
                 const hsBtn = document.getElementById('handshakeEntryBtn');
                 if (hsBtn) { hsBtn.classList.remove('hidden'); hsBtn.classList.add('flex'); }
             } else {
@@ -2754,8 +2655,6 @@
                 otherActions.classList.remove('hidden');
                 editAvatarBtn.classList.add('hidden');
                 editAvatarBtn.classList.remove('flex');
-                document.getElementById('secretAdmirerCard').classList.add('hidden');
-                document.getElementById('secretAdmirerCard').classList.remove('flex');
 
                 document.getElementById('profileModalChatBtn').onclick = () => {
                     closeProfileModal();
@@ -2763,10 +2662,6 @@
                     selectChatUser(username, true);
                 };
 
-                // FEATURE: IN-APP WALLET (TIPPING) — only makes sense on someone else's profile
-                const tipBtn = document.getElementById('profileSendTipBtn');
-                if (tipBtn) { tipBtn.classList.remove('hidden'); tipBtn.classList.add('flex'); }
-                closeSendTipPrompt();
             }
 
             // FEATURE: NEXUS ADMIN VERIFICATION — only NEXUS sees this; NEXUS can verify anyone,
@@ -2804,35 +2699,6 @@
                 document.getElementById('profilePostsCount').innerText = userPostsAll.length;
             }
 
-            // FEATURE: STREAKS — consecutive days with at least one post, computed purely
-            // from existing post timestamps (no schema change needed).
-            const streakBadge = document.getElementById('modalStreakBadge');
-            if (!locked) {
-                const streak = computePostStreak(userPostsAll);
-                if (streak > 0) {
-                    streakBadge.classList.remove('hidden');
-                    streakBadge.classList.add('flex');
-                    streakBadge.innerHTML = `<i class="fa-solid fa-fire"></i> ${streak} day${streak > 1 ? 's' : ''}`;
-                } else {
-                    streakBadge.classList.add('hidden');
-                    streakBadge.classList.remove('flex');
-                }
-            } else {
-                streakBadge.classList.add('hidden');
-                streakBadge.classList.remove('flex');
-            }
-
-            // FEATURE: MOOD STATUS — reads profiles.mood / profiles.mood_emoji if that
-            // column exists in this Supabase project; hides quietly if not set up yet.
-            const moodBadge = document.getElementById('modalMoodBadge');
-            const fullProfile = globalProfilesFullCache[username];
-            if (!locked && fullProfile && fullProfile.mood) {
-                moodBadge.classList.remove('hidden');
-                moodBadge.innerText = `${fullProfile.mood_emoji || '💭'} ${fullProfile.mood}`;
-            } else {
-                moodBadge.classList.add('hidden');
-            }
-
             // FEATURE: CLOSE FRIENDS — only relevant on someone else's profile, and only once
             // I'm actually allowed to see this profile (not a locked private account)
             const closeFriendWrap = document.getElementById('closeFriendToggleWrap');
@@ -2844,25 +2710,15 @@
                 closeFriendWrap.classList.add('hidden');
             }
 
-            // FEATURE: CONTENT DNA FINGERPRINT mini badge — derived from their posts, so it
-            // stays hidden for a locked private account same as the post grid does
-            if (!locked) {
-                renderDnaMiniBadge(username);
-            } else {
-                const dnaBadge = document.getElementById('dnaMiniBadge');
-                if (dnaBadge) { dnaBadge.classList.add('hidden'); dnaBadge.classList.remove('flex'); }
-            }
-
             renderPersonaHub(username, isMe);
             refreshProfileTabView(); // FEATURE: PROFILE GROUPS/CHANNELS TAB
-            renderAnonQaSection(username);
             if (profileFlipped && !locked) renderNewFeaturesPanel(username, isMe);
             document.getElementById('profileModal').classList.remove('hidden');
         }
 
         // =====================================================================================
         // FEATURE: PROFILE FLIP — flips the profile card (with a quick 3D animation) to reveal
-        // the panel of newly-added features: Silent Support Ping + Content DNA Fingerprint.
+        // the panel of extra features (security, activity, settings).
         // =====================================================================================
         function resetProfileFlipToFront() {
             profileFlipped = false;
@@ -2899,26 +2755,16 @@
 
         function renderNewFeaturesPanel(username, isMe) {
             if (!username) return;
-            renderLivePulseCard(username, isMe);
-            renderAuraBattleCard(username, isMe);
-            renderVibeCardFeature(username, isMe);
-            renderSlowFollowCard(username, isMe);
-            renderSilentSupportPingCard(username, isMe);
-            renderContentDnaFingerprint(username);
-            renderHonestUsageMirrorCard(isMe);
             renderAccountSecurityCard(isMe);
             renderMyActivityCard(isMe);
             renderBlockedUsersCard(isMe);
             renderDataExportCard(isMe);
             renderTrueDeleteCard(isMe);
             renderNexusUniverseCard(username, isMe);
-            renderWalletCard(isMe);
             renderOfflineModeCard(isMe);
             renderScreenshotAlertCard(isMe);
-            renderPanicModeCard(isMe);
             renderLanguageCard(isMe);
             renderNotifSoundCard(isMe);
-            renderEmergencyProfileLinkCard(isMe);
         }
 
         // =====================================================================================
@@ -3459,7 +3305,7 @@
 
             try {
                 const [profile, posts, comments, commentLikes, postLikes, postViews, messagesSent, messagesReceived,
-                    stories, storyViews, following, followers, blockedByMe, closeFriends, timeCapsulesSent, timeCapsulesReceived] = await Promise.all([
+                    stories, storyViews, following, followers, blockedByMe, closeFriends] = await Promise.all([
                     safe('profile', supabaseClient.from('profiles').select('*').eq('username', u).maybeSingle().then(r => ({ data: r.data ? [r.data] : [], error: r.error }))),
                     safe('posts', supabaseClient.from('posts').select('*').eq('username', u)),
                     safe('comments', supabaseClient.from('comments').select('*').eq('username', u)),
@@ -3474,8 +3320,6 @@
                     safe('followers', supabaseClient.from('follows').select('*').eq('following', u)),
                     safe('blocked_by_me', supabaseClient.from('blocked_users').select('*').eq('blocker', u)),
                     safe('close_friends', supabaseClient.from('close_friends').select('*').eq('owner', u)),
-                    safe('time_capsules_sent', supabaseClient.from('time_capsules').select('*').eq('from_username', u)),
-                    safe('time_capsules_received', supabaseClient.from('time_capsules').select('*').eq('to_username', u)),
                 ]);
 
                 const exportBundle = {
@@ -3486,8 +3330,7 @@
                     posts, comments, comment_likes: commentLikes, post_likes: postLikes, post_views: postViews,
                     messages_sent: messagesSent, messages_received: messagesReceived,
                     stories, story_views: storyViews, following, followers,
-                    blocked_by_me: blockedByMe, close_friends: closeFriends,
-                    time_capsules_sent: timeCapsulesSent, time_capsules_received: timeCapsulesReceived
+                    blocked_by_me: blockedByMe, close_friends: closeFriends
                 };
 
                 const blob = new Blob([JSON.stringify(exportBundle, null, 2)], { type: 'application/json' });
@@ -3648,581 +3491,7 @@
         }
         window.shareToUserDM = shareToUserDM;
 
-        // =====================================================================================
-        // FEATURE: SLOW FOLLOW — following someone starts a private "growing" period instead of
-        // an instant relationship. Grows fully in 7 days, or fast-tracks to 2 days if you
-        // genuinely view (not skip) 3+ of their posts. Purely local/personal — doesn't touch or
-        // replace the app's existing instant multi-persona follow system.
-        // =====================================================================================
-        function slowFollowStorageKey(following) { return `nexus_slowfollow_${currentUser}_${following}`; }
-
-        function getSlowFollowState(following) {
-            try {
-                const raw = localStorage.getItem(slowFollowStorageKey(following));
-                return raw ? JSON.parse(raw) : null;
-            } catch (e) { return null; }
-        }
-
-        function saveSlowFollowState(following, state) {
-            localStorage.setItem(slowFollowStorageKey(following), JSON.stringify(state));
-        }
-
-        function countGenuineViews(username) {
-            const targetPostIds = new Set(globalPostsCache.filter(p => p.username === username).map(p => p.id));
-            if (targetPostIds.size === 0) return 0;
-            return globalPostViewsCache.filter(v => v.viewer === currentUser && targetPostIds.has(v.post_id)).length;
-        }
-
-        function startSlowFollow(following) {
-            if (!following || following === currentUser || getSlowFollowState(following)) return;
-            saveSlowFollowState(following, { started_at: Date.now(), confirmed: false });
-            renderSlowFollowCard(following, false);
-            showInAppBanner('🌱 Growing', `${following} ke saath ek slow-follow relationship shuru ho gaya.`);
-        }
-
-        function renderSlowFollowCard(username, isMe) {
-            const wrap = document.getElementById('slowFollowCard');
-            if (!wrap) return;
-            if (isMe || !username) { wrap.innerHTML = ''; return; }
-
-            let state = getSlowFollowState(username);
-
-            if (state && !state.confirmed) {
-                const daysElapsed = (Date.now() - state.started_at) / (24 * 60 * 60 * 1000);
-                const requiredDays = countGenuineViews(username) >= 3 ? 2 : 7;
-                if (daysElapsed >= requiredDays) {
-                    state.confirmed = true;
-                    saveSlowFollowState(username, state);
-                }
-            }
-
-            if (!state) {
-                wrap.innerHTML = `
-                    <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-seedling text-emerald-400"></i> Slow Follow</p>
-                    <p class="text-[9px] text-slate-500">Instant follow ke bajaye ek relationship jo waqt maangta hai — 7 din mein grow hoti hai, ya jaldi agar tum genuinely inki posts dekho (skip nahi).</p>
-                    <button onclick="startSlowFollow('${username}')" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-emerald-400 transition"><i class="fa-solid fa-seedling mr-1"></i> Start Growing</button>
-                `;
-                return;
-            }
-
-            const daysElapsed = (Date.now() - state.started_at) / (24 * 60 * 60 * 1000);
-            const genuineViews = countGenuineViews(username);
-            const fastTrack = genuineViews >= 3;
-            const requiredDays = fastTrack ? 2 : 7;
-            const progressPct = Math.min(100, Math.round((daysElapsed / requiredDays) * 100));
-            const stageEmoji = state.confirmed ? '🌳' : (progressPct >= 50 ? '🌿' : '🌱');
-
-            wrap.innerHTML = state.confirmed ? `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-seedling text-emerald-400"></i> Slow Follow</p>
-                <p class="text-xs text-emerald-400 font-bold">🌳 Grown — ye connection ab pakka hai</p>
-                <p class="text-[9px] text-slate-500">${daysElapsed.toFixed(1)} din mein grow hui, ${genuineViews} posts genuinely dekhne ke saath.</p>
-            ` : `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-seedling text-emerald-400"></i> Slow Follow</p>
-                <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                    <div class="h-full bg-gradient-to-r from-emerald-500 to-[#35c7ff] transition-all" style="width:${progressPct}%"></div>
-                </div>
-                <p class="text-xs text-slate-200">${stageEmoji} ${progressPct}% grown${fastTrack ? ' (fast-track — genuine views se)' : ''}</p>
-                <p class="text-[9px] text-slate-500">${genuineViews} posts genuinely dekhi hain — 3+ dekhne se growth 7 din se ghatkar 2 din ho jaati hai.</p>
-            `;
-        }
-
-        // =====================================================================================
-        // FEATURE: SILENT SUPPORT PING — anonymous, one-way "thinking of you" signal.
-        // No likes, no comments, no DM. Sender identity is never surfaced anywhere, including
-        // to us — the receiver only ever sees a private aggregate count on their OWN profile.
-        // =====================================================================================
-        function renderSilentSupportPingCard(username, isMe) {
-            const wrap = document.getElementById('silentSupportPingCard');
-            if (!wrap) return;
-
-            if (!supportPingFeatureAvailable) {
-                wrap.innerHTML = `
-                    <p class="text-[11px] font-bold text-slate-300 flex items-center justify-center gap-1.5"><i class="fa-solid fa-wind text-[#35c7ff]"></i> Silent Support Ping</p>
-                    <p class="text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Iske liye ek chhoti si SQL setup baaki hai (support_pings table) — ban jaane ke baad yeh feature turant kaam karega.</p>
-                `;
-                return;
-            }
-
-            if (isMe) {
-                const count = supportPingCountCache[username] || 0;
-                wrap.innerHTML = `
-                    <p class="text-[11px] font-bold text-slate-300 flex items-center justify-center gap-1.5"><i class="fa-solid fa-wind text-[#35c7ff]"></i> Silent Support Ping</p>
-                    <p class="text-[9px] text-slate-500">Anonymous, one-way care signal — no likes, no comments, no DM. Sirf tumhe dikhta hai.</p>
-                    <p class="text-sm text-slate-200 font-display font-bold pt-1">🫧 ${count} log tumhare baare me soch rahe hain</p>
-                `;
-            } else {
-                const localKey = `nexus_ping_sent_${currentUser}_${username}`;
-                const lastSent = parseInt(localStorage.getItem(localKey) || '0', 10);
-                const onCooldown = lastSent && (Date.now() - lastSent) < 12 * 60 * 60 * 1000;
-                wrap.innerHTML = `
-                    <p class="text-[11px] font-bold text-slate-300 flex items-center justify-center gap-1.5"><i class="fa-solid fa-wind text-[#35c7ff]"></i> Silent Support Ping</p>
-                    <p class="text-[9px] text-slate-500">Bura din ho, exam ho, breakup ho — bina awkward comment likhe silently support bhejo. Kaun bheja pata nahi chalega.</p>
-                    <button id="sendSupportPingBtn" onclick="sendSilentSupportPing('${username}')" ${onCooldown ? 'disabled' : ''} class="w-full font-bold py-2 rounded-xl text-xs shadow transition ${onCooldown ? 'bg-slate-800 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-[#35c7ff] to-[#9d7bff] text-white'}">
-                        ${onCooldown ? '🫧 Bhej diya — thodi der baad phir se' : '🫧 Sending strength'}
-                    </button>
-                `;
-            }
-        }
-
-        async function sendSilentSupportPing(receiverUsername) {
-            if (!supportPingFeatureAvailable || !receiverUsername || receiverUsername === currentUser) return;
-            const localKey = `nexus_ping_sent_${currentUser}_${receiverUsername}`;
-            const lastSent = parseInt(localStorage.getItem(localKey) || '0', 10);
-            if (lastSent && (Date.now() - lastSent) < 12 * 60 * 60 * 1000) return;
-
-            try {
-                const { error } = await supabaseClient.from('support_pings').insert({
-                    sender_username: currentUser,
-                    receiver_username: receiverUsername
-                });
-                if (error) throw error;
-                localStorage.setItem(localKey, String(Date.now()));
-                showInAppBanner('🫧 Sent', 'Silently bhej diya — non-transactional, non-public care signal.');
-                renderSilentSupportPingCard(receiverUsername, false);
-            } catch (e) {
-                console.warn('Nexus: support_pings table not set up yet.', e);
-                supportPingFeatureAvailable = false;
-                renderSilentSupportPingCard(receiverUsername, false);
-            }
-        }
-
-        // =====================================================================================
-        // =====================================================================================
-        // FEATURE: NEXUS VIBE CARD — an auto-generated, shareable "recap" card (Spotify-Wrapped
-        // style) built entirely from the user's own real activity (posts, followers, streak,
-        // posting habits). Meant to be shared to WhatsApp Status / Instagram Stories — the
-        // branding + app link are baked directly into the image, so anyone who sees it in a
-        // friend's story gets nudged to come download Nexus themselves. Fully client-side,
-        // canvas-rendered, no schema needed.
-        // =====================================================================================
-        const VIBE_GENERIC_TITLES = ['Chaos Poster 🌀', 'Vibes Curator ✨', 'Low-Key Legend 🕶️', 'Serial Scroller 📱', 'Certified Nexus Native 🪐', 'Feed Whisperer 🍃'];
-
-        function computeVibeCardStats(username) {
-            const posts = globalPostsCache.filter(p => p.username === username);
-            const followerCount = globalFollowsCache.filter(f => f.following === username).length;
-            const followingCount = globalFollowsCache.filter(f => f.follower === username).length;
-            const streak = posts.length ? computePostStreak(posts) : 0;
-            const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
-            let emojiCount = 0, totalLen = 0;
-            const hourHist = new Array(24).fill(0);
-            posts.forEach(p => {
-                const content = p.content || '';
-                totalLen += content.length;
-                const m = content.match(emojiRegex);
-                emojiCount += m ? m.length : 0;
-                const d = new Date(p.created_at);
-                if (!isNaN(d.getTime())) hourHist[d.getHours()]++;
-            });
-            const peakHour = posts.length ? hourHist.indexOf(Math.max(...hourHist)) : 12;
-
-            const signature = `${username}|${posts.length}|${followerCount}|${followingCount}|${streak}|${emojiCount}|${peakHour}`;
-            let hash = 0;
-            for (let i = 0; i < signature.length; i++) hash = (Math.imul(hash, 31) + signature.charCodeAt(i)) | 0;
-            hash = hash >>> 0;
-
-            return { postsCount: posts.length, followerCount, followingCount, streak, emojiCount, peakHour, avgLen: posts.length ? totalLen / posts.length : 0, hash };
-        }
-
-        function pickVibeTitle(stats) {
-            const pool = [];
-            if (stats.peakHour >= 0 && stats.peakHour < 5) pool.push('Certified Night Owl 🦉');
-            if (stats.streak >= 5) pool.push('Consistency Machine 🔥');
-            if (stats.postsCount > 0 && stats.emojiCount > stats.postsCount * 2) pool.push('Emoji Overlord 😎');
-            if (stats.followerCount > 5 && stats.followerCount > stats.followingCount * 2) pool.push('Certified Main Character 🌟');
-            if (stats.postsCount === 0) pool.push('Silent Observer 👀');
-            if (stats.avgLen > 150) pool.push('Storyteller Supreme 📖');
-            const full = pool.length ? pool : VIBE_GENERIC_TITLES;
-            return full[stats.hash % full.length];
-        }
-
-        function renderVibeCardFeature(username, isMe) {
-            const wrap = document.getElementById('vibeCardCard');
-            if (!wrap) return;
-            const stats = computeVibeCardStats(username);
-            const vibe = pickVibeTitle(stats);
-            const initial = username.charAt(0).toUpperCase();
-            wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center justify-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-[#ff4d8d]"></i> Nexus Vibe Card</p>
-                <p class="text-[9px] text-slate-500">${username} ki apni real activity se generate hua ek shareable recap card — WhatsApp Status ya Instagram Story pe daal do.</p>
-                <div class="rounded-2xl overflow-hidden p-4 space-y-2" style="background: linear-gradient(135deg, #1a0b2e, #2d0a3d 45%, #05050c); border:1px solid rgba(157,123,255,0.25);">
-                    <div class="w-12 h-12 mx-auto rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-lg font-bold text-white shadow-lg">${initial}</div>
-                    <p class="text-[13px] font-extrabold text-white">${vibe}</p>
-                    <p class="text-[10px] text-slate-400">@${username}</p>
-                    <div class="grid grid-cols-3 gap-1.5 pt-1">
-                        <div class="bg-black/30 rounded-xl py-1.5"><p class="text-[13px] font-bold text-[#ff4d8d]">${stats.postsCount}</p><p class="text-[8px] text-slate-500">Posts</p></div>
-                        <div class="bg-black/30 rounded-xl py-1.5"><p class="text-[13px] font-bold text-[#9d7bff]">${stats.followerCount}</p><p class="text-[8px] text-slate-500">Followers</p></div>
-                        <div class="bg-black/30 rounded-xl py-1.5"><p class="text-[13px] font-bold text-[#35c7ff]">${stats.streak}</p><p class="text-[8px] text-slate-500">Day Streak</p></div>
-                    </div>
-                    <p class="text-[8px] text-slate-500 pt-1">📲 Made with SocialNexus</p>
-                </div>
-                <button onclick="shareVibeCard('${username}')" class="text-[9px] font-bold text-[#35c7ff] hover:text-[#9d7bff] transition"><i class="fa-solid fa-share-nodes mr-1"></i>Share Vibe Card</button>
-            `;
-        }
-
-        function vibeRoundRect(ctx, x, y, w, h, r) {
-            ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.arcTo(x + w, y, x + w, y + h, r);
-            ctx.arcTo(x + w, y + h, x, y + h, r);
-            ctx.arcTo(x, y + h, x, y, r);
-            ctx.arcTo(x, y, x + w, y, r);
-            ctx.closePath();
-        }
-
-        function vibeWrapText(ctx, text, x, y, maxWidth, lineHeight) {
-            const words = text.split(' ');
-            let line = '';
-            const lines = [];
-            for (let n = 0; n < words.length; n++) {
-                const testLine = line + words[n] + ' ';
-                if (ctx.measureText(testLine).width > maxWidth && n > 0) {
-                    lines.push(line.trim());
-                    line = words[n] + ' ';
-                } else {
-                    line = testLine;
-                }
-            }
-            lines.push(line.trim());
-            const totalH = lines.length * lineHeight;
-            const startY = y - totalH / 2 + lineHeight / 2;
-            lines.forEach((l, i) => ctx.fillText(l, x, startY + i * lineHeight));
-        }
-
-        function shareVibeCard(username) {
-            const stats = computeVibeCardStats(username);
-            const vibe = pickVibeTitle(stats);
-            const canvas = document.createElement('canvas');
-            canvas.width = 720; canvas.height = 1280; // 9:16 — drops straight into WhatsApp/IG Stories
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-
-            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, '#1a0b2e');
-            grad.addColorStop(0.5, '#2d0a3d');
-            grad.addColorStop(1, '#05050c');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            [['#ff4d8d22', 150, 220], ['#9d7bff22', 570, 900], ['#35c7ff1a', 560, 300]].forEach(([c, x, y]) => {
-                ctx.beginPath();
-                ctx.fillStyle = c;
-                ctx.arc(x, y, 200, 0, Math.PI * 2);
-                ctx.fill();
-            });
-
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            const avatarGrad = ctx.createLinearGradient(cx - 70, 260, cx + 70, 400);
-            avatarGrad.addColorStop(0, '#9d7bff');
-            avatarGrad.addColorStop(1, '#ff4d8d');
-            ctx.beginPath();
-            ctx.fillStyle = avatarGrad;
-            ctx.arc(cx, 330, 70, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#ffffff';
-            ctx.font = 'bold 64px sans-serif';
-            ctx.fillText(username.charAt(0).toUpperCase(), cx, 335);
-
-            ctx.font = 'bold 34px sans-serif';
-            ctx.fillStyle = '#cbd5e1';
-            ctx.fillText('@' + username, cx, 450);
-
-            ctx.font = 'bold 52px sans-serif';
-            ctx.fillStyle = '#ffffff';
-            vibeWrapText(ctx, vibe, cx, 570, 620, 62);
-
-            const statsData = [
-                { label: 'POSTS', value: stats.postsCount, color: '#ff4d8d' },
-                { label: 'FOLLOWERS', value: stats.followerCount, color: '#9d7bff' },
-                { label: 'DAY STREAK', value: stats.streak, color: '#35c7ff' }
-            ];
-            const boxW = 180, boxGap = 30, startX = cx - (boxW * 3 + boxGap * 2) / 2;
-            statsData.forEach((s, i) => {
-                const x = startX + i * (boxW + boxGap);
-                const y = 780;
-                ctx.fillStyle = 'rgba(255,255,255,0.07)';
-                vibeRoundRect(ctx, x, y, boxW, 160, 24);
-                ctx.fill();
-                ctx.fillStyle = s.color;
-                ctx.font = 'bold 56px sans-serif';
-                ctx.fillText(String(s.value), x + boxW / 2, y + 68);
-                ctx.fillStyle = '#94a3b8';
-                ctx.font = 'bold 20px sans-serif';
-                ctx.fillText(s.label, x + boxW / 2, y + 122);
-            });
-
-            // Footer CTA — the part designed to actually drive downloads once this card gets
-            // reposted onto someone else's WhatsApp Status / Instagram Story.
-            ctx.font = 'bold 30px sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText('📲 Made with SocialNexus', cx, 1120);
-            ctx.font = '24px sans-serif';
-            ctx.fillStyle = '#35c7ff';
-            ctx.fillText(window.location.origin.replace(/^https?:\/\//, ''), cx, 1165);
-            ctx.font = '20px sans-serif';
-            ctx.fillStyle = '#64748b';
-            ctx.fillText('Join the app to see your own vibe', cx, 1200);
-
-            canvas.toBlob(async (blob) => {
-                if (!blob) return;
-                const file = new File([blob], `${username}-nexus-vibe.png`, { type: 'image/png' });
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: 'My Nexus Vibe', text: `${vibe} — check my Nexus Vibe Card! 🔥` });
-                        return;
-                    } catch (e) { /* user cancelled share, fall through to download */ }
-                }
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `${username}-nexus-vibe.png`;
-                a.click();
-            }, 'image/png');
-        }
-
-        // =====================================================================================
-        // FEATURE: LIVE GLOBAL PULSE — an ambient real-time radar showing the whole Nexus user-
-        // base posting live, right now, anywhere in the app. Every user gets a deterministic
-        // pseudo-position on the radar (hashed from their username — no real location data is
-        // ever collected or needed), so when ANY user's post lands, everyone with this panel
-        // open sees a pulse fire in real time. Purely a vibe/ambient feature — never fabricates
-        // activity that didn't happen.
-        // =====================================================================================
-        let recentPulseEvents = []; // small ring buffer so the panel isn't empty on open
-
-        function pulseCoordsForUser(username) {
-            const rand = mulberry32((username || '').split('').reduce((h, c) => (Math.imul(h, 31) + c.charCodeAt(0)) | 0, 7) >>> 0);
-            return { x: 10 + rand() * 180, y: 10 + rand() * 80 };
-        }
-
-        function renderLivePulseCard(username, isMe) {
-            const wrap = document.getElementById('livePulseCard');
-            if (!wrap) return;
-            const dots = Array.from({ length: 22 }, (_, i) => {
-                const r = mulberry32(i * 977 + 3);
-                return `<circle cx="${(10 + r() * 180).toFixed(1)}" cy="${(10 + r() * 80).toFixed(1)}" r="1.1" fill="#9d7bff" opacity="0.25"/>`;
-            }).join('');
-            wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center justify-center gap-1.5"><i class="fa-solid fa-satellite-dish text-[#35c7ff]"></i> Live Global Pulse</p>
-                <p class="text-[9px] text-slate-500">Nexus pe abhi, is second, jo bhi log real mein post kar rahe hain — unka live pulse.</p>
-                <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 relative">
-                    <svg id="livePulseSvg" viewBox="0 0 200 100" class="w-full h-28">
-                        <rect width="200" height="100" fill="#050509"/>
-                        <circle cx="100" cy="50" r="46" fill="none" stroke="#9d7bff" stroke-width="0.4" opacity="0.25"/>
-                        <circle cx="100" cy="50" r="30" fill="none" stroke="#9d7bff" stroke-width="0.4" opacity="0.25"/>
-                        <circle cx="100" cy="50" r="14" fill="none" stroke="#9d7bff" stroke-width="0.4" opacity="0.25"/>
-                        ${dots}
-                    </svg>
-                </div>
-                <div id="livePulseFeed" class="space-y-1 text-left max-h-16 overflow-y-auto"></div>
-            `;
-            renderPulseFeedList();
-        }
-
-        function renderPulseFeedList() {
-            const feed = document.getElementById('livePulseFeed');
-            if (!feed) return;
-            if (!recentPulseEvents.length) {
-                feed.innerHTML = `<p class="text-[9px] text-slate-600 text-center py-1">Koi live activity abhi nahi — jaise hi koi post karega, yahan dikhega.</p>`;
-                return;
-            }
-            feed.innerHTML = recentPulseEvents.slice(0, 6).map(e =>
-                `<p class="text-[9px] text-slate-500"><span class="text-[#35c7ff] font-bold">@${e.username}</span> just posted <span class="text-slate-600">· ${e.timeLabel}</span></p>`
-            ).join('');
-        }
-
-        function spawnPulseOnMap(username) {
-            const svg = document.getElementById('livePulseSvg');
-            if (!svg) return; // panel isn't open right now — skip the animation, feed list still updates
-            const { x, y } = pulseCoordsForUser(username);
-            const ns = 'http://www.w3.org/2000/svg';
-            const ring = document.createElementNS(ns, 'circle');
-            ring.setAttribute('cx', x.toFixed(1));
-            ring.setAttribute('cy', y.toFixed(1));
-            ring.setAttribute('r', '1.5');
-            ring.setAttribute('fill', 'none');
-            ring.setAttribute('stroke', '#ff4d8d');
-            ring.setAttribute('stroke-width', '1');
-            ring.style.transition = 'r 1.4s ease-out, opacity 1.4s ease-out';
-            ring.style.opacity = '1';
-            svg.appendChild(ring);
-
-            const dot = document.createElementNS(ns, 'circle');
-            dot.setAttribute('cx', x.toFixed(1));
-            dot.setAttribute('cy', y.toFixed(1));
-            dot.setAttribute('r', '2');
-            dot.setAttribute('fill', '#ff4d8d');
-            svg.appendChild(dot);
-
-            requestAnimationFrame(() => {
-                ring.setAttribute('r', '18');
-                ring.style.opacity = '0';
-            });
-            setTimeout(() => { ring.remove(); dot.remove(); }, 1500);
-        }
-
-        function handleGlobalPulseEvent(postRow) {
-            const username = postRow.username;
-            if (!username) return;
-            recentPulseEvents.unshift({ username, timeLabel: 'abhi' });
-            recentPulseEvents = recentPulseEvents.slice(0, 8);
-            spawnPulseOnMap(username);
-            renderPulseFeedList();
-        }
-
-        // =====================================================================================
-        // FEATURE: NEXUS AURA BATTLE — head-to-head comparison of two users' Vibe Card stats.
-        // Reuses computeVibeCardStats (already built for the Vibe Card) against any username in
-        // the app, declares a winner per category + overall, and exports a shareable VS card —
-        // same download-driving CTA baked into the image as the Vibe Card.
-        // =====================================================================================
-        function computeAuraScore(stats) {
-            return Math.round(stats.postsCount * 2 + stats.followerCount * 3 + stats.streak * 4);
-        }
-
-        function renderAuraBattleCard(username, isMe) {
-            const wrap = document.getElementById('auraBattleCard');
-            if (!wrap) return;
-            if (!isMe) { wrap.innerHTML = ''; return; }
-            wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-bolt text-[#ff4d8d]"></i> Nexus Aura Battle</p>
-                <p class="text-[9px] text-slate-500">Kisi bhi Nexus user ke against apna Aura Score battle karo — posts, followers aur streak ke basis pe.</p>
-                <div class="flex gap-1.5">
-                    <input type="text" id="auraBattleOpponentInput" placeholder="Opponent ka username..." class="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-2.5 py-1.5 text-[10px] text-white outline-none focus:border-[#ff4d8d]">
-                    <button onclick="runAuraBattle('${username}')" class="bg-gradient-to-r from-[#ff4d8d] to-[#9d7bff] text-white text-[10px] font-bold px-3 py-1.5 rounded-xl">Battle</button>
-                </div>
-                <div id="auraBattleResult"></div>
-            `;
-        }
-
-        function runAuraBattle(myUsername) {
-            const input = document.getElementById('auraBattleOpponentInput');
-            const resultBox = document.getElementById('auraBattleResult');
-            const opponent = (input ? input.value : '').trim();
-            if (!opponent) return;
-            if (opponent === myUsername) {
-                resultBox.innerHTML = `<p class="text-[9px] text-amber-400 text-center pt-1">Khud se battle nahi ho sakti 😅</p>`;
-                return;
-            }
-            if (!globalProfilesFullCache[opponent]) {
-                resultBox.innerHTML = `<p class="text-[9px] text-amber-400 text-center pt-1">"${opponent}" naam ka koi user nahi mila.</p>`;
-                return;
-            }
-
-            const myStats = computeVibeCardStats(myUsername);
-            const oppStats = computeVibeCardStats(opponent);
-            const myScore = computeAuraScore(myStats);
-            const oppScore = computeAuraScore(oppStats);
-            const iWin = myScore >= oppScore;
-
-            const rowsHtml = [
-                ['Posts', myStats.postsCount, oppStats.postsCount],
-                ['Followers', myStats.followerCount, oppStats.followerCount],
-                ['Day Streak', myStats.streak, oppStats.streak]
-            ].map(([label, a, b]) => `
-                <div class="flex items-center justify-between text-[10px]">
-                    <span class="font-bold ${a >= b ? 'text-[#ff4d8d]' : 'text-slate-500'}">${a}</span>
-                    <span class="text-slate-600">${label}</span>
-                    <span class="font-bold ${b >= a ? 'text-[#9d7bff]' : 'text-slate-500'}">${b}</span>
-                </div>
-            `).join('');
-
-            resultBox.innerHTML = `
-                <div class="rounded-2xl bg-slate-950 border border-slate-800 p-3 space-y-2 mt-1">
-                    <div class="flex items-center justify-between text-[11px] font-bold">
-                        <span class="text-[#ff4d8d]">@${myUsername} (${myScore})</span>
-                        <span class="text-slate-500 text-[9px]">VS</span>
-                        <span class="text-[#9d7bff]">@${opponent} (${oppScore})</span>
-                    </div>
-                    ${rowsHtml}
-                    <p class="text-center text-[10px] font-bold ${iWin ? 'text-emerald-400' : 'text-amber-400'} pt-1">${iWin ? `@${myUsername} wins this Aura Battle 🏆` : `@${opponent} wins this Aura Battle 🏆`}</p>
-                    <button onclick="shareAuraBattle('${myUsername}', '${opponent}')" class="w-full text-[9px] font-bold text-[#35c7ff] hover:text-[#9d7bff] transition text-center"><i class="fa-solid fa-share-nodes mr-1"></i>Share Battle Result</button>
-                </div>
-            `;
-        }
-
-        function shareAuraBattle(myUsername, opponent) {
-            const myStats = computeVibeCardStats(myUsername);
-            const oppStats = computeVibeCardStats(opponent);
-            const myScore = computeAuraScore(myStats);
-            const oppScore = computeAuraScore(oppStats);
-            const iWin = myScore >= oppScore;
-
-            const canvas = document.createElement('canvas');
-            canvas.width = 720; canvas.height = 1280;
-            const ctx = canvas.getContext('2d');
-            const cx = canvas.width / 2;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-
-            const grad = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-            grad.addColorStop(0, '#1a0b2e');
-            grad.addColorStop(0.5, '#2d0a3d');
-            grad.addColorStop(1, '#05050c');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            ctx.font = 'bold 30px sans-serif';
-            ctx.fillStyle = '#94a3b8';
-            ctx.fillText('NEXUS AURA BATTLE', cx, 160);
-
-            [{ u: myUsername, s: myScore, x: cx / 2, color: '#ff4d8d' }, { u: opponent, s: oppScore, x: cx + cx / 2, color: '#9d7bff' }].forEach(p => {
-                const g = ctx.createLinearGradient(p.x - 70, 260, p.x + 70, 400);
-                g.addColorStop(0, p.color); g.addColorStop(1, '#35c7ff');
-                ctx.beginPath();
-                ctx.fillStyle = g;
-                ctx.arc(p.x, 340, 70, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.fillStyle = '#fff';
-                ctx.font = 'bold 60px sans-serif';
-                ctx.fillText(p.u.charAt(0).toUpperCase(), p.x, 345);
-                ctx.font = 'bold 28px sans-serif';
-                ctx.fillStyle = '#e2e8f0';
-                ctx.fillText('@' + p.u, p.x, 450);
-                ctx.font = 'bold 46px sans-serif';
-                ctx.fillStyle = p.color;
-                ctx.fillText(String(p.s), p.x, 510);
-            });
-
-            ctx.font = 'bold 40px sans-serif';
-            ctx.fillStyle = '#64748b';
-            ctx.fillText('VS', cx, 340);
-
-            ctx.font = 'bold 40px sans-serif';
-            ctx.fillStyle = '#34d399';
-            ctx.fillText(`${iWin ? myUsername : opponent} wins 🏆`, cx, 640);
-
-            ctx.font = 'bold 30px sans-serif';
-            ctx.fillStyle = '#ffffff';
-            ctx.fillText('📲 Made with SocialNexus', cx, 1120);
-            ctx.font = '24px sans-serif';
-            ctx.fillStyle = '#35c7ff';
-            ctx.fillText(window.location.origin.replace(/^https?:\/\//, ''), cx, 1165);
-            ctx.font = '20px sans-serif';
-            ctx.fillStyle = '#64748b';
-            ctx.fillText('Battle your friends on Nexus', cx, 1200);
-
-            canvas.toBlob(async (blob) => {
-                if (!blob) return;
-                const file = new File([blob], `${myUsername}-vs-${opponent}-aura-battle.png`, { type: 'image/png' });
-                if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                    try {
-                        await navigator.share({ files: [file], title: 'Nexus Aura Battle', text: `${myUsername} vs ${opponent} — who's got the bigger Nexus aura? 🔥` });
-                        return;
-                    } catch (e) { /* user cancelled, fall through to download */ }
-                }
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(blob);
-                a.download = `${myUsername}-vs-${opponent}-aura-battle.png`;
-                a.click();
-            }, 'image/png');
-        }
-
-        // FEATURE: CONTENT DNA FINGERPRINT — generates a unique abstract "fingerprint" pattern
-        // purely from a user's own post data (tone/length, timing, hashtags, emoji-usage,
-        // activity pattern). Deterministic per-user, evolves as their posting habits change,
-        // and never the same for two different data sets. Fully client-side, no schema needed.
-        // =====================================================================================
+        // Small seeded random-number generator (used by the Nexus Universe visual).
         function mulberry32(seed) {
             return function () {
                 seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
@@ -4230,297 +3499,6 @@
                 t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
                 return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
             };
-        }
-
-        function computeContentDnaSignature(username) {
-            const posts = globalPostsCache.filter(p => p.username === username);
-            if (!posts.length) return null;
-
-            const hourHist = new Array(24).fill(0);
-            let hashtagCount = 0, emojiCount = 0, totalLen = 0;
-            const emojiRegex = /[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}]/gu;
-
-            posts.forEach(p => {
-                const d = new Date(p.created_at);
-                if (!isNaN(d.getTime())) hourHist[d.getHours()]++;
-                const content = p.content || '';
-                totalLen += content.length;
-                hashtagCount += extractHashtags(content).length;
-                const matches = content.match(emojiRegex);
-                emojiCount += matches ? matches.length : 0;
-            });
-
-            const avgLen = totalLen / posts.length;
-            const peakHour = hourHist.indexOf(Math.max(...hourHist));
-            const streak = computePostStreak(posts);
-
-            const signature = `${username}|${posts.length}|${avgLen.toFixed(2)}|${hashtagCount}|${emojiCount}|${peakHour}|${streak}|${hourHist.join(',')}`;
-            let hash = 0;
-            for (let i = 0; i < signature.length; i++) {
-                hash = (Math.imul(hash, 31) + signature.charCodeAt(i)) | 0;
-            }
-            hash = hash >>> 0;
-
-            return { hash, postsCount: posts.length, avgLen, hashtagCount, emojiCount, peakHour, streak, hourHist };
-        }
-
-        function buildDnaSvg(dna) {
-            const rand = mulberry32(dna.hash);
-            const colors = ['#ff4d8d', '#9d7bff', '#35c7ff'];
-            const numWaves = 3 + (dna.hashtagCount % 3);
-            let paths = '';
-
-            for (let w = 0; w < numWaves; w++) {
-                const color = colors[w % colors.length];
-                const amplitude = 6 + rand() * 16;
-                const freq = 1 + Math.floor(rand() * 4);
-                const phase = rand() * Math.PI * 2;
-                const yBase = 14 + w * (62 / numWaves);
-                let d = `M 0 ${yBase.toFixed(1)}`;
-                for (let x = 0; x <= 120; x += 4) {
-                    const hourWeight = dna.hourHist[Math.floor((x / 120) * 24)] || 0;
-                    const y = yBase + Math.sin((x / 120) * Math.PI * 2 * freq + phase) * amplitude * (0.4 + hourWeight * 0.15);
-                    d += ` L ${x} ${y.toFixed(1)}`;
-                }
-                paths += `<path d="${d}" fill="none" stroke="${color}" stroke-width="${(1.2 + rand() * 1.6).toFixed(1)}" stroke-linecap="round" opacity="${(0.5 + rand() * 0.4).toFixed(2)}"/>`;
-            }
-
-            const dots = Math.min(14, dna.emojiCount + 3);
-            let dotSvg = '';
-            for (let i = 0; i < dots; i++) {
-                const angle = (i / dots) * Math.PI * 2;
-                const r = 26 + rand() * 12;
-                const cx = 60 + Math.cos(angle) * r;
-                const cy = 45 + Math.sin(angle) * r * 0.55;
-                dotSvg += `<circle cx="${cx.toFixed(1)}" cy="${cy.toFixed(1)}" r="${(1 + rand() * 2).toFixed(1)}" fill="${colors[i % colors.length]}" opacity="0.7"/>`;
-            }
-
-            return `<svg viewBox="0 0 120 90" class="w-full h-24" xmlns="http://www.w3.org/2000/svg"><rect width="120" height="90" fill="#050509"/>${paths}${dotSvg}</svg>`;
-        }
-
-        function renderDnaMiniBadge(username) {
-            const badge = document.getElementById('dnaMiniBadge');
-            if (!badge) return;
-            const dna = computeContentDnaSignature(username);
-            if (!dna) { badge.classList.add('hidden'); badge.classList.remove('flex'); return; }
-            const hex = (dna.hash % 0xFFFFFF).toString(16).padStart(6, '0');
-            badge.classList.remove('hidden');
-            badge.classList.add('flex');
-            badge.innerHTML = `<span class="w-2 h-2 rounded-full inline-block" style="background:#${hex}"></span> DNA`;
-        }
-
-        function renderContentDnaFingerprint(username) {
-            const wrap = document.getElementById('contentDnaCard');
-            if (!wrap) return;
-            const dna = computeContentDnaSignature(username);
-
-            if (!dna) {
-                wrap.innerHTML = `
-                    <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-dna text-[#9d7bff]"></i> Content DNA Fingerprint</p>
-                    <p class="text-[10px] text-slate-500 text-center py-3">Abhi koi post nahi hai — pehla post karte hi fingerprint ban jayega.</p>
-                `;
-                return;
-            }
-
-            const svg = buildDnaSvg(dna);
-            const dnaCode = dna.hash.toString(16).toUpperCase().slice(0, 6);
-            wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-dna text-[#9d7bff]"></i> Content DNA Fingerprint</p>
-                <p class="text-[9px] text-slate-500">${username} ke posts ke tone, timing, hashtags, emoji-usage aur activity pattern se generate hua — purely unka data, kabhi kisi se match nahi karega.</p>
-                <div class="rounded-2xl overflow-hidden bg-slate-950 border border-slate-800 p-2">${svg}</div>
-                <div class="flex items-center justify-between pt-0.5">
-                    <span class="text-[9px] text-slate-500 font-mono">DNA-${dnaCode}</span>
-                    <button onclick="shareContentDna('${username}')" class="text-[9px] font-bold text-[#35c7ff] hover:text-[#9d7bff] transition"><i class="fa-solid fa-share-nodes mr-1"></i>Share</button>
-                </div>
-            `;
-        }
-
-        function shareContentDna(username) {
-            const svgEl = document.querySelector('#contentDnaCard svg');
-            if (!svgEl) return;
-            const svgData = new XMLSerializer().serializeToString(svgEl);
-            const svgBlob = new Blob([svgData], { type: 'image/svg+xml;charset=utf-8' });
-            const url = URL.createObjectURL(svgBlob);
-            const img = new Image();
-            img.onload = function () {
-                const canvas = document.createElement('canvas');
-                canvas.width = 480; canvas.height = 360;
-                const ctx = canvas.getContext('2d');
-                ctx.fillStyle = '#050509';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                URL.revokeObjectURL(url);
-                canvas.toBlob(async (blob) => {
-                    if (!blob) return;
-                    const file = new File([blob], `${username}-content-dna.png`, { type: 'image/png' });
-                    if (navigator.share && navigator.canShare && navigator.canShare({ files: [file] })) {
-                        try {
-                            await navigator.share({ files: [file], title: `${username}'s Content DNA`, text: `${username} ka unique Content DNA fingerprint on Nexus 🧬` });
-                            return;
-                        } catch (e) { /* user cancelled share, fall through to download */ }
-                    }
-                    const a = document.createElement('a');
-                    a.href = URL.createObjectURL(blob);
-                    a.download = `${username}-content-dna.png`;
-                    a.click();
-                }, 'image/png');
-            };
-            img.src = url;
-        }
-
-        // =====================================================================================
-        // FEATURE: HONEST USAGE MIRROR — a blunt, no-sugarcoating daily/weekly usage summary
-        // (total time-in-app vs. genuine post-dwell time), plus an undismissable-for-5s nudge
-        // once usage crosses a threshold. Purely local (per-device), no schema needed.
-        // =====================================================================================
-        function usageTodayKey() { return new Date().toISOString().split('T')[0]; }
-        function usageStorageKey(dateKey) { return `nexus_usage_${currentUser}_${dateKey}`; }
-
-        function getUsageStats(dateKey) {
-            try {
-                const raw = localStorage.getItem(usageStorageKey(dateKey));
-                return raw ? JSON.parse(raw) : { activeSeconds: 0, dwellSeconds: 0 };
-            } catch (e) { return { activeSeconds: 0, dwellSeconds: 0 }; }
-        }
-
-        function saveUsageStats(dateKey, stats) {
-            localStorage.setItem(usageStorageKey(dateKey), JSON.stringify(stats));
-        }
-
-        function startUsageActiveTracking() {
-            if (usageActiveTickInterval) return;
-            usageActiveTickInterval = setInterval(() => {
-                if (document.visibilityState === 'visible' && document.hasFocus()) {
-                    addUsageActiveSeconds(5);
-                }
-            }, 5000);
-        }
-
-        function addUsageActiveSeconds(sec) {
-            const key = usageTodayKey();
-            const stats = getUsageStats(key);
-            stats.activeSeconds = (stats.activeSeconds || 0) + sec;
-            saveUsageStats(key, stats);
-            maybeTriggerUsageNudge(stats);
-        }
-
-        function addUsageDwellSeconds(sec) {
-            const key = usageTodayKey();
-            const stats = getUsageStats(key);
-            stats.dwellSeconds = (stats.dwellSeconds || 0) + sec;
-            saveUsageStats(key, stats);
-        }
-
-        function getUsageDwellObserver() {
-            if (usageDwellObserver) return usageDwellObserver;
-            usageDwellObserver = new IntersectionObserver((entries) => {
-                entries.forEach(entry => {
-                    const postId = entry.target.dataset.usagePostId;
-                    if (!postId) return;
-                    if (entry.isIntersecting) {
-                        usageDwellEntryTimestamps[postId] = Date.now();
-                    } else {
-                        const enteredAt = usageDwellEntryTimestamps[postId];
-                        if (enteredAt) {
-                            const dwellMs = Date.now() - enteredAt;
-                            if (dwellMs >= 1200) addUsageDwellSeconds(dwellMs / 1000); // ignore quick scroll-pasts
-                            delete usageDwellEntryTimestamps[postId];
-                        }
-                    }
-                });
-            }, { threshold: 0.6 });
-            return usageDwellObserver;
-        }
-
-        // Called right before a feed re-render clears the DOM, so any post that was mid-dwell
-        // still gets credited instead of silently losing that time.
-        function flushUsageDwellObserver() {
-            if (usageDwellObserver) usageDwellObserver.disconnect();
-            Object.keys(usageDwellEntryTimestamps).forEach(postId => {
-                const dwellMs = Date.now() - usageDwellEntryTimestamps[postId];
-                if (dwellMs >= 1200) addUsageDwellSeconds(dwellMs / 1000);
-            });
-            usageDwellEntryTimestamps = {};
-            usageDwellObserver = null;
-        }
-
-        // Undismissable-for-5s nudge — fires once per threshold per day
-        function maybeTriggerUsageNudge(stats) {
-            const thresholds = [2700, 5400]; // 45 min, 90 min
-            for (const t of thresholds) {
-                const flag = `nudged_${t}`;
-                if (stats.activeSeconds >= t && !stats[flag]) {
-                    stats[flag] = true;
-                    saveUsageStats(usageTodayKey(), stats);
-                    showUsageNudgeModal(stats.activeSeconds);
-                    break;
-                }
-            }
-        }
-
-        function showUsageNudgeModal(activeSeconds) {
-            const modal = document.getElementById('usageNudgeModal');
-            const text = document.getElementById('usageNudgeText');
-            const btn = document.getElementById('usageNudgeCloseBtn');
-            if (!modal || !text || !btn) return;
-            const mins = Math.round(activeSeconds / 60);
-            text.innerText = `Tumne aaj ${mins} minute se zyada scroll kar liya hai — thodi der real life mein bhi ruko.`;
-            modal.classList.remove('hidden'); modal.classList.add('flex');
-            btn.disabled = true;
-            btn.className = 'w-full bg-slate-800 text-slate-500 font-bold py-2.5 rounded-xl text-xs cursor-not-allowed transition';
-
-            let remaining = 5;
-            btn.innerText = `Wait ${remaining}s...`;
-            const timer = setInterval(() => {
-                remaining--;
-                if (remaining <= 0) {
-                    clearInterval(timer);
-                    btn.disabled = false;
-                    btn.innerText = 'Theek hai, samajh gaya';
-                    btn.className = 'w-full bg-gradient-to-r from-amber-500 to-[#ff4d8d] text-white font-bold py-2.5 rounded-xl text-xs transition';
-                } else {
-                    btn.innerText = `Wait ${remaining}s...`;
-                }
-            }, 1000);
-        }
-
-        function closeUsageNudgeModal() {
-            document.getElementById('usageNudgeModal').classList.add('hidden');
-            document.getElementById('usageNudgeModal').classList.remove('flex');
-        }
-
-        function renderHonestUsageMirrorCard(isMe) {
-            const wrap = document.getElementById('honestUsageMirrorCard');
-            if (!wrap) return;
-            if (!isMe) { wrap.innerHTML = ''; return; }
-
-            const today = getUsageStats(usageTodayKey());
-            const activeMin = Math.round((today.activeSeconds || 0) / 60);
-            // BUGFIX: dwell time is tracked per-post via IntersectionObserver, so when two+
-            // posts are visible in the viewport at once their dwell seconds can add up and
-            // exceed the actual time the app was open. Genuine dwell time can never be more
-            // than total active time, so we cap it here instead of showing an impossible
-            // "78 min dwell out of 65 min active".
-            const dwellMin = Math.min(Math.round((today.dwellSeconds || 0) / 60), activeMin);
-            const mindlessMin = Math.max(0, activeMin - dwellMin);
-            const mindlessPct = activeMin > 0 ? Math.round((mindlessMin / activeMin) * 100) : 0;
-
-            let weekActiveSec = 0;
-            for (let i = 0; i < 7; i++) {
-                const d = new Date(); d.setDate(d.getDate() - i);
-                weekActiveSec += (getUsageStats(d.toISOString().split('T')[0]).activeSeconds || 0);
-            }
-            const weekActiveHrs = (weekActiveSec / 3600).toFixed(1);
-
-            wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-hourglass-half text-amber-400"></i> Honest Usage Mirror</p>
-                <p class="text-[9px] text-slate-500">No sugarcoating — app khud tumhe bataata hai, business-interest ke against.</p>
-                ${activeMin > 0 ? `
-                    <p class="text-xs text-slate-200">Aaj: <b>${activeMin} min</b> app khula, jisme se sirf <b class="text-emerald-400">${dwellMin} min</b> genuinely kisi post pe ruke.</p>
-                    <p class="text-[10px] text-amber-400">${mindlessPct}% mindless scroll tha.</p>
-                ` : `<p class="text-[10px] text-slate-500">Aaj abhi tak track karne layak usage nahi hui.</p>`}
-                <p class="text-[9px] text-slate-500">Pichle 7 din: ${weekActiveHrs} ghante total.</p>
-            `;
         }
 
         // =====================================================================================
@@ -4650,7 +3628,6 @@
                     await safeDelete('your groups', supabaseClient.from('groups').delete().in('id', ownedGroupIds));
                 }
                 await safeDelete('group messages you sent', supabaseClient.from('group_messages').delete().eq('sender', u));
-                await safeDelete('bots you own', supabaseClient.from('bots').delete().eq('owner', u));
 
                 // ---- Step 3: now safe to delete everything owned directly by username.
                 await Promise.all([
@@ -4678,13 +3655,6 @@
 
                 // ---- Step 4: best-effort extras — optional tables that may not exist on every install.
                 await Promise.all([
-                    safeDelete('support pings sent', supabaseClient.from('support_pings').delete().eq('sender_username', u)),
-                    safeDelete('support pings received', supabaseClient.from('support_pings').delete().eq('receiver_username', u)),
-                    // NOTE: this is 'target_username', not 'to_username' — that's the actual
-                    // column anon_questions uses (see askAnonQuestion).
-                    safeDelete('anon questions to you', supabaseClient.from('anon_questions').delete().eq('target_username', u)),
-                    safeDelete('time capsules sent', supabaseClient.from('time_capsules').delete().eq('from_username', u)),
-                    safeDelete('time capsules received', supabaseClient.from('time_capsules').delete().eq('to_username', u)),
                     safeDelete('close friends list', supabaseClient.from('close_friends').delete().eq('owner', u)),
                 ]);
 
@@ -4715,103 +3685,6 @@
                 showAlertBanner(`Kuch data delete karte waqt error aaya${detail} — thodi der baad phir try karo.`, 'error');
             }
         }
-
-        // =====================================================================================
-        // FEATURE: IN-APP WALLET (TIPPING) — a simple internal-currency ledger ("Nexus Coins").
-        // Needs `profiles.wallet_balance` (numeric, default 0) and a `wallet_transactions` table
-        // (from_username, to_username, amount, note, created_at) in Supabase. If either is
-        // missing, we degrade gracefully: balance shows 0 and Send Tip shows a setup notice
-        // instead of crashing. NOTE: this does two separate updates (debit sender, credit
-        // receiver) rather than one atomic RPC, so under real concurrent load it isn't
-        // airtight — fine for a social-app tipping feature, not a real payments system.
-        // =====================================================================================
-        let walletFeatureAvailable = true;
-        let walletBalanceCache = 0;
-
-        async function refreshWalletBalance() {
-            try {
-                const { data, error } = await supabaseClient.from('profiles').select('wallet_balance').eq('username', currentUser).maybeSingle();
-                if (error) throw error;
-                walletFeatureAvailable = true;
-                walletBalanceCache = (data && typeof data.wallet_balance === 'number') ? data.wallet_balance : 0;
-            } catch (e) {
-                walletFeatureAvailable = false;
-                walletBalanceCache = 0;
-            }
-        }
-
-        async function renderWalletCard(isMe) {
-            const wrap = document.getElementById('walletCard');
-            if (!wrap) return;
-            if (!isMe) { wrap.innerHTML = ''; return; }
-            await refreshWalletBalance();
-            wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-wallet text-amber-400"></i> Nexus Wallet</p>
-                <div class="flex items-center justify-between bg-slate-900/80 border border-amber-500/20 rounded-xl p-2.5">
-                    <span class="text-[10px] text-slate-400">Balance</span>
-                    <span class="font-display font-bold text-amber-400 text-sm"><i class="fa-solid fa-coins mr-1"></i>${walletBalanceCache}</span>
-                </div>
-                <p class="text-[9px] text-slate-500">Kisi ke profile pe jaake "Send Tip" se coins bhejo. ${walletFeatureAvailable ? 'Recent transactions neeche apne activity me dikhengi.' : ''}</p>
-                ${!walletFeatureAvailable ? `<p class="text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Wallet ke liye Supabase me <code>profiles.wallet_balance</code> column aur <code>wallet_transactions</code> table chahiye.</p>` : ''}
-            `;
-        }
-        window.renderWalletCard = renderWalletCard;
-
-        let sendTipTargetUsername = null;
-        function openSendTipPrompt(username) {
-            sendTipTargetUsername = username;
-            document.getElementById('sendTipAmountInput').value = '';
-            document.getElementById('sendTipNoteInput').value = '';
-            document.getElementById('sendTipFeatureNotice').classList.toggle('hidden', walletFeatureAvailable);
-            const box = document.getElementById('sendTipInlineBox');
-            box.classList.remove('hidden');
-            box.classList.add('flex', 'flex-col');
-        }
-        window.openSendTipPrompt = openSendTipPrompt;
-
-        function closeSendTipPrompt() {
-            sendTipTargetUsername = null;
-            const box = document.getElementById('sendTipInlineBox');
-            if (box) { box.classList.add('hidden'); box.classList.remove('flex', 'flex-col'); }
-        }
-        window.closeSendTipPrompt = closeSendTipPrompt;
-
-        async function confirmSendTip() {
-            const amount = parseInt(document.getElementById('sendTipAmountInput').value, 10);
-            const note = document.getElementById('sendTipNoteInput').value.trim().slice(0, 60);
-            if (!sendTipTargetUsername || !amount || amount <= 0) {
-                showAlertBanner('Sahi amount daalo tip bhejne ke liye.', 'error');
-                return;
-            }
-            await refreshWalletBalance();
-            if (!walletFeatureAvailable) {
-                showAlertBanner('Wallet abhi Supabase me set up nahi hai — SQL setup complete karo.', 'error');
-                return;
-            }
-            if (amount > walletBalanceCache) {
-                showAlertBanner('Itne coins tumhare wallet me nahi hain.', 'error');
-                return;
-            }
-            try {
-                const { data: receiver } = await supabaseClient.from('profiles').select('wallet_balance').eq('username', sendTipTargetUsername).maybeSingle();
-                const receiverBalance = (receiver && typeof receiver.wallet_balance === 'number') ? receiver.wallet_balance : 0;
-
-                const { error: debitErr } = await supabaseClient.from('profiles').update({ wallet_balance: walletBalanceCache - amount }).eq('username', currentUser);
-                if (debitErr) throw debitErr;
-                const { error: creditErr } = await supabaseClient.from('profiles').update({ wallet_balance: receiverBalance + amount }).eq('username', sendTipTargetUsername);
-                if (creditErr) throw creditErr;
-
-                await supabaseClient.from('wallet_transactions').insert({ from_username: currentUser, to_username: sendTipTargetUsername, amount, note: note || null });
-
-                showAlertBanner(`${amount} coins ${sendTipTargetUsername} ko bhej diye! 🪙`, 'success');
-                closeSendTipPrompt();
-                renderWalletCard(true);
-            } catch (e) {
-                console.error('Send tip error:', e);
-                showAlertBanner('Tip bhejte waqt error aaya — dobara try karo.', 'error');
-            }
-        }
-        window.confirmSendTip = confirmSendTip;
 
         // =====================================================================================
         // FEATURE: OFFLINE MODE — shows a banner when the browser goes offline, keeps the last
@@ -4961,74 +3834,6 @@
             renderScreenshotAlertCard(true);
         }
         window.toggleScreenshotAlert = toggleScreenshotAlert;
-
-        // =====================================================================================
-        // FEATURE: PANIC MODE — instantly swaps the whole app for an innocuous fake "Notes"
-        // screen. Trigger: press Escape 3 times within 1.5 seconds, anywhere in the app.
-        // Unlock: tap the disguise's bottom input 5 times, then the real app reappears
-        // (this build re-enters via a tap-count, not a full password re-check, since there's
-        // no separate "app lock PIN" store yet — pair with a real PIN if you add one).
-        // =====================================================================================
-        let panicModeEnabled = localStorage.getItem('nexus_panic_enabled') !== 'false';
-        let panicEscCount = 0;
-        let panicEscTimer = null;
-        let panicUnlockTapCount = 0;
-
-        function triggerPanicMode() {
-            const overlay = document.getElementById('panicModeOverlay');
-            if (!overlay) return;
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-            panicUnlockTapCount = 0;
-        }
-        window.triggerPanicMode = triggerPanicMode;
-
-        function handlePanicUnlockTap() {
-            panicUnlockTapCount++;
-            if (panicUnlockTapCount >= 5) {
-                const overlay = document.getElementById('panicModeOverlay');
-                overlay.classList.add('hidden');
-                overlay.classList.remove('flex');
-                panicUnlockTapCount = 0;
-            }
-        }
-        window.handlePanicUnlockTap = handlePanicUnlockTap;
-
-        function initPanicMode() {
-            document.addEventListener('keyup', (e) => {
-                if (!panicModeEnabled || e.key !== 'Escape') return;
-                panicEscCount++;
-                clearTimeout(panicEscTimer);
-                panicEscTimer = setTimeout(() => { panicEscCount = 0; }, 1500);
-                if (panicEscCount >= 3) { panicEscCount = 0; triggerPanicMode(); }
-            });
-        }
-
-        function renderPanicModeCard(isMe) {
-            const wrap = document.getElementById('panicModeCard');
-            if (!wrap) return;
-            if (!isMe) { wrap.innerHTML = ''; return; }
-            wrap.innerHTML = `
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-[11px] font-bold text-slate-200"><i class="fa-solid fa-user-secret mr-1 text-slate-400"></i> Panic Mode</p>
-                        <p class="text-[9px] text-slate-500">Escape key 3 baar jaldi jaldi dabao — app turant ek fake "Notes" screen me badal jayega. Wapas laane ke liye us screen ke input box ko 5 baar tap karo.</p>
-                    </div>
-                    <button onclick="togglePanicModeEnabled()" id="panicModeToggleBtn" class="w-10 h-5 rounded-full ${panicModeEnabled ? 'bg-[#ff4d8d]' : 'bg-slate-700'} relative transition shrink-0">
-                        <span class="absolute top-0.5 ${panicModeEnabled ? 'left-5' : 'left-0.5'} w-4 h-4 rounded-full bg-white transition-transform"></span>
-                    </button>
-                </div>
-                <button onclick="triggerPanicMode()" class="w-full bg-slate-800 hover:bg-slate-700 py-1.5 rounded-xl text-[10px] font-bold text-slate-300 transition">Test it now</button>
-            `;
-        }
-        window.renderPanicModeCard = renderPanicModeCard;
-
-        function togglePanicModeEnabled() {
-            panicModeEnabled = !panicModeEnabled;
-            localStorage.setItem('nexus_panic_enabled', String(panicModeEnabled));
-            renderPanicModeCard(true);
-        }
-        window.togglePanicModeEnabled = togglePanicModeEnabled;
 
         // =====================================================================================
         // FEATURE: MULTI-LANGUAGE UI — translates the core navigation/action labels (the app's
@@ -5343,588 +4148,6 @@
         }
 
         // =====================================================================================
-        // FEATURE: YOUR GROWTH — a real 3D tree (WebGL via three.js) that visually represents
-        // follower count. Kam followers = ek chhota 3D seed. Followers badhne pe tree bada
-        // hota jaata hai — zyada branches, zyada depth, zyada patte, real lighting/shadow ke
-        // saath. Har baar modal khulne pe tree animate hoke "ugta" hai (seed → sapling → tree),
-        // aur drag karke ghumaya bhi ja sakta hai (jaise Nexus Universe).
-        // Deterministic per-user shape (mulberry32 seeded on username) so the tree's silhouette
-        // stays recognizably "theirs" while only its scale/complexity grows with followers.
-        // =====================================================================================
-        const GROWTH_TIERS = [
-            { min: 0,    label: 'Seed',            icon: '🌰', maxDepth: 0 },
-            { min: 5,    label: 'Sprout',           icon: '🌱', maxDepth: 3 },
-            { min: 15,   label: 'Sapling',          icon: '🌿', maxDepth: 4 },
-            { min: 30,   label: 'Young Tree',       icon: '🌳', maxDepth: 5 },
-            { min: 60,   label: 'Growing Tree',     icon: '🌳', maxDepth: 6 },
-            { min: 100,  label: 'Full Tree',        icon: '🌳', maxDepth: 7 },
-            { min: 250,  label: 'Big Tree',         icon: '🌲', maxDepth: 8 },
-            { min: 500,  label: 'Mighty Tree',      icon: '🌲', maxDepth: 9 },
-            { min: 1000, label: 'Legendary Tree',   icon: '🌴', maxDepth: 10 },
-        ];
-
-        function getGrowthTier(count) {
-            let tier = GROWTH_TIERS[0];
-            for (const t of GROWTH_TIERS) { if (count >= t.min) tier = t; }
-            return tier;
-        }
-
-        function getNextGrowthTier(count) {
-            for (const t of GROWTH_TIERS) { if (count < t.min) return t; }
-            return null;
-        }
-
-        let growthTreeState = null;
-        let growthTreeAnimFrame = null;
-        let gt3d = null; // { renderer, scene, camera, treeGroup, container, dragging, rotY, targetRotY }
-
-        function ensureGrowthTreeScene(container) {
-            if (gt3d) return;
-            if (typeof THREE === 'undefined') { console.error('THREE.js not loaded'); return; }
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputColorSpace;
-            container.appendChild(renderer.domElement);
-            renderer.domElement.style.width = '100%';
-            renderer.domElement.style.height = '100%';
-            renderer.domElement.style.display = 'block';
-            renderer.domElement.style.touchAction = 'none';
-
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100);
-            camera.position.set(0, 3.1, 8.6);
-            camera.lookAt(0, 2.2, 0);
-
-            const hemi = new THREE.HemisphereLight(0x9fd3ff, 0x2a1a0f, 1.0);
-            scene.add(hemi);
-            const sun = new THREE.DirectionalLight(0xfff3d6, 1.15);
-            sun.position.set(4, 8, 5);
-            scene.add(sun);
-            const fill = new THREE.DirectionalLight(0x8fbcff, 0.3);
-            fill.position.set(-5, 3, -4);
-            scene.add(fill);
-
-            const groundGeo = new THREE.CircleGeometry(4.4, 48);
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x18261a, roughness: 1 });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
-
-            // soft radial shadow blob under the tree for grounding/depth cue (cheap fake AO)
-            const shadowGeo = new THREE.CircleGeometry(1.6, 32);
-            const shadowCanvas = document.createElement('canvas');
-            shadowCanvas.width = 128; shadowCanvas.height = 128;
-            const sctx = shadowCanvas.getContext('2d');
-            const grad = sctx.createRadialGradient(64, 64, 5, 64, 64, 64);
-            grad.addColorStop(0, 'rgba(0,0,0,0.55)');
-            grad.addColorStop(1, 'rgba(0,0,0,0)');
-            sctx.fillStyle = grad;
-            sctx.fillRect(0, 0, 128, 128);
-            const shadowTex = new THREE.CanvasTexture(shadowCanvas);
-            const shadowMat = new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false });
-            const shadowMesh = new THREE.Mesh(shadowGeo, shadowMat);
-            shadowMesh.rotation.x = -Math.PI / 2;
-            shadowMesh.position.y = 0.01;
-            scene.add(shadowMesh);
-
-            const treeGroup = new THREE.Group();
-            scene.add(treeGroup);
-
-            gt3d = { renderer, scene, camera, treeGroup, container, dragging: false, lastX: 0, rotY: 0.6, targetRotY: 0.6, growDone: false };
-
-            const dom = renderer.domElement;
-            const onDown = (e) => { gt3d.dragging = true; gt3d.lastX = (e.touches ? e.touches[0].clientX : e.clientX); };
-            const onMove = (e) => {
-                if (!gt3d.dragging) return;
-                const x = (e.touches ? e.touches[0].clientX : e.clientX);
-                gt3d.targetRotY += (x - gt3d.lastX) * 0.008;
-                gt3d.lastX = x;
-            };
-            const onUp = () => { if (gt3d) gt3d.dragging = false; };
-            dom.addEventListener('pointerdown', onDown);
-            dom.addEventListener('pointermove', onMove);
-            window.addEventListener('pointerup', onUp);
-            dom.addEventListener('touchstart', onDown, { passive: true });
-            dom.addEventListener('touchmove', onMove, { passive: true });
-            dom.addEventListener('touchend', onUp);
-        }
-
-        function resizeGrowthTreeRenderer() {
-            if (!gt3d) return;
-            const rect = gt3d.container.getBoundingClientRect();
-            if (rect.width < 1 || rect.height < 1) return;
-            gt3d.renderer.setSize(rect.width, rect.height, false);
-            gt3d.camera.aspect = rect.width / rect.height;
-            gt3d.camera.updateProjectionMatrix();
-        }
-
-        function clearGrowthTreeGroup() {
-            if (!gt3d) return;
-            while (gt3d.treeGroup.children.length) {
-                const obj = gt3d.treeGroup.children.pop();
-                obj.traverse(o => {
-                    if (o.geometry) o.geometry.dispose();
-                    if (o.material) o.material.dispose();
-                });
-            }
-        }
-
-        // Cone-shaped random deviation around a parent direction, with a slight upward bias
-        // so the tree keeps reaching skyward instead of drooping — this is what makes the
-        // recursive branching look like a real, natural tree instead of random noise.
-        function deviateGrowthDirection(dir, spread, rand) {
-            const arbitrary = Math.abs(dir.y) < 0.9 ? new THREE.Vector3(0, 1, 0) : new THREE.Vector3(1, 0, 0);
-            const perp1 = new THREE.Vector3().crossVectors(dir, arbitrary).normalize();
-            const perp2 = new THREE.Vector3().crossVectors(dir, perp1).normalize();
-            const theta = rand() * Math.PI * 2;
-            const r = spread * (0.5 + rand() * 0.5);
-            const nd = dir.clone().addScaledVector(perp1, Math.cos(theta) * r).addScaledVector(perp2, Math.sin(theta) * r);
-            nd.lerp(new THREE.Vector3(0, 1, 0), 0.12);
-            return nd.normalize();
-        }
-
-        function buildGrowthBranchList(maxDepth, rand) {
-            const branches = [];
-            const leaves = [];
-            const CAP = 650;
-            function recurse(base, dir, len, radius, depth) {
-                if (depth > maxDepth || len < 0.05 || branches.length > CAP) return;
-                const tip = base.clone().addScaledVector(dir, len);
-                branches.push({ base: base.clone(), tip, depth, radius });
-
-                if (depth >= maxDepth - 2 && maxDepth > 0) {
-                    const n = 3 + Math.floor(rand() * 3);
-                    for (let i = 0; i < n; i++) {
-                        const off = new THREE.Vector3((rand() - 0.5) * 0.4, (rand() - 0.5) * 0.3, (rand() - 0.5) * 0.4);
-                        leaves.push({ pos: tip.clone().add(off), depth, scale: 0.16 + rand() * 0.12 });
-                    }
-                }
-                if (depth < maxDepth) {
-                    const n = depth === 0 ? 2 : (rand() > 0.5 ? 2 : 3);
-                    for (let i = 0; i < n; i++) {
-                        const nd = deviateGrowthDirection(dir, 0.85, rand);
-                        recurse(tip, nd, len * (0.66 + rand() * 0.14), radius * 0.67, depth + 1);
-                    }
-                }
-            }
-            recurse(new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), 1.55, 0.17, 0);
-            return { branches, leaves };
-        }
-
-        function buildGrowthTreeMeshes(maxDepth, rand) {
-            const { branches, leaves } = buildGrowthBranchList(maxDepth, rand);
-
-            const branchGeo = new THREE.CylinderGeometry(0.55, 1, 1, 7, 1);
-            branchGeo.translate(0, 0.5, 0);
-            const branchMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.85, metalness: 0.05 });
-            const branchMesh = new THREE.InstancedMesh(branchGeo, branchMat, Math.max(1, branches.length));
-            branchMesh.count = branches.length;
-
-            const leafGeo = new THREE.IcosahedronGeometry(1, 0);
-            const leafMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.55, metalness: 0.02 });
-            const leafMesh = new THREE.InstancedMesh(leafGeo, leafMat, Math.max(1, leaves.length));
-            leafMesh.count = leaves.length;
-
-            const barkNear = new THREE.Color(0x6b4226);
-            const barkFar = new THREE.Color(0x5aa863);
-            branches.forEach((b, i) => {
-                const t = maxDepth ? b.depth / maxDepth : 0;
-                branchMesh.setColorAt(i, barkNear.clone().lerp(barkFar, Math.min(1, t * 1.3)));
-            });
-            if (branchMesh.instanceColor) branchMesh.instanceColor.needsUpdate = true;
-
-            const leafGreen = new THREE.Color(0x4ade80);
-            const leafGold = new THREE.Color(0xfacc15);
-            const leafDeep = new THREE.Color(0x1f9d55);
-            leaves.forEach((l, i) => {
-                const r = rand();
-                leafMesh.setColorAt(i, r > 0.87 ? leafGold : (r > 0.4 ? leafGreen : leafDeep));
-            });
-            if (leafMesh.instanceColor) leafMesh.instanceColor.needsUpdate = true;
-
-            branchMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-            leafMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-
-            return { branches, leaves, branchMesh, leafMesh };
-        }
-
-        function updateGrowthTreeInstances(data, maxDepth, growProgress) {
-            const { branches, leaves, branchMesh, leafMesh } = data;
-            const m = new THREE.Matrix4();
-            const q = new THREE.Quaternion();
-            const up = new THREE.Vector3(0, 1, 0);
-            const dirVec = new THREE.Vector3();
-            const scaleVec = new THREE.Vector3();
-
-            branches.forEach((b, i) => {
-                const branchStart = maxDepth ? b.depth / (maxDepth + 2) : 0;
-                const branchSpan = maxDepth ? 1.6 / (maxDepth + 2) : 1;
-                let localP = (growProgress - branchStart) / branchSpan;
-                localP = Math.max(0, Math.min(1, localP));
-                const fullLen = b.base.distanceTo(b.tip);
-                const curLen = Math.max(0.0008, fullLen * localP);
-                dirVec.subVectors(b.tip, b.base).normalize();
-                q.setFromUnitVectors(up, dirVec);
-                scaleVec.set(b.radius, curLen, b.radius);
-                m.compose(b.base, q, scaleVec);
-                branchMesh.setMatrixAt(i, m);
-            });
-            branchMesh.instanceMatrix.needsUpdate = true;
-
-            const zeroQ = new THREE.Quaternion();
-            leaves.forEach((l, i) => {
-                const branchStart = maxDepth ? l.depth / (maxDepth + 2) : 0;
-                const branchSpan = maxDepth ? 1.6 / (maxDepth + 2) : 1;
-                let localP = (growProgress - branchStart) / branchSpan;
-                localP = Math.max(0, Math.min(1, (localP - 0.5) / 0.5));
-                const eased = localP <= 0 ? 0.0001 : (1 - Math.pow(1 - localP, 3)) * l.scale;
-                m.compose(l.pos, zeroQ, new THREE.Vector3(eased, eased, eased));
-                leafMesh.setMatrixAt(i, m);
-            });
-            leafMesh.instanceMatrix.needsUpdate = true;
-        }
-
-        function buildGrowthSeedStage() {
-            const group = new THREE.Group();
-            const seedGeo = new THREE.SphereGeometry(0.22, 16, 12);
-            seedGeo.scale(1, 1.3, 1);
-            const seedMat = new THREE.MeshStandardMaterial({ color: 0x8a5a2b, roughness: 0.6 });
-            const seed = new THREE.Mesh(seedGeo, seedMat);
-            seed.position.y = 0.22;
-            group.add(seed);
-
-            const stemGeo = new THREE.CylinderGeometry(0.03, 0.045, 1, 6, 1);
-            stemGeo.translate(0, 0.5, 0);
-            const stemMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.7 });
-            const stem = new THREE.Mesh(stemGeo, stemMat);
-            stem.position.y = 0.4;
-            stem.scale.y = 0.0001;
-            group.add(stem);
-
-            const leafGeo = new THREE.IcosahedronGeometry(1, 0);
-            leafGeo.scale(1.4, 0.4, 0.9);
-            const leafMat = new THREE.MeshStandardMaterial({ color: 0x4ade80, roughness: 0.55 });
-            const leafL = new THREE.Mesh(leafGeo, leafMat);
-            const leafR = new THREE.Mesh(leafGeo, leafMat.clone());
-            leafL.scale.setScalar(0.0001); leafR.scale.setScalar(0.0001);
-            group.add(leafL, leafR);
-
-            return { group, seed, stem, leafL, leafR };
-        }
-
-        function updateGrowthSeedStage(refs, progress) {
-            refs.group.position.y = Math.sin(progress * Math.PI) * 0.03;
-            refs.stem.scale.y = Math.max(0.0001, Math.min(1, progress * 1.4)) * 1.4;
-            if (progress > 0.55) {
-                const lp = Math.min(1, (progress - 0.55) / 0.45);
-                const eased = 1 - Math.pow(1 - lp, 3);
-                refs.leafL.scale.setScalar(0.12 * eased);
-                refs.leafR.scale.setScalar(0.12 * eased);
-                refs.leafL.position.set(-0.09, 0.42 + refs.stem.scale.y * 0.5, 0);
-                refs.leafR.position.set(0.09, 0.42 + refs.stem.scale.y * 0.5, 0);
-                refs.leafL.rotation.z = 0.5;
-                refs.leafR.rotation.z = -0.5;
-            }
-        }
-
-        function openGrowthTreeModal(username) {
-            if (!username) return;
-            const modal = document.getElementById('growthTreeModal');
-            const container = document.getElementById('growthTreeCanvasContainer');
-            if (!modal || !container) return;
-
-            const followerCount = (globalFollowsCache || []).filter(f => f.following === username).length;
-            const tier = getGrowthTier(followerCount);
-            const next = getNextGrowthTier(followerCount);
-
-            document.getElementById('growthTreeTitle').innerText = username === currentUser ? 'Your Growth' : `${username}'s Growth`;
-            document.getElementById('growthTreeFollowerCount').innerText = followerCount;
-            document.getElementById('growthTreeStageLabel').innerText = `${tier.icon} ${tier.label}`;
-            document.getElementById('growthTreeNextTierText').innerText = next
-                ? `${next.min - followerCount} aur followers → ${next.icon} ${next.label}`
-                : `Tumhara tree apni poori mahima mein hai 🌴`;
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            ensureGrowthTreeScene(container);
-            if (!gt3d) return; // THREE failed to load
-            resizeGrowthTreeRenderer();
-            clearGrowthTreeGroup();
-
-            let seedNum = 0;
-            for (let i = 0; i < username.length; i++) seedNum = (Math.imul(seedNum, 31) + username.charCodeAt(i)) | 0;
-            const rand = mulberry32(seedNum || 1);
-
-            if (tier.maxDepth === 0) {
-                const seedRefs = buildGrowthSeedStage();
-                gt3d.treeGroup.add(seedRefs.group);
-                growthTreeState = { maxDepth: 0, seedRefs, startTime: performance.now(), duration: 1700 };
-            } else {
-                const data = buildGrowthTreeMeshes(tier.maxDepth, rand);
-                gt3d.treeGroup.add(data.branchMesh, data.leafMesh);
-                growthTreeState = { maxDepth: tier.maxDepth, data, startTime: performance.now(), duration: 2600 };
-            }
-
-            gt3d.rotY = 0.6; gt3d.targetRotY = 0.6; gt3d.dragging = false; gt3d.growDone = false;
-
-            if (growthTreeAnimFrame) cancelAnimationFrame(growthTreeAnimFrame);
-            renderGrowthTreeFrame();
-        }
-        window.openGrowthTreeModal = openGrowthTreeModal;
-
-        function closeGrowthTreeModal() {
-            const modal = document.getElementById('growthTreeModal');
-            if (modal) { modal.classList.add('hidden'); modal.classList.remove('flex'); }
-            if (growthTreeAnimFrame) cancelAnimationFrame(growthTreeAnimFrame);
-            growthTreeAnimFrame = null;
-            growthTreeState = null;
-        }
-        window.closeGrowthTreeModal = closeGrowthTreeModal;
-
-        function renderGrowthTreeFrame() {
-            if (!gt3d || !growthTreeState) return;
-
-            const elapsed = performance.now() - growthTreeState.startTime;
-            const progress = Math.min(1, elapsed / growthTreeState.duration);
-            const eased = 1 - Math.pow(1 - progress, 3);
-
-            if (growthTreeState.data) {
-                updateGrowthTreeInstances(growthTreeState.data, growthTreeState.maxDepth, eased);
-            } else if (growthTreeState.seedRefs) {
-                updateGrowthSeedStage(growthTreeState.seedRefs, eased);
-            }
-
-            // gentle continuous auto-rotate once fully grown, like slowly inspecting a real
-            // 3D object on a turntable — pauses the moment the person drags it themselves.
-            if (progress >= 1 && !gt3d.dragging) gt3d.targetRotY += 0.0016;
-            gt3d.rotY += (gt3d.targetRotY - gt3d.rotY) * 0.08;
-            gt3d.treeGroup.rotation.y = gt3d.rotY;
-
-            gt3d.renderer.render(gt3d.scene, gt3d.camera);
-            growthTreeAnimFrame = requestAnimationFrame(renderGrowthTreeFrame);
-        }
-
-        window.addEventListener('resize', () => {
-            const modal = document.getElementById('growthTreeModal');
-            if (modal && !modal.classList.contains('hidden')) resizeGrowthTreeRenderer();
-        });
-
-        // =====================================================================================
-        // FEATURE: GROWTH FOREST — the requested username's Growth tree, planted together with
-        // every mutual follow's tree, in one shared 3D forest. Reuses the exact same tree-building
-        // math as "Your Growth" (same tiers, same deterministic per-username shape) so a person's
-        // tree looks identical whether you meet it here or in their solo Growth view. Because
-        // membership is just "username + whoever mutually follows them" — public, symmetric data —
-        // anyone involved sees the exact same forest, which is what makes it genuinely "shared"
-        // rather than a private simulation.
-        // =====================================================================================
-        let gf3d = null; // separate three.js context from gt3d so both modals can't clash
-        let growthForestAnimFrame = null;
-        let growthForestMembers = [];
-
-        function getForestMembers(username) {
-            if (!username) return [];
-            const following = new Set((globalFollowsCache || []).filter(f => f.follower === username).map(f => f.following));
-            const followers = new Set((globalFollowsCache || []).filter(f => f.following === username).map(f => f.follower));
-            const mutuals = Array.from(followers).filter(u => following.has(u) && u !== username).sort();
-            const MAX_TREES = 7; // keep the scene light on phones
-            return [username, ...mutuals.slice(0, MAX_TREES)];
-        }
-
-        function ensureGrowthForestScene(container) {
-            if (gf3d) return;
-            if (typeof THREE === 'undefined') { console.error('THREE.js not loaded'); return; }
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
-            renderer.outputColorSpace = THREE.SRGBColorSpace || renderer.outputColorSpace;
-            container.appendChild(renderer.domElement);
-            renderer.domElement.style.width = '100%';
-            renderer.domElement.style.height = '100%';
-            renderer.domElement.style.display = 'block';
-            renderer.domElement.style.touchAction = 'none';
-
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(48, 1, 0.1, 200);
-
-            const hemi = new THREE.HemisphereLight(0x9fd3ff, 0x14200f, 1.0);
-            scene.add(hemi);
-            const sun = new THREE.DirectionalLight(0xfff3d6, 1.1);
-            sun.position.set(6, 10, 6);
-            scene.add(sun);
-
-            const groundGeo = new THREE.CircleGeometry(14, 56);
-            const groundMat = new THREE.MeshStandardMaterial({ color: 0x122015, roughness: 1 });
-            const ground = new THREE.Mesh(groundGeo, groundMat);
-            ground.rotation.x = -Math.PI / 2;
-            scene.add(ground);
-
-            const forestGroup = new THREE.Group();
-            scene.add(forestGroup);
-
-            gf3d = { renderer, scene, camera, forestGroup, container, dragging: false, lastX: 0, rotY: 0.5, targetRotY: 0.5, zoom: 1 };
-
-            const dom = renderer.domElement;
-            const onDown = (e) => { gf3d.dragging = true; gf3d.lastX = (e.touches ? e.touches[0].clientX : e.clientX); };
-            const onMove = (e) => {
-                if (!gf3d.dragging) return;
-                const x = (e.touches ? e.touches[0].clientX : e.clientX);
-                gf3d.targetRotY += (x - gf3d.lastX) * 0.006;
-                gf3d.lastX = x;
-            };
-            const onUp = () => { if (gf3d) gf3d.dragging = false; };
-            dom.addEventListener('pointerdown', onDown);
-            dom.addEventListener('pointermove', onMove);
-            window.addEventListener('pointerup', onUp);
-            dom.addEventListener('touchstart', onDown, { passive: true });
-            dom.addEventListener('touchmove', onMove, { passive: true });
-            dom.addEventListener('touchend', onUp);
-            dom.addEventListener('wheel', (e) => {
-                e.preventDefault();
-                gf3d.zoom = Math.max(0.55, Math.min(2, gf3d.zoom - e.deltaY * 0.001));
-            }, { passive: false });
-        }
-
-        function resizeGrowthForestRenderer() {
-            if (!gf3d) return;
-            const rect = gf3d.container.getBoundingClientRect();
-            if (rect.width < 1 || rect.height < 1) return;
-            gf3d.renderer.setSize(rect.width, rect.height, false);
-            gf3d.camera.aspect = rect.width / rect.height;
-            gf3d.camera.updateProjectionMatrix();
-        }
-
-        function clearGrowthForestGroup() {
-            if (!gf3d) return;
-            while (gf3d.forestGroup.children.length) {
-                const obj = gf3d.forestGroup.children.pop();
-                obj.traverse(o => {
-                    if (o.geometry) o.geometry.dispose();
-                    if (o.material) o.material.dispose();
-                });
-            }
-        }
-
-        const FOREST_LEGEND_COLORS = ['#ff4d8d', '#9d7bff', '#35c7ff', '#facc15', '#4ade80', '#fb923c', '#f472b6', '#38bdf8'];
-
-        function openGrowthForestModal(username) {
-            if (!username) return;
-            const modal = document.getElementById('growthForestModal');
-            const container = document.getElementById('growthForestCanvasContainer');
-            if (!modal || !container) return;
-
-            growthForestMembers = getForestMembers(username);
-            document.getElementById('growthForestTitle').innerText = username === currentUser ? 'Your Growth Forest' : `${username}'s Growth Forest`;
-
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-
-            const emptyState = document.getElementById('growthForestEmptyState');
-            const legend = document.getElementById('growthForestLegend');
-            if (growthForestMembers.length <= 1) {
-                emptyState.classList.remove('hidden');
-                legend.innerHTML = '';
-                return;
-            }
-            emptyState.classList.add('hidden');
-
-            ensureGrowthForestScene(container);
-            if (!gf3d) return;
-            resizeGrowthForestRenderer();
-            clearGrowthForestGroup();
-
-            const n = growthForestMembers.length;
-            const spacing = n <= 3 ? 4.6 : (n <= 5 ? 3.9 : 3.3);
-            const radius = spacing * n / (2 * Math.PI) + 1.4;
-
-            legend.innerHTML = growthForestMembers.map((name, i) => {
-                const color = FOREST_LEGEND_COLORS[i % FOREST_LEGEND_COLORS.length];
-                return `<span class="text-[9px] font-bold px-2 py-1 rounded-full bg-slate-900/80 border border-slate-700 text-slate-200" style="box-shadow: inset 3px 0 0 ${color}">${name === currentUser ? 'You' : name}</span>`;
-            }).join('');
-
-            growthForestMembers.forEach((name, i) => {
-                const followerCount = (globalFollowsCache || []).filter(f => f.following === name).length;
-                const tier = getGrowthTier(followerCount);
-
-                let seedNum = 0;
-                for (let c = 0; c < name.length; c++) seedNum = (Math.imul(seedNum, 31) + name.charCodeAt(c)) | 0;
-                const rand = mulberry32(seedNum || 1);
-
-                const angle = (i / n) * Math.PI * 2;
-                const px = Math.sin(angle) * radius;
-                const pz = Math.cos(angle) * radius;
-
-                const holder = new THREE.Group();
-                holder.position.set(px, 0, pz);
-
-                if (tier.maxDepth === 0) {
-                    const seedRefs = buildGrowthSeedStage();
-                    updateGrowthSeedStage(seedRefs, 1); // forest shows trees fully grown, not the sprouting animation
-                    holder.add(seedRefs.group);
-                } else {
-                    const data = buildGrowthTreeMeshes(tier.maxDepth, rand);
-                    updateGrowthTreeInstances(data, tier.maxDepth, 1);
-                    holder.add(data.branchMesh, data.leafMesh);
-                }
-
-                // small floating name tag so it's clear whose tree is whose
-                const labelCanvas = document.createElement('canvas');
-                labelCanvas.width = 256; labelCanvas.height = 64;
-                const lctx = labelCanvas.getContext('2d');
-                lctx.fillStyle = 'rgba(10,10,16,0.75)';
-                lctx.roundRect ? (lctx.roundRect(4, 14, 248, 36, 18), lctx.fill()) : lctx.fillRect(4, 14, 248, 36);
-                lctx.font = 'bold 26px sans-serif';
-                lctx.fillStyle = i === 0 ? '#ffe08a' : '#e2e8f0';
-                lctx.textAlign = 'center';
-                lctx.fillText(name === currentUser ? 'You' : name, 128, 40);
-                const labelTex = new THREE.CanvasTexture(labelCanvas);
-                const labelMat = new THREE.SpriteMaterial({ map: labelTex, depthTest: false });
-                const label = new THREE.Sprite(labelMat);
-                label.scale.set(1.8, 0.45, 1);
-                label.position.y = 2.6 + tier.maxDepth * 0.28;
-                holder.add(label);
-
-                gf3d.forestGroup.add(holder);
-            });
-
-            gf3d.rotY = 0.5; gf3d.targetRotY = 0.5; gf3d.zoom = Math.max(0.6, Math.min(1.4, 8 / radius));
-
-            if (growthForestAnimFrame) cancelAnimationFrame(growthForestAnimFrame);
-            renderGrowthForestFrame();
-        }
-        window.openGrowthForestModal = openGrowthForestModal;
-
-        function closeGrowthForestModal() {
-            const modal = document.getElementById('growthForestModal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-            if (growthForestAnimFrame) cancelAnimationFrame(growthForestAnimFrame);
-            growthForestAnimFrame = null;
-        }
-        window.closeGrowthForestModal = closeGrowthForestModal;
-
-        function renderGrowthForestFrame() {
-            if (!gf3d) return;
-            if (!gf3d.dragging) gf3d.targetRotY += 0.0012; // slow ambient drift through the forest
-            gf3d.rotY += (gf3d.targetRotY - gf3d.rotY) * 0.08;
-            gf3d.forestGroup.rotation.y = gf3d.rotY;
-
-            const dist = 15 / gf3d.zoom;
-            gf3d.camera.position.set(0, 4.4, dist);
-            gf3d.camera.lookAt(0, 2.4, 0);
-
-            gf3d.renderer.render(gf3d.scene, gf3d.camera);
-            growthForestAnimFrame = requestAnimationFrame(renderGrowthForestFrame);
-        }
-
-        window.addEventListener('resize', () => {
-            const modal = document.getElementById('growthForestModal');
-            if (modal && !modal.classList.contains('hidden')) resizeGrowthForestRenderer();
-        });
-
-        // =====================================================================================
         // FEATURE: PRESENCE CONSTELLATION — mutuals rendered as ambient stars in a night sky.
         // No unread counts, no push notification — just a quiet, glanceable sense of who you're
         // closest to right now. Star position is a deterministic hash (same trick as Nexus
@@ -6166,7 +4389,7 @@
             try {
                 const myProfile = globalProfilesFullCache[currentUser] || {};
                 const theirProfile = globalProfilesFullCache[partnerUsername] || {};
-                const prompt = `Do log abhi-abhi Handshake Connect feature se (phone paas laakar) connect hue hain.\nMain: ${currentUser}${myProfile.mood ? ', mood: ' + myProfile.mood : ''}\nDoosra: ${partnerUsername}${theirProfile.mood ? ', mood: ' + theirProfile.mood : ''}\n\nEk hi bahut chhota (max 18 shabd), casual, friendly Hinglish icebreaker line likho jo main abhi unhe bhej sakoon. Sirf woh ek line likho, kuch aur text ya quotes nahi.`;
+                const prompt = `Do log abhi-abhi Handshake Connect feature se (phone paas laakar) connect hue hain.\nMain: ${currentUser}\nDoosra: ${partnerUsername}\n\nEk hi bahut chhota (max 18 shabd), casual, friendly Hinglish icebreaker line likho jo main abhi unhe bhej sakoon. Sirf woh ek line likho, kuch aur text ya quotes nahi.`;
                 const text = await askNexusAIOnce(prompt, "Tum ek friendly icebreaker line generator ho naye connections ke liye. Sirf ek chhota casual Hinglish line do, koi extra text ya quotes nahi.");
                 el.innerText = (text || '').replace(/^["'“]+|["'”]+$/g, '').trim() || `Hey ${partnerUsername}! Milke acha laga 👋`;
             } catch (e) {
@@ -6412,261 +4635,6 @@
                 closeFriendsFeatureAvailable = false;
                 renderCloseFriendToggle(username);
             }
-        }
-
-
-        // =====================================================================================
-        // FEATURE: ANONYMOUS Q&A
-        // =====================================================================================
-        function renderAnonQaSection(username) {
-            const wrap = document.getElementById('anonQaSection');
-            const isMe = username === currentUser;
-
-            // FEATURE: PRIVATE ACCOUNT ENFORCEMENT — questions/answers are profile detail too
-            if (!isMe && isPrivateAndNotFollowing(username)) {
-                wrap.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-1"><i class="fa-solid fa-lock mr-1"></i>Follow ${username} to see this.</p>`;
-                return;
-            }
-
-            if (!anonQaFeatureAvailable) {
-                wrap.innerHTML = `<p class="text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Anonymous Q&A ke liye ek chhoti si SQL setup baaki hai.</p>`;
-                return;
-            }
-
-            const answered = anonQuestionsCache.filter(q => q.target_username === username && q.answer);
-            let html = '';
-
-            if (isMe) {
-                const pending = anonQuestionsCache.filter(q => q.target_username === username && !q.answer);
-                html += `<h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-comments text-[#ff4d8d]"></i> Anonymous Questions ${pending.length ? `<span class="text-[#ff4d8d]">(${pending.length})</span>` : ''}</h2>`;
-                if (pending.length === 0) {
-                    html += `<p class="text-[10px] text-slate-500">Koi naya anonymous sawaal nahi hai abhi.</p>`;
-                } else {
-                    html += pending.map(q => `
-                        <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-1.5">
-                            <p class="text-xs text-slate-200">${(q.question || '').replace(/</g,'&lt;')}</p>
-                            <div class="flex gap-1.5">
-                                <input type="text" id="anonAnswerInput-${q.id}" placeholder="Public jawab likho..." class="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
-                                <button onclick="answerAnonQuestion('${q.id}')" class="shrink-0 bg-[#ff4d8d] px-2.5 py-1 rounded-lg text-[10px] font-bold text-white">Reply</button>
-                                <button onclick="deleteAnonQuestion('${q.id}')" class="shrink-0 text-slate-500 hover:text-red-400 text-[11px] px-1" title="Delete"><i class="fa-solid fa-trash"></i></button>
-                            </div>
-                        </div>
-                    `).join('');
-                }
-            } else {
-                html += `<h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-comments text-[#ff4d8d]"></i> Ask ${username} anonymously</h2>`;
-                html += `
-                    <div class="flex gap-1.5">
-                        <input type="text" id="anonQuestionInput" maxlength="150" placeholder="Kuch bhi pucho, tumhara naam nahi dikhega..." class="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
-                        <button onclick="askAnonQuestion('${username}')" class="shrink-0 bg-[#ff4d8d] px-3 py-1.5 rounded-xl text-[11px] font-bold text-white">Send</button>
-                    </div>
-                `;
-            }
-
-            if (answered.length > 0) {
-                html += `<div class="pt-1.5 space-y-1.5">` + answered.slice(0, 8).map(q => `
-                    <div class="bg-slate-900/40 border border-slate-800/70 rounded-xl p-2.5 space-y-1">
-                        <p class="text-[10px] text-slate-500"><i class="fa-solid fa-user-secret mr-1"></i>Anonymous asked</p>
-                        <p class="text-xs text-slate-300">${(q.question || '').replace(/</g,'&lt;')}</p>
-                        <p class="text-xs text-slate-100 border-l-2 border-[#ff4d8d] pl-2">${(q.answer || '').replace(/</g,'&lt;')}</p>
-                    </div>
-                `).join('') + `</div>`;
-            }
-
-            wrap.innerHTML = html;
-        }
-
-        async function askAnonQuestion(targetUsername) {
-            const input = document.getElementById('anonQuestionInput');
-            const text = input.value.trim();
-            if (!text) return;
-            try {
-                const { error } = await supabaseClient.from('anon_questions').insert({ target_username: targetUsername, question: text });
-                if (error) throw error;
-                input.value = '';
-                await fetchAllData();
-                renderAnonQaSection(targetUsername);
-                showInAppBanner('✅ Sent', 'Tumhara anonymous sawaal bhej diya gaya.');
-            } catch (e) {
-                console.warn('Nexus: anon_questions table not set up yet.', e);
-                anonQaFeatureAvailable = false;
-                renderAnonQaSection(targetUsername);
-            }
-        }
-
-        async function answerAnonQuestion(id) {
-            const input = document.getElementById('anonAnswerInput-' + id);
-            const text = input ? input.value.trim() : '';
-            if (!text) return;
-            await supabaseClient.from('anon_questions').update({ answer: text, answered_at: new Date().toISOString() }).eq('id', id);
-            await fetchAllData();
-            renderAnonQaSection(currentUser);
-        }
-
-        async function deleteAnonQuestion(id) {
-            await supabaseClient.from('anon_questions').delete().eq('id', id);
-            await fetchAllData();
-            renderAnonQaSection(currentUser);
-        }
-
-        // =====================================================================================
-        // FEATURE: VIBE MATCH — AI-estimated compatibility score based on shared chat history
-        // =====================================================================================
-        async function checkVibeMatch(targetUser) {
-            if (!targetUser || targetUser === currentUser) return;
-            const modal = document.getElementById('vibeMatchModal');
-            const body = document.getElementById('vibeMatchBody');
-            modal.classList.remove('hidden');
-            body.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-2xl text-[#35c7ff]"></i>`;
-
-            try {
-                const { data: rawMessages } = await supabaseClient
-                    .from('messages').select('*')
-                    .or(`and(sender.eq.${currentUser},receiver.eq.${targetUser}),and(sender.eq.${targetUser},receiver.eq.${currentUser})`)
-                    .order('created_at', { ascending: false }).limit(40);
-                const recent = (rawMessages || []).reverse().filter(m => m.text);
-
-                const prompt = recent.length > 0
-                    ? `Yeh do dosto (Main aur ${targetUser}) ke beech ek chat transcript hai:\n${recent.map(m => `${m.sender === currentUser ? 'Main' : targetUser}: ${m.text}`).join('\n')}\n\nIsse ek fun, halka-fulka "vibe match %" (0-100 ke beech ek number) nikaalo based on energy/tone match, aur ek chhoti (max 15 shabd) mazedaar wajah do. Sirf JSON return karo: {"score": number, "reason": "..."}`
-                    : `${currentUser} aur ${targetUser} ke beech abhi tak koi chat nahi hui hai. Ek random, fun "vibe match %" (40-90 ke beech) generate karo naye dosti ke liye, aur ek chhoti (max 15 shabd) chulbuli wajah do. Sirf JSON return karo: {"score": number, "reason": "..."}`;
-
-                const raw = await askNexusAIOnce(prompt, "Tum ek fun 'vibe match' calculator ho ek social app ke liye. Sirf requested JSON object return karo, koi extra text nahi.");
-                const match = raw.match(/\{[\s\S]*\}/);
-                const result = match ? JSON.parse(match[0]) : { score: 60, reason: "Vibes are immeasurable ✨" };
-                const score = Math.max(0, Math.min(100, parseInt(result.score) || 60));
-
-                body.innerHTML = `
-                    <div class="text-5xl font-display font-extrabold bg-gradient-to-r from-[#ff4d8d] via-[#9d7bff] to-[#35c7ff] bg-clip-text text-transparent">${score}%</div>
-                    <p class="text-xs text-slate-300 mt-2">${currentUser} × ${targetUser}</p>
-                    <p class="text-[11px] text-slate-400 mt-1.5 px-2">${(result.reason || '').replace(/</g,'&lt;')}</p>
-                `;
-            } catch (e) {
-                // BUGFIX: this error was being swallowed with no logging at all, so a broken
-                // AI call, a bad Supabase query, or a JSON parse failure all looked identical
-                // to the user and were impossible to diagnose from the console.
-                console.error("checkVibeMatch failed for target user:", targetUser, e);
-                body.innerHTML = `<p class="text-xs text-slate-400">Vibe check abhi available nahi hai, thodi der baad try karo.</p>`;
-            }
-        }
-
-        // =====================================================================================
-        // FEATURE: NEXUS WRAPPED — AI-generated recap of the last 30 days
-        // =====================================================================================
-        async function generateNexusWrapped() {
-            const modal = document.getElementById('wrappedModal');
-            const body = document.getElementById('wrappedBody');
-            modal.classList.remove('hidden');
-            body.innerHTML = `<i class="fa-solid fa-spinner fa-spin text-2xl"></i>`;
-
-            try {
-                const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
-                const myPosts = globalPostsCache.filter(p => p.username === currentUser && new Date(p.created_at).getTime() >= cutoff);
-                const myPostIds = new Set(myPosts.map(p => p.id));
-                const likesReceived = globalLikesCache.filter(l => myPostIds.has(l.post_id)).length;
-                const commentsReceived = globalCommentsCache.filter(c => myPostIds.has(c.post_id)).length;
-                const newFollowers = globalFollowsCache.filter(f => f.following === currentUser).length;
-                const streak = computePostStreak(globalPostsCache.filter(p => p.username === currentUser));
-
-                const stats = `Posts: ${myPosts.length}, Likes received: ${likesReceived}, Comments received: ${commentsReceived}, Total followers: ${newFollowers}, Current streak: ${streak} din`;
-                const prompt = `Yeh ${currentUser} ke pichle 30 din ke Nexus app stats hain: ${stats}.\n\nEk fun, hype-filled, casual Hinglish "Wrapped" style recap likho (jaise Spotify Wrapped) — 3-4 chhoti lines mein, emojis ke sath, thoda celebratory tone mein.`;
-                const recap = await askNexusAIOnce(prompt, "Tum ek hype, fun 'yearly/monthly recap' generator ho, jaise Spotify Wrapped. Short, energetic, casual Hinglish, emojis zaroor use karo.");
-
-                body.innerHTML = `
-                    <div class="grid grid-cols-2 gap-2 mb-3 text-left">
-                        <div class="bg-white/15 rounded-xl p-2"><p class="text-lg font-display font-bold">${myPosts.length}</p><p class="text-[9px] opacity-80">Posts (30d)</p></div>
-                        <div class="bg-white/15 rounded-xl p-2"><p class="text-lg font-display font-bold">${likesReceived}</p><p class="text-[9px] opacity-80">Likes</p></div>
-                        <div class="bg-white/15 rounded-xl p-2"><p class="text-lg font-display font-bold">${commentsReceived}</p><p class="text-[9px] opacity-80">Comments</p></div>
-                        <div class="bg-white/15 rounded-xl p-2"><p class="text-lg font-display font-bold">🔥 ${streak}</p><p class="text-[9px] opacity-80">Day streak</p></div>
-                    </div>
-                    <p class="text-xs leading-relaxed whitespace-pre-wrap">${(recap || '').replace(/</g,'&lt;')}</p>
-                `;
-            } catch (e) {
-                // BUGFIX: same silent-catch issue as Vibe Check — nothing was ever logged,
-                // so a failed AI call or a bad stats computation left zero trace to debug.
-                console.error("generateNexusWrapped failed for user:", currentUser, e);
-                body.innerHTML = `<p class="text-xs">Wrapped abhi generate nahi ho paya, thodi der baad try karo.</p>`;
-            }
-        }
-
-        // =====================================================================================
-        // FEATURE: TIME CAPSULE — locked messages that unlock on a future date
-        // =====================================================================================
-        function openTimeCapsuleModal() {
-            document.getElementById('timeCapsuleForUser').innerText = activeChatUser ? `for ${activeChatUser}` : '';
-            document.getElementById('timeCapsuleText').value = '';
-            const dateInput = document.getElementById('timeCapsuleDate');
-            const minDate = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-            dateInput.min = minDate;
-            dateInput.value = minDate;
-            document.getElementById('timeCapsuleFeatureNotice').classList.toggle('hidden', timeCapsuleFeatureAvailable);
-            renderTimeCapsuleList();
-            document.getElementById('timeCapsuleModal').classList.remove('hidden');
-        }
-
-        async function sendTimeCapsule() {
-            if (!timeCapsuleFeatureAvailable) return;
-            const text = document.getElementById('timeCapsuleText').value.trim();
-            const dateVal = document.getElementById('timeCapsuleDate').value;
-            const to = activeChatUser || currentUser;
-            if (!text || !dateVal) return;
-            try {
-                const { error } = await supabaseClient.from('time_capsules').insert({
-                    from_username: currentUser,
-                    to_username: to,
-                    content: text,
-                    unlock_at: new Date(dateVal + 'T00:00:00').toISOString()
-                });
-                if (error) throw error;
-                document.getElementById('timeCapsuleText').value = '';
-                await fetchAllData();
-                renderTimeCapsuleList();
-                showInAppBanner('🔒 Locked', `Capsule ${to} ke liye lock ho gaya.`);
-            } catch (e) {
-                console.warn('Nexus: time_capsules table not set up yet.', e);
-                timeCapsuleFeatureAvailable = false;
-                document.getElementById('timeCapsuleFeatureNotice').classList.remove('hidden');
-            }
-        }
-
-        function renderTimeCapsuleList() {
-            const wrap = document.getElementById('timeCapsuleList');
-            if (!timeCapsuleFeatureAvailable) { wrap.innerHTML = ''; return; }
-
-            const relevant = timeCapsulesCache.filter(c => c.from_username === currentUser || c.to_username === currentUser);
-            if (relevant.length === 0) {
-                wrap.innerHTML = `<p class="text-[10px] text-slate-500">Koi capsule nahi hai abhi.</p>`;
-                return;
-            }
-            const now = Date.now();
-            wrap.innerHTML = relevant.map(c => {
-                const isUnlocked = new Date(c.unlock_at).getTime() <= now;
-                const otherParty = c.from_username === currentUser ? `To ${c.to_username}` : `From ${c.from_username}`;
-                return `
-                    <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-2.5 space-y-1">
-                        <div class="flex items-center justify-between text-[9px] text-slate-500">
-                            <span>${otherParty}</span>
-                            <span>${isUnlocked ? '🔓 Unlocked' : '🔒 ' + new Date(c.unlock_at).toLocaleDateString()}</span>
-                        </div>
-                        <p class="text-xs text-slate-200">${isUnlocked ? (c.content || '').replace(/</g,'&lt;') : '•••••••••••••••••'}</p>
-                    </div>
-                `;
-            }).join('');
-        }
-
-
-        // Counts consecutive calendar days (ending today or yesterday) that have at least one post.
-        function computePostStreak(userPosts) {
-            if (!userPosts || !userPosts.length) return 0;
-            const dayKeys = new Set(userPosts.map(p => new Date(p.created_at).toDateString()));
-            let streak = 0;
-            let cursor = new Date();
-            // Allow the streak to still show if today has no post yet, as long as yesterday does.
-            if (!dayKeys.has(cursor.toDateString())) cursor.setDate(cursor.getDate() - 1);
-            while (dayKeys.has(cursor.toDateString())) {
-                streak++;
-                cursor.setDate(cursor.getDate() - 1);
-            }
-            return streak;
         }
 
         function switchProfileTab(tab) {
@@ -7063,30 +5031,6 @@
             }, 'image/jpeg');
         }
 
-        // FEATURE: MOOD STATUS
-        let selectedMoodEmoji = '😊';
-        function selectMoodEmoji(emoji) {
-            selectedMoodEmoji = emoji;
-            document.querySelectorAll('#moodEmojiPicker [data-mood-emoji]').forEach(el => {
-                el.classList.toggle('bg-slate-800', el.dataset.moodEmoji === emoji);
-            });
-        }
-        async function saveMoodStatus() {
-            const text = document.getElementById('moodTextInput').value.trim();
-            try {
-                const { error } = await supabaseClient.from('profiles')
-                    .update({ mood: text || null, mood_emoji: text ? selectedMoodEmoji : null, mood_updated_at: new Date().toISOString() })
-                    .eq('username', currentUser);
-                if (error) throw error;
-                document.getElementById('moodFeatureNotice').classList.add('hidden');
-                await fetchAllData();
-                openProfile(currentUser, false);
-            } catch (e) {
-                console.warn('Nexus: mood columns not set up on profiles yet.', e);
-                document.getElementById('moodFeatureNotice').classList.remove('hidden');
-            }
-        }
-
         async function saveProfileChanges() {
             const newUsername = document.getElementById('editUsernameInput').value.trim();
             if(!newUsername || newUsername === currentUser) return;
@@ -7143,41 +5087,6 @@
             showAlertBanner('Username updated successfully!', 'success');
         }
 
-        // FEATURE: CUSTOM CHAT THEMES — purely local (localStorage per chat partner), no DB needed
-        const CHAT_THEMES = [
-            { key: 'default', label: 'Default', css: '' },
-            { key: 'sunset', label: 'Sunset', css: 'linear-gradient(160deg, rgba(255,77,141,0.18), rgba(15,15,24,0))' },
-            { key: 'ocean', label: 'Ocean', css: 'linear-gradient(160deg, rgba(53,199,255,0.18), rgba(15,15,24,0))' },
-            { key: 'violet', label: 'Violet', css: 'linear-gradient(160deg, rgba(157,123,255,0.18), rgba(15,15,24,0))' },
-            { key: 'forest', label: 'Forest', css: 'linear-gradient(160deg, rgba(16,185,129,0.16), rgba(15,15,24,0))' },
-            { key: 'amber', label: 'Amber', css: 'linear-gradient(160deg, rgba(245,165,36,0.16), rgba(15,15,24,0))' },
-            { key: 'mono', label: 'Mono', css: 'linear-gradient(160deg, rgba(148,163,184,0.14), rgba(15,15,24,0))' },
-            { key: 'nexus', label: 'Nexus', css: 'linear-gradient(160deg, rgba(255,77,141,0.14), rgba(157,123,255,0.10), rgba(53,199,255,0.10))' }
-        ];
-        function chatThemeKey(username) { return 'nexus_chat_theme_' + currentUser + '_' + username; }
-        function applyChatTheme(username) {
-            const saved = localStorage.getItem(chatThemeKey(username)) || 'default';
-            const theme = CHAT_THEMES.find(t => t.key === saved) || CHAT_THEMES[0];
-            document.getElementById('chatMessagesBox').style.backgroundImage = theme.css;
-        }
-        function openChatThemeModal() {
-            if (!activeChatUser) return;
-            document.getElementById('chatThemeForUser').innerText = 'with ' + activeChatUser;
-            const current = localStorage.getItem(chatThemeKey(activeChatUser)) || 'default';
-            document.getElementById('chatThemeGrid').innerHTML = CHAT_THEMES.map(t => `
-                <button onclick="selectChatTheme('${t.key}')" class="aspect-square rounded-xl border-2 ${current === t.key ? 'border-[#ff4d8d]' : 'border-slate-800'} flex items-center justify-center text-[9px] text-slate-300 font-semibold overflow-hidden relative" style="background: #0f0f18; background-image: ${t.css || 'none'}">
-                    ${t.label}
-                </button>
-            `).join('');
-            document.getElementById('chatThemeModal').classList.remove('hidden');
-        }
-        function selectChatTheme(key) {
-            if (!activeChatUser) return;
-            localStorage.setItem(chatThemeKey(activeChatUser), key);
-            applyChatTheme(activeChatUser);
-            document.getElementById('chatThemeModal').classList.add('hidden');
-        }
-
         function selectChatUser(username, updateState = true) {
             activeChatUser = username;
             if(updateState) {
@@ -7195,7 +5104,6 @@
             updateOnlineStatusUI();
             cancelReply();
             hideTypingIndicator();
-            applyChatTheme(username);
             updateChatRequestUI(username); // FEATURE: MESSAGE REQUESTS
 
             // (Re)create a dedicated broadcast channel to send typing signals to this chat partner
@@ -7735,14 +5643,10 @@
 
                 // Deleted-for-everyone: show placeholder instead of real content
                 let bodyHtml;
-                const isStickerMsg = msg.type === 'sticker' && msg.media_url && !msg.is_deleted;
                 if (msg.is_deleted) {
                     bodyHtml = `<p class="leading-relaxed italic text-slate-500 flex items-center gap-1"><i class="fa-solid fa-ban text-[10px]"></i> This message was deleted</p>`;
                 } else if (msg.type === 'voice' && msg.audio_url) {
                     bodyHtml = `<audio src="${msg.audio_url}" controls class="max-w-[220px] h-9"></audio>`;
-                } else if (isStickerMsg) {
-                    // FEATURE: GIFs & STICKERS — stickers render borderless/no-bubble, like a real sticker
-                    bodyHtml = `<img src="${msg.media_url}" class="w-28 h-28 object-contain drop-shadow-lg">`;
                 } else {
                     const fadeStyleAttr = fadeInfo ? ` style="filter:blur(${fadeInfo.blur}px); opacity:${fadeInfo.opacity}; transition: filter 1s ease, opacity 1s ease;"` : '';
                     const fadeBadge = fadeInfo ? `<i class="fa-solid fa-water text-[8px] text-slate-500 ml-1" title="Reply karo isse pehle ki ye poori tarah fade ho jaaye"></i>` : '';
@@ -7760,7 +5664,7 @@
 
                 htmlContent += `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5 msg-swipe-item" data-msg-id="${msg.id}" data-is-me="${isMe ? '1' : '0'}" style="touch-action: pan-y;">
-                        <div class="max-w-[80%] ${isStickerMsg ? 'p-0 bg-transparent shadow-none' : `p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#ff4d8d] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'}`} text-xs space-y-1.5 relative group" ondblclick="${msg.is_deleted ? '' : `openReactionPicker(event, '${msg.id}', 'dm')`}">
+                        <div class="max-w-[80%] p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#ff4d8d] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'} text-xs space-y-1.5 relative group" ondblclick="${msg.is_deleted ? '' : `openReactionPicker(event, '${msg.id}', 'dm')`}">
                             ${replyBlockHtml}
                             ${bodyHtml}
                             ${!msg.is_deleted ? `<button onclick="setReplyTarget('${msg.id}')" class="absolute -top-2 ${isMe ? '-left-2' : '-right-2'} bg-slate-800 text-[#35c7ff] p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="Reply"><i class="fa-solid fa-reply"></i></button>` : ''}
@@ -7809,16 +5713,6 @@
 
             updatePinnedBanner('dm');
 
-            // FEATURE: AI SMART REPLIES — only (re)generate when a *new* incoming message arrives
-            const lastMsg = messages[messages.length - 1];
-            if (lastMsg && lastMsg.sender === targetUser && !lastMsg.is_deleted && lastMsg.text) {
-                if (lastSmartReplyTrigger !== lastMsg.id) {
-                    lastSmartReplyTrigger = lastMsg.id;
-                    generateSmartReplies(messages.slice(-6));
-                }
-            } else {
-                hideSmartReplies();
-            }
         }
 
         // ===== FEATURE: PINNED MESSAGES IN CHAT =====
@@ -8131,14 +6025,10 @@
             if (!globalPostsCache) return;
 
             renderOnThisDay();
-            flushUsageDwellObserver(); // FEATURE: HONEST USAGE MIRROR — settle any in-flight dwell time before re-render
             feedStream.innerHTML = '';
             globalPostsCache.filter(post => !isBlockedWith(post.username) && !isPrivateAndNotFollowing(post.username)).forEach(post => {
                 const postLikes = globalLikesCache.filter(l => l.post_id === post.id);
                 const hasLiked = postLikes.some(l => l.username === currentUser);
-                // FEATURE: REACTION SPEED GAME — badge for whoever liked this post first (needs post_likes.created_at)
-                const timedLikes = postLikes.filter(l => l.created_at).sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                const firstReactor = timedLikes.length > 0 ? timedLikes[0].username : null;
                 const postComments = globalCommentsCache.filter(c => c.post_id === post.id);
                 const posterAvatar = globalProfilesCache[post.username];
                 // FEATURE: MULTI-PERSONA IDENTITY — a post's platform tag IS its persona face,
@@ -8177,7 +6067,6 @@
                         <button onclick="toggleLike('${post.id}')" class="hover:text-[#ff4d8d] transition flex items-center gap-1">
                             <i class="fa-solid fa-heart ${hasLiked ? 'text-[#ff4d8d]' : 'text-slate-500'}"></i> <span>${postLikes.length}</span>
                         </button>
-                        ${firstReactor ? `<span class="text-[9px] text-amber-400 flex items-center gap-1 truncate max-w-[90px]" title="First to react"><i class="fa-solid fa-bolt shrink-0"></i><span class="truncate">${firstReactor}${firstReactor === currentUser ? ' (you!)' : ''}</span></span>` : ''}
                         <button onclick="openCommentModal('${post.id}')" class="hover:text-[#35c7ff] transition flex items-center gap-1">
                             <i class="fa-solid fa-comment text-[#35c7ff]"></i> <span>${postComments.length}</span>
                         </button>
@@ -8189,10 +6078,6 @@
                     </div>
                 `;
                 feedStream.appendChild(card);
-
-                // FEATURE: HONEST USAGE MIRROR — track continuous genuine dwell time per post
-                card.dataset.usagePostId = post.id;
-                getUsageDwellObserver().observe(card);
 
                 // Log an impression view (post analytics) the first time this post scrolls into view this session
                 if (post.username !== currentUser && !trackedPostViewIds.has(post.id)) {
@@ -8700,24 +6585,6 @@
         window.openChatMediaTap = openChatMediaTap;
         window.closeChatMediaViewer = closeChatMediaViewer;
 
-        // FEATURE: MILESTONE CONFETTI
-        function fireConfetti() {
-            const container = document.getElementById('confettiContainer');
-            const colors = ['#ff4d8d', '#9d7bff', '#35c7ff', '#f5a524'];
-            const pieceCount = 60;
-            for (let i = 0; i < pieceCount; i++) {
-                const piece = document.createElement('div');
-                piece.className = 'confetti-piece';
-                piece.style.left = Math.random() * 100 + 'vw';
-                piece.style.background = colors[Math.floor(Math.random() * colors.length)];
-                piece.style.animationDuration = (1.6 + Math.random() * 1.2) + 's';
-                piece.style.animationDelay = (Math.random() * 0.3) + 's';
-                piece.style.transform = `rotate(${Math.random() * 360}deg)`;
-                container.appendChild(piece);
-                setTimeout(() => piece.remove(), 3200);
-            }
-        }
-
         async function toggleLike(postId) {
             // BUGFIX: this used to wait for a full network round trip (select, then
             // insert/delete, then a full fetchAllData() re-fetch of every table) before
@@ -8725,7 +6592,6 @@
             // to Instagram. Now we flip the UI instantly using the local cache, then sync
             // to the DB in the background and roll back only if it actually fails.
             const alreadyLiked = globalLikesCache.some(l => l.post_id === postId && l.username === currentUser);
-            const justLiked = !alreadyLiked;
 
             // Optimistic local update
             if (alreadyLiked) {
@@ -8737,13 +6603,6 @@
             if (activeModalPostId) renderCommentModal(activeModalPostId);
             if (viewingProfileUsername) renderProfileGrid();
 
-            // FEATURE: MILESTONE CONFETTI — celebrate a post crossing a like milestone
-            if (justLiked) {
-                const newCount = globalLikesCache.filter(l => l.post_id === postId).length;
-                if ([10, 25, 50, 100, 250, 500, 1000].includes(newCount)) {
-                    fireConfetti();
-                }
-            }
 
             // Sync to DB in the background
             try {
@@ -8904,42 +6763,7 @@
                 }
             }
 
-            renderStreakLeaderboard();
             renderExploreGrid();
-        }
-
-        // FEATURE: STREAK LEADERBOARD — ranks the people you follow (+ you) by current post streak
-        function renderStreakLeaderboard() {
-            const container = document.getElementById('streakLeaderboardContainer');
-            if (!container) return;
-
-            const friendUsernames = new Set([currentUser]);
-            globalFollowsCache.filter(f => f.follower === currentUser).forEach(f => friendUsernames.add(f.following));
-
-            const ranked = Array.from(friendUsernames).map(username => {
-                const userPosts = globalPostsCache.filter(p => p.username === username);
-                return { username, streak: computePostStreak(userPosts) };
-            }).filter(r => r.streak > 0).sort((a, b) => b.streak - a.streak).slice(0, 10);
-
-            if (ranked.length === 0) {
-                container.innerHTML = `<p class="text-[10px] text-slate-500">Koi active streak nahi hai abhi — roz post karo aur yahan top pe aa jao!</p>`;
-                return;
-            }
-
-            const medals = ['🥇', '🥈', '🥉'];
-            container.innerHTML = ranked.map((r, i) => {
-                const avatar = globalProfilesCache[r.username];
-                return `
-                    <div onclick="handleUserClick('${r.username}')" class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-900/60 cursor-pointer transition ${r.username === currentUser ? 'bg-slate-900/40' : ''}">
-                        <span class="w-5 text-center text-xs shrink-0">${medals[i] || (i + 1)}</span>
-                        <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-[10px] text-white overflow-hidden shrink-0">
-                            ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : r.username.charAt(0).toUpperCase()}
-                        </div>
-                        <span class="flex-1 min-w-0 text-xs font-semibold text-slate-200 truncate">${r.username}${r.username === currentUser ? ' (You)' : ''}</span>
-                        <span class="text-[10px] font-bold text-amber-400 flex items-center gap-0.5 shrink-0"><i class="fa-solid fa-fire"></i> ${r.streak}</span>
-                    </div>
-                `;
-            }).join('');
         }
 
         function renderExploreGrid() {
@@ -9053,23 +6877,6 @@
             document.getElementById('storyPreviewImg').classList.add('hidden');
             document.getElementById('storyPreviewVideo').classList.add('hidden');
             selectedStoryFileObject = null;
-            revealSlowlyOptionEnabled = false;
-            const dot = document.getElementById('revealSlowlyToggleDot');
-            const btn = document.getElementById('revealSlowlyToggleBtn');
-            if (dot && btn) {
-                dot.style.transform = 'translateX(0)';
-                btn.className = 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
-            }
-            document.getElementById('revealSlowlyFeatureNotice').classList.add('hidden');
-        }
-
-        // FEATURE: REVERSE REVEAL STORY — toggle for the upload-time "blur until they stay" option
-        function toggleRevealSlowlyOption() {
-            revealSlowlyOptionEnabled = !revealSlowlyOptionEnabled;
-            const dot = document.getElementById('revealSlowlyToggleDot');
-            const btn = document.getElementById('revealSlowlyToggleBtn');
-            dot.style.transform = revealSlowlyOptionEnabled ? 'translateX(20px)' : 'translateX(0)';
-            btn.className = revealSlowlyOptionEnabled ? 'w-10 h-5 rounded-full bg-[#9d7bff] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
         }
 
         function previewStoryMedia(input) {
@@ -9110,17 +6917,6 @@
                     caption: document.getElementById('storyCaptionInput').value.trim() || null
                 }).select();
                 if (insertError) throw insertError;
-
-                // FEATURE: REVERSE REVEAL STORY — separate follow-up update so a missing
-                // reveal_slowly column can never block the core story post above.
-                if (revealSlowlyOptionEnabled && insertedRows && insertedRows[0]) {
-                    try {
-                        const { error: rsErr } = await supabaseClient.from('stories').update({ reveal_slowly: true }).eq('id', insertedRows[0].id);
-                        if (rsErr) throw rsErr;
-                    } catch (rsEx) {
-                        console.warn('Nexus: reveal_slowly column not set up on stories yet.', rsEx);
-                    }
-                }
 
                 await fetchAllData();
                 closeStoryUploadModal();
@@ -9164,14 +6960,10 @@
             document.getElementById('storyCaptionOverlay').classList.toggle('bottom-4', isOwnStory);
 
             const mediaContainer = document.getElementById('storyMediaContainer');
-            const isRevealSlowly = !!story.reveal_slowly;
-            const revealStyle = isRevealSlowly ? ` id="storyRevealMedia" class="max-w-full max-h-full object-contain reveal-slowly-media" style="animation: revealBlurClear ${STORY_DURATION_MS}ms linear forwards;"` : ' class="max-w-full max-h-full object-contain"';
+            const revealStyle = ' class="max-w-full max-h-full object-contain"';
             mediaContainer.innerHTML = story.media_type === 'video'
                 ? `<video src="${story.media_url}"${revealStyle} autoplay playsinline muted></video>`
                 : `<img src="${story.media_url}"${revealStyle}>`;
-
-            const revealBadge = document.getElementById('storyRevealBadge');
-            if (revealBadge) revealBadge.classList.toggle('hidden', !isRevealSlowly);
 
             // Progress bars: one segment per story in the queue
             const barsContainer = document.getElementById('storyProgressBarsContainer');
@@ -9211,8 +7003,6 @@
             if (storyProgressTimer) { clearTimeout(storyProgressTimer); storyProgressTimer = null; }
             const bar = document.getElementById(`storyBarFill-${storyQueueIndex}`);
             if (bar) bar.style.animationPlayState = 'paused';
-            const revealMedia = document.getElementById('storyRevealMedia');
-            if (revealMedia) revealMedia.style.animationPlayState = 'paused';
         }
 
         function resumeStoryTimer() {
@@ -9226,8 +7016,6 @@
                 void bar.offsetWidth;
                 bar.style.animation = `storyProgress ${STORY_DURATION_MS}ms linear forwards`;
             }
-            const revealMedia = document.getElementById('storyRevealMedia');
-            if (revealMedia) revealMedia.style.animationPlayState = 'running';
             if (storyProgressTimer) clearTimeout(storyProgressTimer);
             storyProgressTimer = setTimeout(storyNavNext, STORY_DURATION_MS);
         }
@@ -9266,98 +7054,6 @@
             }
         }
 
-        // =====================================================================================
-        // FEATURE: BOTS/AUTOMATION
-        // A "bot" here is just a normal profile (so it's chattable like any user) plus a row in
-        // the `bots` table describing its keyword -> reply rules. Since this app has no server
-        // backend, the auto-reply is simulated on the SENDER's own browser right after they send
-        // a message to a bot's username — there is no always-on process, so a bot only "replies"
-        // to the person actively chatting with it in that moment (same limitation any client-only
-        // demo app has without serverless functions).
-        // =====================================================================================
-        function openBotsModal() {
-            renderMyBotsList();
-            document.getElementById('newBotRulesContainer').innerHTML = '';
-            addBotRuleRow();
-            document.getElementById('botsModal').classList.remove('hidden');
-            document.getElementById('botsModal').classList.add('flex');
-        }
-
-        function closeBotsModal() {
-            document.getElementById('botsModal').classList.add('hidden');
-            document.getElementById('botsModal').classList.remove('flex');
-        }
-
-        function renderMyBotsList() {
-            const container = document.getElementById('myBotsListContainer');
-            const myBots = globalBotsCache.filter(b => b.owner === currentUser);
-            if (myBots.length === 0) {
-                container.innerHTML = `<div class="text-center text-[10px] text-slate-500 py-2">You haven't created any bots yet.</div>`;
-                return;
-            }
-            container.innerHTML = myBots.map(b => `
-                <div class="flex items-center justify-between gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800">
-                    <div onclick="closeBotsModal(); switchTab('chat'); selectChatUser('${b.bot_username}')" class="flex items-center gap-2 flex-1 min-w-0 cursor-pointer">
-                        <div class="w-8 h-8 shrink-0 rounded-full bg-gradient-to-tr from-[#9d7bff] to-indigo-600 flex items-center justify-center text-white text-xs"><i class="fa-solid fa-robot"></i></div>
-                        <div class="min-w-0">
-                            <p class="text-xs font-bold text-slate-200 truncate">${b.bot_username}</p>
-                            <p class="text-[9px] text-slate-500">${(b.rules || []).length} rule${(b.rules || []).length === 1 ? '' : 's'}</p>
-                        </div>
-                    </div>
-                    <button onclick="deleteBot('${b.id}')" class="text-slate-500 hover:text-red-400 text-xs p-1" title="Delete bot"><i class="fa-solid fa-trash"></i></button>
-                </div>
-            `).join('');
-        }
-
-        function addBotRuleRow(keyword = '', reply = '') {
-            const container = document.getElementById('newBotRulesContainer');
-            const row = document.createElement('div');
-            row.className = 'flex items-center gap-1.5 bot-rule-row';
-            row.innerHTML = `
-                <input type="text" placeholder="keyword" value="${keyword}" class="bot-rule-keyword w-1/3 bg-slate-950 border border-slate-800 rounded-lg p-2 text-[10px] text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                <input type="text" placeholder="reply text" value="${reply}" class="bot-rule-reply flex-1 bg-slate-950 border border-slate-800 rounded-lg p-2 text-[10px] text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                <button onclick="this.closest('.bot-rule-row').remove()" class="text-slate-500 hover:text-red-400 p-1 shrink-0"><i class="fa-solid fa-xmark"></i></button>
-            `;
-            container.appendChild(row);
-        }
-
-        async function submitCreateBot() {
-            const botUsername = document.getElementById('newBotUsernameInput').value.trim();
-            if (!botUsername) { showAlertBanner('Please enter a bot username.', 'warning'); return; }
-            if (globalProfilesCache.hasOwnProperty(botUsername)) { showAlertBanner('That username is already taken.', 'warning'); return; }
-
-            const defaultReply = document.getElementById('newBotDefaultReplyInput').value.trim() || "Sorry, I didn't understand that. 🤖";
-            const rules = Array.from(document.querySelectorAll('.bot-rule-row')).map(row => ({
-                keyword: row.querySelector('.bot-rule-keyword').value.trim().toLowerCase(),
-                reply: row.querySelector('.bot-rule-reply').value.trim()
-            })).filter(r => r.keyword && r.reply);
-
-            // A bot needs a profile row too, so it shows up like any normal chattable user.
-            await supabaseClient.from('profiles').upsert({ username: botUsername }, { onConflict: 'username' });
-            const { error } = await supabaseClient.from('bots').insert({
-                bot_username: botUsername,
-                owner: currentUser,
-                rules: rules,
-                default_reply: defaultReply
-            });
-            if (error) { showAlertBanner('Could not create bot: ' + error.message, 'error'); return; }
-
-            document.getElementById('newBotUsernameInput').value = '';
-            document.getElementById('newBotDefaultReplyInput').value = '';
-            document.getElementById('newBotRulesContainer').innerHTML = '';
-            addBotRuleRow();
-
-            await fetchAllData();
-            renderMyBotsList();
-        }
-
-        async function deleteBot(botId) {
-            if (!confirm('Delete this bot? Its profile and chat history will remain, but it will stop auto-replying.')) return;
-            await supabaseClient.from('bots').delete().eq('id', botId);
-            await fetchAllData();
-            renderMyBotsList();
-        }
-
         // Checks whether the chat partner is a registered bot and, if so, simulates its reply.
         // FEATURE: AI AUTO-REPLY WHEN AWAY
         // BUGFIX #1: this used to fire on EVERY single message sent to an away contact — send
@@ -9374,7 +7070,6 @@
         // always check the LIVE value from the DB right before deciding to send one.
         async function maybeTriggerAwayAutoReply(chatPartnerUsername, incomingText) {
             if (chatPartnerUsername === currentUser) return;
-            if (globalBotsCache.some(b => b.bot_username === chatPartnerUsername)) return; // bots have their own reply logic
 
             let targetProfile;
             try {
@@ -9415,26 +7110,6 @@
                     loadDirectMessages(chatPartnerUsername, true);
                 }
             }, 900);
-        }
-
-        async function maybeTriggerBotReply(chatPartnerUsername, incomingText) {
-            const bot = globalBotsCache.find(b => b.bot_username === chatPartnerUsername);
-            if (!bot) return;
-
-            const lowerText = (incomingText || '').toLowerCase();
-            const matchedRule = (bot.rules || []).find(r => r.keyword && lowerText.includes(r.keyword));
-            const replyText = matchedRule ? matchedRule.reply : (bot.default_reply || "Sorry, I didn't understand that. 🤖");
-
-            setTimeout(async () => {
-                await supabaseClient.from('messages').insert({
-                    sender: bot.bot_username,
-                    receiver: currentUser,
-                    text: replyText
-                });
-                if (activeChatUser === bot.bot_username) {
-                    loadDirectMessages(bot.bot_username, true);
-                }
-            }, 700); // small delay so the reply doesn't feel instant/robotic
         }
 
         async function markStorySeen(storyId) {
@@ -9910,14 +7585,11 @@
             const groupHtmlContent = globalGroupMessagesCache.map(msg => {
                 const isMe = msg.sender === currentUser;
                 const isVideoMedia = msg.media_url && msg.media_url.match(/\.(mp4|mov|webm)$/i);
-                const isStickerMsg = msg.type === 'sticker' && msg.media_url; // FEATURE: GIFs & STICKERS
                 const timeLabel = formatMessageTimestamp(new Date(msg.created_at || Date.now()));
                 const av = globalProfilesCache[msg.sender];
                 const reactionsHtml = renderReactionBadgesHtml(msg.id, 'group');
 
-                const groupBodyHtml = isStickerMsg
-                    ? `<img src="${msg.media_url}" class="w-28 h-28 object-contain drop-shadow-lg">`
-                    : `${msg.media_url ? (
+                const groupBodyHtml = `${msg.media_url ? (
                         isVideoMedia ?
                         `<video src="${msg.media_url}" data-msg-id="${msg.id}" onclick="event.stopPropagation(); openChatMediaTap('${msg.media_url}', true, ${msg.shared_post_id ? `'${msg.shared_post_id}'` : 'null'})" controls playsinline class="w-full max-h-48 rounded-lg object-cover cursor-pointer"></video>` :
                         `<img src="${msg.media_url}" onclick="event.stopPropagation(); openChatMediaTap('${msg.media_url}', false, ${msg.shared_post_id ? `'${msg.shared_post_id}'` : 'null'})" class="w-full max-h-48 rounded-lg object-cover cursor-pointer">`
@@ -9927,7 +7599,7 @@
                 return `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5">
                         ${!isMe ? `<span class="text-[9px] font-bold text-[#ff4d8d] px-1">${msg.sender}</span>` : ''}
-                        <div class="max-w-[80%] ${isStickerMsg ? 'p-0 bg-transparent shadow-none' : `p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#ff4d8d] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'}`} text-xs space-y-1.5 relative group" ondblclick="openReactionPicker(event, '${msg.id}', 'group')">
+                        <div class="max-w-[80%] p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#ff4d8d] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'} text-xs space-y-1.5 relative group" ondblclick="openReactionPicker(event, '${msg.id}', 'group')">
                             ${groupBodyHtml}
                             <button onclick="togglePinMessage('${msg.id}', 'group')" class="absolute -bottom-2 ${isMe ? '-right-2' : '-left-2'} ${msg.pinned_at ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-yellow-400'} p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="${msg.pinned_at ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>
                             <button onclick="openReactionPicker(event, '${msg.id}', 'group')" class="absolute -bottom-2 ${isMe ? '-left-2' : 'left-2'} bg-slate-800 text-yellow-400 p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="React"><i class="fa-solid fa-face-smile"></i></button>
@@ -9991,289 +7663,6 @@
             selectedGroupMediaObject = null;
             document.getElementById('groupMediaFileInput').value = '';
             loadGroupMessages(activeGroupId, true);
-        }
-
-        // =====================================================================================
-        // FEATURE: GIFs & STICKERS — shared picker used by both DM chat and group chat. Sending
-        // either one is just a normal insert into the existing messages/group_messages tables
-        // (with type: 'gif' | 'sticker' + media_url set to the image), so it rides the app's
-        // existing Supabase Realtime subscriptions on those tables — no extra real-time plumbing
-        // needed, the other person sees it appear instantly exactly like a normal message.
-        // =====================================================================================
-
-        function openGifStickerModal(context) {
-            gifStickerTargetContext = context; // 'dm' or 'group'
-            document.getElementById('gifStickerModal').classList.remove('hidden');
-            switchGifStickerTab('gif');
-            loadTrendingGifs();
-            loadStickerPacksForPicker();
-        }
-
-        function closeGifStickerModal() {
-            document.getElementById('gifStickerModal').classList.add('hidden');
-        }
-
-        function switchGifStickerTab(tab) {
-            const gifTabBtn = document.getElementById('gifTabBtn');
-            const stickerTabBtn = document.getElementById('stickerTabBtn');
-            const gifPanel = document.getElementById('gifPickerPanel');
-            const stickerPanel = document.getElementById('stickerPickerPanel');
-            if (!gifTabBtn || !stickerTabBtn || !gifPanel || !stickerPanel) return;
-            const isGif = tab === 'gif';
-            gifPanel.classList.toggle('hidden', !isGif);
-            stickerPanel.classList.toggle('hidden', isGif);
-            const activeCls = 'flex-1 py-1.5 rounded-xl text-[11px] font-bold transition bg-[#ff4d8d] text-white shadow';
-            const inactiveCls = 'flex-1 py-1.5 rounded-xl text-[11px] font-bold transition text-slate-400 hover:text-slate-200';
-            gifTabBtn.className = isGif ? activeCls : inactiveCls;
-            stickerTabBtn.className = !isGif ? activeCls : inactiveCls;
-        }
-
-        // ---- GIFs (GIPHY) ----
-
-        async function loadTrendingGifs() {
-            const grid = document.getElementById('gifResultsGrid');
-            if (!grid) return;
-            grid.innerHTML = `<div class="col-span-3 text-center text-[10px] text-slate-500 py-6"><i class="fa-solid fa-spinner fa-spin"></i> Loading trending GIFs...</div>`;
-            try {
-                const res = await fetch(`https://api.giphy.com/v1/gifs/trending?api_key=${GIPHY_API_KEY}&limit=24&rating=g`);
-                const json = await res.json();
-                renderGifResults(json.data || []);
-            } catch (err) {
-                console.error('GIF trending fetch failed:', err);
-                grid.innerHTML = `<div class="col-span-3 text-center text-[10px] text-red-400 py-6">GIFs load nahi hue. Try again.</div>`;
-            }
-        }
-
-        function onGifSearchInput(value) {
-            clearTimeout(gifSearchDebounceTimer);
-            gifSearchDebounceTimer = setTimeout(() => {
-                const q = value.trim();
-                if (!q) { loadTrendingGifs(); return; }
-                searchGifsNow(q);
-            }, 400);
-        }
-
-        async function searchGifsNow(query) {
-            const grid = document.getElementById('gifResultsGrid');
-            if (!grid) return;
-            grid.innerHTML = `<div class="col-span-3 text-center text-[10px] text-slate-500 py-6"><i class="fa-solid fa-spinner fa-spin"></i> Searching...</div>`;
-            try {
-                const res = await fetch(`https://api.giphy.com/v1/gifs/search?api_key=${GIPHY_API_KEY}&q=${encodeURIComponent(query)}&limit=24&rating=g`);
-                const json = await res.json();
-                renderGifResults(json.data || []);
-            } catch (err) {
-                console.error('GIF search failed:', err);
-                grid.innerHTML = `<div class="col-span-3 text-center text-[10px] text-red-400 py-6">Search fail ho gaya. Try again.</div>`;
-            }
-        }
-
-        function renderGifResults(results) {
-            const grid = document.getElementById('gifResultsGrid');
-            if (!grid) return;
-            if (!results.length) {
-                grid.innerHTML = `<div class="col-span-3 text-center text-[10px] text-slate-500 py-6">No GIFs found.</div>`;
-                return;
-            }
-            grid.innerHTML = results.map(g => {
-                const thumb = g.images && g.images.fixed_width ? g.images.fixed_width.url : (g.images && g.images.original ? g.images.original.url : '');
-                const full = g.images && g.images.original ? g.images.original.url : thumb;
-                if (!thumb) return '';
-                return `<img src="${thumb}" loading="lazy" onclick="sendGifMessage('${full.replace(/'/g, "\\'")}')" class="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 hover:scale-[1.03] transition bg-slate-900">`;
-            }).join('');
-        }
-
-        async function sendGifOrStickerMessage(url, msgType) {
-            const caption = msgType === 'sticker' ? '🎨 Sticker' : '🎬 GIF';
-            if (gifStickerTargetContext === 'group') {
-                if (!activeGroupId) return;
-                const activeGroup = globalGroupsCache.find(g => String(g.id) === String(activeGroupId));
-                if (activeGroup && activeGroup.is_channel && activeGroup.created_by !== currentUser) {
-                    showAlertBanner('Only the channel admin can post here.', 'warning');
-                    return;
-                }
-                const { error } = await supabaseClient.from('group_messages').insert({
-                    group_id: activeGroupId,
-                    sender: currentUser,
-                    text: caption,
-                    media_url: url,
-                    type: msgType
-                });
-                if (error) {
-                    console.error(`Group ${msgType} send failed (did you run stickers_gifs_migration.sql?):`, error);
-                    showAlertBanner(`Send nahi hua: ` + error.message, 'error');
-                    return;
-                }
-                closeGifStickerModal();
-                loadGroupMessages(activeGroupId, true);
-            } else {
-                if (!activeChatUser) return;
-                const okToSend = await ensureMessageRequestForSend(activeChatUser);
-                if (!okToSend) return;
-                const { error } = await supabaseClient.from('messages').insert({
-                    sender: currentUser,
-                    receiver: activeChatUser,
-                    text: caption,
-                    media_url: url,
-                    type: msgType
-                });
-                if (error) {
-                    console.error(`${msgType} send failed (did you run stickers_gifs_migration.sql?):`, error);
-                    showAlertBanner(`Send nahi hua: ` + error.message, 'error');
-                    return;
-                }
-                closeGifStickerModal();
-                loadDirectMessages(activeChatUser, true);
-                loadLoggedUsers();
-                maybeTriggerBotReply(activeChatUser, msgType === 'sticker' ? 'sticker' : 'gif');
-                maybeTriggerAwayAutoReply(activeChatUser, msgType === 'sticker' ? 'sticker' : 'gif');
-            }
-        }
-        function sendGifMessage(url) { sendGifOrStickerMessage(url, 'gif'); }
-        function sendStickerMessage(url) { sendGifOrStickerMessage(url, 'sticker'); }
-
-        // ---- Stickers (own uploaded packs + starter packs + imported packs) ----
-
-        function makeEmojiStickerDataUri(emoji) {
-            const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><text x="50%" y="54%" font-size="110" text-anchor="middle" dominant-baseline="middle">${emoji}</text></svg>`;
-            return 'data:image/svg+xml;utf8,' + encodeURIComponent(svg);
-        }
-
-        async function loadStickerPacksForPicker() {
-            if (!currentUser) return;
-            const { data, error } = await supabaseClient
-                .from('sticker_packs')
-                .select('*, stickers(*)')
-                .or(`owner.eq.${currentUser},is_public.eq.true`)
-                .order('created_at', { ascending: true });
-            if (error) {
-                console.error('Sticker packs load failed (did you run stickers_gifs_migration.sql?):', error);
-                stickerPacksCache = [];
-            } else {
-                stickerPacksCache = data || [];
-            }
-            if ((!activeStickerPackId || !stickerPacksCache.find(p => p.id === activeStickerPackId)) && stickerPacksCache.length) {
-                activeStickerPackId = stickerPacksCache[0].id;
-            }
-            renderStickerPackSelector();
-            renderStickerGrid();
-        }
-
-        function renderStickerPackSelector() {
-            const bar = document.getElementById('stickerPackSelector');
-            if (!bar) return;
-            if (!stickerPacksCache.length) {
-                bar.innerHTML = `<span class="text-[10px] text-slate-500 px-1">No packs yet — add one below 👇</span>`;
-                return;
-            }
-            bar.innerHTML = stickerPacksCache.map(p => `
-                <button onclick="selectStickerPack(${p.id})" class="shrink-0 px-3 py-1.5 rounded-full text-[10px] font-bold transition ${activeStickerPackId === p.id ? 'bg-[#ff4d8d] text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'}">${p.name}</button>
-            `).join('');
-        }
-
-        function selectStickerPack(packId) {
-            activeStickerPackId = packId;
-            renderStickerPackSelector();
-            renderStickerGrid();
-        }
-
-        function renderStickerGrid() {
-            const grid = document.getElementById('stickerResultsGrid');
-            if (!grid) return;
-            const pack = stickerPacksCache.find(p => p.id === activeStickerPackId);
-            const stickers = pack ? (pack.stickers || []) : [];
-            if (!stickers.length) {
-                grid.innerHTML = `<div class="col-span-4 text-center text-[10px] text-slate-500 py-6">${pack ? 'This pack is empty — upload some stickers below.' : 'Pick or add a pack first.'}</div>`;
-                return;
-            }
-            grid.innerHTML = stickers.map(s => `
-                <img src="${s.image_url}" loading="lazy" onclick="sendStickerMessage('${s.image_url.replace(/'/g, "\\'")}')" class="w-full aspect-square object-contain cursor-pointer hover:scale-110 transition p-1">
-            `).join('');
-        }
-
-        async function createNewStickerPack() {
-            const input = document.getElementById('newStickerPackNameInput');
-            const name = input ? input.value.trim() : '';
-            if (!name) { showAlertBanner('Pack ko naam do pehle.', 'warning'); return; }
-            const { data, error } = await supabaseClient.from('sticker_packs').insert({ name, owner: currentUser }).select().single();
-            if (error) {
-                console.error('Create sticker pack failed (did you run stickers_gifs_migration.sql?):', error);
-                showAlertBanner('Pack create nahi hua: ' + error.message, 'error');
-                return;
-            }
-            input.value = '';
-            activeStickerPackId = data.id;
-            await loadStickerPacksForPicker();
-        }
-
-        function handleStickerUploadSelect(input) {
-            if (input.files && input.files.length) {
-                selectedStickerUploadFiles = Array.from(input.files);
-                showAlertBanner(`${selectedStickerUploadFiles.length} sticker image(s) selected. Ab "Upload" dabao.`, 'info');
-            }
-        }
-
-        async function uploadSelectedStickersToPack() {
-            if (!activeStickerPackId) { showAlertBanner('Pehle ek pack select ya create karo.', 'warning'); return; }
-            if (!selectedStickerUploadFiles.length) { showAlertBanner('Pehle sticker images choose karo.', 'warning'); return; }
-            showAlertBanner('Stickers upload ho rahe hain...', 'info');
-            for (const file of selectedStickerUploadFiles) {
-                try {
-                    const fileName = `stickers_${Date.now()}_${Math.random().toString(36).slice(2, 7)}_${file.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                    const { error: uploadErr } = await supabaseClient.storage.from('media').upload(fileName, file);
-                    if (uploadErr) throw uploadErr;
-                    const { data: pubData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
-                    await supabaseClient.from('stickers').insert({ pack_id: activeStickerPackId, image_url: pubData.publicUrl });
-                } catch (err) {
-                    console.error('Sticker upload failed:', err);
-                }
-            }
-            selectedStickerUploadFiles = [];
-            const fileInput = document.getElementById('stickerUploadFileInput');
-            if (fileInput) fileInput.value = '';
-            await loadStickerPacksForPicker();
-            showAlertBanner('Stickers pack me add ho gaye! ✅', 'success');
-        }
-
-        async function importStickerPackFromUrl() {
-            const input = document.getElementById('importPackUrlInput');
-            const url = input ? input.value.trim() : '';
-            if (!url) { showAlertBanner('Pack ka JSON URL daalo.', 'warning'); return; }
-            try {
-                const res = await fetch(url);
-                const json = await res.json();
-                const rawList = Array.isArray(json.stickers) ? json.stickers : (Array.isArray(json) ? json : []);
-                if (!rawList.length) { showAlertBanner('Ye link me koi stickers nahi mile.', 'error'); return; }
-                const packName = json.name || 'Imported Pack';
-                const { data: packRow, error: packErr } = await supabaseClient.from('sticker_packs').insert({ name: packName, owner: currentUser, source_url: url }).select().single();
-                if (packErr) throw packErr;
-                const rows = rawList.map(u => ({ pack_id: packRow.id, image_url: typeof u === 'string' ? u : u.url })).filter(r => r.image_url);
-                await supabaseClient.from('stickers').insert(rows);
-                input.value = '';
-                activeStickerPackId = packRow.id;
-                await loadStickerPacksForPicker();
-                showAlertBanner(`"${packName}" download ho gaya! ✅`, 'success');
-            } catch (err) {
-                console.error('Import sticker pack failed:', err);
-                showAlertBanner('Pack import nahi hua — link ya JSON format check karo.', 'error');
-            }
-        }
-
-        async function addStarterStickerPack(key) {
-            const starter = STARTER_STICKER_PACKS.find(p => p.key === key);
-            if (!starter) return;
-            const already = stickerPacksCache.find(p => p.owner === currentUser && p.name === starter.name);
-            if (already) { selectStickerPack(already.id); return; }
-            const { data: packRow, error: packErr } = await supabaseClient.from('sticker_packs').insert({ name: starter.name, owner: currentUser }).select().single();
-            if (packErr) {
-                console.error('Starter pack add failed (did you run stickers_gifs_migration.sql?):', packErr);
-                showAlertBanner('Pack download nahi hua: ' + packErr.message, 'error');
-                return;
-            }
-            const rows = starter.emojis.map(e => ({ pack_id: packRow.id, image_url: makeEmojiStickerDataUri(e) }));
-            await supabaseClient.from('stickers').insert(rows);
-            activeStickerPackId = packRow.id;
-            await loadStickerPacksForPicker();
-            showAlertBanner(`"${starter.name}" download ho gaya! 🎉`, 'success');
         }
 
         // =====================================================================================
@@ -10687,36 +8076,6 @@
             dot.style.transform = isAway ? 'translateX(20px)' : 'translateX(0)';
             btn.className = isAway ? 'w-10 h-5 rounded-full bg-[#9d7bff] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
             document.getElementById('awayMessageInput').value = myProfile.away_message || '';
-        }
-
-        // FEATURE: SECRET ADMIRER — teases the person who's interacted with your posts the most
-        function renderSecretAdmirer() {
-            const card = document.getElementById('secretAdmirerCard');
-            const myPostIds = new Set(globalPostsCache.filter(p => p.username === currentUser).map(p => p.id));
-            if (myPostIds.size === 0) { card.classList.add('hidden'); card.classList.remove('flex'); return; }
-
-            const scores = {};
-            globalLikesCache.filter(l => myPostIds.has(l.post_id) && l.username !== currentUser).forEach(l => {
-                scores[l.username] = (scores[l.username] || 0) + 2;
-            });
-            globalPostViewsCache.filter(v => myPostIds.has(v.post_id) && v.viewer !== currentUser).forEach(v => {
-                scores[v.viewer] = (scores[v.viewer] || 0) + 1;
-            });
-
-            const ranked = Object.entries(scores).sort((a, b) => b[1] - a[1]);
-            if (ranked.length === 0) { card.classList.add('hidden'); card.classList.remove('flex'); return; }
-
-            const [topUser, score] = ranked[0];
-            const masked = topUser.charAt(0).toUpperCase() + '•'.repeat(Math.max(topUser.length - 1, 2));
-            card.classList.remove('hidden');
-            card.classList.add('flex');
-            card.innerHTML = `
-                <div class="text-xl shrink-0">👀</div>
-                <div class="min-w-0">
-                    <p class="text-[11px] font-bold text-slate-200">Secret Admirer</p>
-                    <p class="text-[10px] text-slate-400">Kisi ka naam <span class="font-bold text-[#ff4d8d]">${masked}</span> se hai — unhone tumhare posts ${score} baar like/view kiye 👀</p>
-                </div>
-            `;
         }
 
         // FEATURE: GHOST MODE — purely a local browser setting, nothing synced to Supabase
@@ -11225,7 +8584,7 @@
         // background wash, saved per-page/per-user in localStorage. "Default" clears both back
         // to the original look. Purely cosmetic/local — no schema needed.
         // =====================================================================================
-        const PAGE_CUSTOMIZE_KEYS = ['feed', 'chat', 'reels', 'calls', 'groups', 'explore', 'ai', 'profile'];
+        const PAGE_CUSTOMIZE_KEYS = ['feed', 'chat', 'reels', 'calls', 'groups', 'explore', 'profile'];
         const PAGE_ACCENT_SWATCHES = ['#ff4d8d', '#9d7bff', '#35c7ff', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#84cc16', '#e11d48', '#64748b', '#14b8a6'];
         const THEME_OPTIONS = [
             { key: 'dark', label: 'Midnight', preview: 'linear-gradient(135deg, #050509, #26263a)' },
@@ -11602,694 +8961,4 @@
                 }
             }
             return fullText.trim();
-        }
-
-        // FEATURE: AI SMART REPLIES
-        async function generateSmartReplies(recentMsgs) {
-            const wrap = document.getElementById('smartReplyChips');
-            try {
-                const transcript = recentMsgs.map(m => `${m.sender === currentUser ? 'Main' : m.sender}: ${m.text || '[media]'}`).join('\n');
-                const prompt = `Yeh ek chat ka recent transcript hai:\n${transcript}\n\nMujhe iska jawab dene ke liye 3 bahut chhote (max 6 shabd), casual, alag-alag tone ke quick-reply options do. Sirf ek JSON array of 3 strings ke roop mein jawab do, kuch aur text nahi likhna. Example: ["Haan bilkul!", "Abhi busy hoon", "😂😂 sahi hai"]`;
-                const raw = await askNexusAIOnce(prompt, "Tum ek chat app ka smart-reply generator ho. Sirf requested JSON array return karo, koi extra text ya markdown nahi.");
-                const match = raw.match(/\[[\s\S]*\]/);
-                const options = match ? JSON.parse(match[0]) : [];
-                if (!Array.isArray(options) || options.length === 0) throw new Error('empty');
-
-                wrap.innerHTML = options.slice(0, 3).map(opt =>
-                    `<button onclick="useSmartReply(${JSON.stringify(opt)})" class="shrink-0 bg-slate-900 border border-slate-800 hover:border-[#35c7ff] text-slate-300 text-[10.5px] font-semibold px-2.5 py-1.5 rounded-full transition whitespace-nowrap">${opt}</button>`
-                ).join('');
-                wrap.classList.remove('hidden');
-                wrap.classList.add('flex');
-            } catch (e) {
-                hideSmartReplies();
-            }
-        }
-        function hideSmartReplies() {
-            const wrap = document.getElementById('smartReplyChips');
-            wrap.classList.add('hidden');
-            wrap.classList.remove('flex');
-            wrap.innerHTML = '';
-        }
-        function useSmartReply(text) {
-            document.getElementById('chatInputText').value = text;
-            hideSmartReplies();
-            document.getElementById('chatInputText').focus();
-        }
-
-        // FEATURE: AI CHAT VIBE SUMMARY
-        async function summarizeChatVibe() {
-            const btn = document.getElementById('chatVibeBtn');
-            const targetUser = activeChatUser;
-            if (!targetUser) return;
-            const original = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin text-xs"></i>';
-            try {
-                const { data: rawMessages } = await supabaseClient
-                    .from('messages').select('*')
-                    .or(`and(sender.eq.${currentUser},receiver.eq.${targetUser}),and(sender.eq.${targetUser},receiver.eq.${currentUser})`)
-                    .order('created_at', { ascending: false }).limit(25);
-                const recent = (rawMessages || []).reverse().filter(m => m.text);
-                if (recent.length === 0) { showAlertBanner('Summarize karne ke liye abhi koi text message nahi hai.', 'warning'); return; }
-
-                const transcript = recent.map(m => `${m.sender === currentUser ? 'Main' : m.sender}: ${m.text}`).join('\n');
-                const prompt = `Is chat transcript ko padho aur 2-3 chhoti lines mein bta do: overall vibe/mood kya hai, kya baat ho rahi hai. Casual Hinglish mein, emoji ke sath.\n\n${transcript}`;
-                const summary = await askNexusAIOnce(prompt, "Tum ek chat vibe-checker ho. Short, casual, friendly Hinglish summary do — 2-3 lines se zyada nahi.");
-                showInAppBanner(`✨ Vibe Check: ${targetUser}`, summary || "Kuch khaas pata nahi chala, chat continue karo!");
-            } catch (e) {
-                // BUGFIX: previously silent — no console output — so a broken AI call or a
-                // bad Supabase query for message history was completely undiagnosable.
-                console.error("summarizeChatVibe failed for chat with:", targetUser, e);
-                showAlertBanner('Vibe check abhi available nahi hai, thodi der baad try karo.', 'error');
-            } finally {
-                btn.innerHTML = original;
-            }
-        }
-
-        const AI_QUICK_ACTIONS = [
-            { label: "✍️ Suggest a caption", prompt: "AI_ACTION_CAPTION" },
-            { label: "👤 Improve my bio", prompt: "Mere liye ek catchy, short social media bio likho." },
-            { label: "#️⃣ Trending hashtags", prompt: "Mujhe kuch trending/relevant hashtag ideas do meri niche ke liye — pucho pehle meri niche kya hai." },
-            { label: "💬 Chat icebreaker", prompt: "Kisi naye follower ko message karne ke liye ek achha, friendly icebreaker line do." }
-        ];
-
-        let aiChatHistory = [];
-        let aiLastUserText = "";
-        let aiInitialized = false;
-
-        function aiStorageKey() { return 'nexus_ai_chat_' + (currentUser || 'guest'); }
-
-        function initAiAssistant() {
-            renderAiQuickActions();
-            if (aiInitialized) return;
-            aiInitialized = true;
-            try {
-                aiChatHistory = JSON.parse(localStorage.getItem(aiStorageKey()) || "[]");
-            } catch (e) { aiChatHistory = []; }
-
-            const container = document.getElementById('aiMessages');
-            if (aiChatHistory.length === 0) {
-                addAiMessageToUI('bot', 'Hi ' + (currentUser || '') + '! Main Nexus AI hoon 👋 Caption, bio, hashtags — kuch bhi pucho.', false);
-            } else {
-                aiChatHistory.forEach(turn => {
-                    addAiMessageToUI(turn.role === 'user' ? 'user' : 'bot', turn.parts[0].text, false);
-                });
-            }
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function renderAiQuickActions() {
-            const wrap = document.getElementById('aiQuickActions');
-            wrap.innerHTML = AI_QUICK_ACTIONS.map((a, i) =>
-                `<button onclick="runAiQuickAction(${i})" class="shrink-0 bg-slate-900 border border-slate-800 hover:border-[#ff4d8d] text-slate-300 text-[10.5px] font-bold px-2.5 py-1.5 rounded-full transition">${a.label}</button>`
-            ).join('');
-        }
-
-        function runAiQuickAction(i) {
-            const action = AI_QUICK_ACTIONS[i];
-            if (action.prompt === "AI_ACTION_CAPTION") {
-                const draft = (document.getElementById('postContentInput') || {}).value || "";
-                const prompt = draft.trim()
-                    ? `Mere is post draft ke liye 3 catchy caption options suggest karo:\n"${draft.trim()}"`
-                    : "Mujhe ek social media post ke liye 3 catchy caption ideas do (general/aesthetic vibe).";
-                sendAiMessage(prompt);
-            } else {
-                sendAiMessage(action.prompt);
-            }
-        }
-
-        function clearAiChat() {
-            aiChatHistory = [];
-            localStorage.removeItem(aiStorageKey());
-            document.getElementById('aiMessages').innerHTML = '';
-            addAiMessageToUI('bot', 'Chat clear ho gayi. Kuch bhi pucho!', false);
-        }
-
-        function aiAutoResize(el) {
-            el.style.height = 'auto';
-            el.style.height = Math.min(el.scrollHeight, 96) + 'px';
-        }
-
-        function formatAiText(text) {
-            const escaped = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            return escaped
-                .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
-                .replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank" rel="noopener" class="text-[#35c7ff] underline">$1</a>');
-        }
-
-        function addAiMessageToUI(role, text, showMeta = true) {
-            const container = document.getElementById('aiMessages');
-            const wrap = document.createElement('div');
-            wrap.className = role === 'user' ? 'flex flex-col items-end' : 'flex items-start gap-2';
-
-            if (role === 'bot') {
-                const avatar = document.createElement('div');
-                avatar.className = 'w-6 h-6 rounded-lg bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-white text-[10px] shadow shrink-0 mt-0.5';
-                avatar.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles"></i>';
-                wrap.appendChild(avatar);
-            }
-
-            const col = document.createElement('div');
-            col.className = 'flex flex-col max-w-[80%] ' + (role === 'user' ? 'items-end' : 'items-start');
-
-            const bubble = document.createElement('div');
-            bubble.className = role === 'user'
-                ? 'bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white text-xs leading-relaxed px-3 py-2 rounded-2xl rounded-br-sm shadow whitespace-pre-wrap break-words'
-                : 'bg-slate-900 border border-slate-800 text-slate-200 text-xs leading-relaxed px-3 py-2 rounded-2xl rounded-bl-sm whitespace-pre-wrap break-words';
-            bubble.innerHTML = formatAiText(text);
-            col.appendChild(bubble);
-
-            if (showMeta && role === 'bot') {
-                const meta = document.createElement('div');
-                meta.className = 'flex items-center gap-2 mt-1 px-1';
-                const time = document.createElement('span');
-                time.className = 'text-[9px] text-slate-500';
-                time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'text-[9px] text-slate-500 hover:text-[#ff4d8d] font-bold';
-                copyBtn.textContent = 'Copy';
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(bubble.textContent);
-                    copyBtn.textContent = 'Copied!';
-                    setTimeout(() => copyBtn.textContent = 'Copy', 1200);
-                };
-                meta.appendChild(time);
-                meta.appendChild(copyBtn);
-                col.appendChild(meta);
-            }
-
-            wrap.appendChild(col);
-            container.appendChild(wrap);
-            container.scrollTop = container.scrollHeight;
-            return bubble;
-        }
-
-        function addAiRetryButton() {
-            const container = document.getElementById('aiMessages');
-            const btn = document.createElement('button');
-            btn.className = 'ml-8 bg-slate-900 border border-slate-800 hover:border-[#ff4d8d] text-slate-300 text-[10px] font-bold px-2.5 py-1 rounded-full';
-            btn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i>Retry';
-            btn.onclick = () => { btn.remove(); sendAiMessage(aiLastUserText); };
-            container.appendChild(btn);
-            container.scrollTop = container.scrollHeight;
-        }
-
-        async function sendAiMessage(forcedText) {
-            const input = document.getElementById('aiInput');
-            const text = (forcedText !== undefined ? forcedText : input.value.trim());
-            if (!text) return;
-
-            aiLastUserText = text;
-            if (forcedText === undefined) {
-                input.value = '';
-                aiAutoResize(input);
-                addAiMessageToUI('user', text, false);
-            }
-            document.getElementById('aiSendBtn').disabled = true;
-
-            aiChatHistory.push({ role: 'user', parts: [{ text: text }] });
-
-            const botBubble = addAiMessageToUI('bot', 'Type kar raha hai...');
-            botBubble.classList.add('italic', 'text-slate-500');
-            let streamedText = '';
-            let gotFirstChunk = false;
-
-            try {
-                const response = await fetch(`${SUPABASE_URL}/functions/v1/ai_chat`,
-    {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            system_instruction: { parts: [{ text: AI_SYSTEM_INSTRUCTION }] },
-            generationConfig: {
-                maxOutputTokens: 1024,
-                thinkingConfig: { thinkingBudget: 0 }
-            },
-            safetySettings: AI_SAFETY_SETTINGS,
-            contents: aiChatHistory
-        })
-    }
-);
-
-                if (!response.ok || !response.body) {
-                    const errData = await response.json().catch(() => ({}));
-                    throw new Error(errData.error ? errData.error.message : `HTTP ${response.status}`);
-                }
-
-                const reader = response.body.getReader();
-                const decoder = new TextDecoder();
-                let buffer = '';
-                let lastCand = null;
-                let promptBlockReason = null;
-
-                while (true) {
-                    const { done, value } = await reader.read();
-                    if (done) break;
-                    buffer += decoder.decode(value, { stream: true });
-                    const frames = buffer.split('\n\n');
-                    buffer = frames.pop();
-
-                    for (const frame of frames) {
-                        const line = frame.trim();
-                        if (!line.startsWith('data:')) continue;
-                        const jsonStr = line.slice(5).trim();
-                        if (!jsonStr) continue;
-                        try {
-                            const parsed = JSON.parse(jsonStr);
-
-                            if (parsed.promptFeedback && parsed.promptFeedback.blockReason) {
-                                promptBlockReason = parsed.promptFeedback.blockReason;
-                            }
-
-                            const cand = parsed.candidates && parsed.candidates[0];
-                            if (cand) lastCand = cand;
-
-                            // Gemini "thinking" models can send multiple parts per chunk —
-                            // some are internal reasoning (part.thought === true) and must be
-                            // skipped; only concatenate the real answer text parts.
-                            const allParts = (cand && cand.content && cand.content.parts) || [];
-                            const piece = allParts
-                                .filter(p => !p.thought && typeof p.text === 'string')
-                                .map(p => p.text)
-                                .join('');
-
-                            if (piece) {
-                                streamedText += piece;
-                                if (!gotFirstChunk) {
-                                    botBubble.classList.remove('italic', 'text-slate-500');
-                                    gotFirstChunk = true;
-                                }
-                                botBubble.innerHTML = formatAiText(streamedText);
-                                document.getElementById('aiMessages').scrollTop = document.getElementById('aiMessages').scrollHeight;
-                            }
-                        } catch (e) { /* incomplete chunk, ignore */ }
-                    }
-                }
-
-                if (!streamedText) {
-                    // Nothing came through — log full diagnostics to console so the real
-                    // cause (safety block, finishReason, empty candidates, etc.) is visible
-                    // via F12 > Console, instead of just failing silently.
-                    console.warn('Nexus AI: empty response.', {
-                        promptBlockReason,
-                        lastCandidate: lastCand
-                    });
-                    if (promptBlockReason) {
-                        streamedText = `⚠️ Request block ho gayi (reason: ${promptBlockReason}). Sawaal thoda reword karke try karo.`;
-                    } else if (lastCand && lastCand.finishReason && lastCand.finishReason !== 'STOP') {
-                        streamedText = `⚠️ Jawab generate nahi hua (reason: ${lastCand.finishReason}). Dobara try karo ya sawaal thoda alag se pucho.`;
-                    } else {
-                        streamedText = 'Sorry, main is baat ka jawab nahi de sakta. Kuch aur pucho?';
-                    }
-                }
-                botBubble.classList.remove('italic', 'text-slate-500');
-                botBubble.innerHTML = formatAiText(streamedText);
-
-                aiChatHistory.push({ role: 'model', parts: [{ text: streamedText }] });
-                localStorage.setItem(aiStorageKey(), JSON.stringify(aiChatHistory.slice(-30)));
-
-                const meta = document.createElement('div');
-                meta.className = 'flex items-center gap-2 mt-1 px-1';
-                const time = document.createElement('span');
-                time.className = 'text-[9px] text-slate-500';
-                time.textContent = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                const copyBtn = document.createElement('button');
-                copyBtn.className = 'text-[9px] text-slate-500 hover:text-[#ff4d8d] font-bold';
-                copyBtn.textContent = 'Copy';
-                copyBtn.onclick = () => {
-                    navigator.clipboard.writeText(botBubble.textContent);
-                    copyBtn.textContent = 'Copied!';
-                    setTimeout(() => copyBtn.textContent = 'Copy', 1200);
-                };
-                meta.appendChild(time);
-                meta.appendChild(copyBtn);
-                botBubble.parentElement.appendChild(meta);
-
-            } catch (err) {
-                botBubble.classList.remove('italic', 'text-slate-500');
-                botBubble.classList.add('border-red-500/60', 'text-red-300');
-                botBubble.textContent = '⚠️ ' + err.message;
-                aiChatHistory.pop();
-                addAiRetryButton();
-            } finally {
-                document.getElementById('aiSendBtn').disabled = false;
-            }
-        }
-
-        // =====================================================================================
-        // FEATURE: EMERGENCY ALERT — self-contained module. Uses the existing supabaseClient,
-        // currentUser, globalProfilesCache and showAlertBanner() but defines nothing that
-        // collides with existing names. Needs emergency_migration.sql run once in Supabase
-        // (adds 4 columns to `profiles`, plus new `emergency_alerts` / `alert_responses` tables).
-        // Nothing here runs or affects anything unless the user opens the Emergency modal.
-        // =====================================================================================
-
-        let emergencyResponderEnabled = false;
-        let emergencyLocationWatchId = null;
-        let emergencyActiveIncomingAlert = null; // the nearest alert currently shown, if any
-        let emergencyCountdownTimer = null;
-
-        function haversineKm(lat1, lon1, lat2, lon2) {
-            if (lat1 == null || lon1 == null || lat2 == null || lon2 == null) return Infinity;
-            const R = 6371;
-            const dLat = (lat2 - lat1) * Math.PI / 180;
-            const dLon = (lon2 - lon1) * Math.PI / 180;
-            const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
-            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        }
-
-        async function openEmergencyModal() {
-            const modal = document.getElementById('emergencyModal');
-            if (!modal) return;
-            modal.classList.remove('hidden');
-            await loadEmergencyProfileIntoForm();
-        }
-
-        function closeEmergencyModal() {
-            const modal = document.getElementById('emergencyModal');
-            if (modal) modal.classList.add('hidden');
-        }
-
-        async function loadEmergencyProfileIntoForm() {
-            if (!currentUser) return;
-            try {
-                const { data, error } = await supabaseClient.from('profiles')
-                    .select('medical_blood_group, medical_allergies, medical_conditions, emergency_contact_number, emergency_responder_enabled, auto_crash_detection_enabled')
-                    .eq('username', currentUser).maybeSingle();
-                if (error || !data) return;
-                document.getElementById('emergencyBloodGroup').value = data.medical_blood_group || '';
-                document.getElementById('emergencyAllergies').value = data.medical_allergies || '';
-                document.getElementById('emergencyConditions').value = data.medical_conditions || '';
-                document.getElementById('emergencyContactNumber').value = data.emergency_contact_number || '';
-                emergencyResponderEnabled = !!data.emergency_responder_enabled;
-                updateEmergencyResponderToggleUI();
-                if (emergencyResponderEnabled) startEmergencyLocationWatch();
-                emergencyAutoDetectEnabled = !!data.auto_crash_detection_enabled;
-                updateEmergencyAutoDetectToggleUI();
-                if (emergencyAutoDetectEnabled) startAutoCrashDetection();
-            } catch (e) { console.warn('loadEmergencyProfileIntoForm failed', e); }
-        }
-
-        async function saveEmergencyProfile() {
-            if (!currentUser) return;
-            const payload = {
-                medical_blood_group: document.getElementById('emergencyBloodGroup').value.trim(),
-                medical_allergies: document.getElementById('emergencyAllergies').value.trim(),
-                medical_conditions: document.getElementById('emergencyConditions').value.trim(),
-                emergency_contact_number: document.getElementById('emergencyContactNumber').value.trim(),
-            };
-            const { error } = await supabaseClient.from('profiles').update(payload).eq('username', currentUser);
-            if (error) { showAlertBanner('Safety profile save nahi hua, dobara try karo', 'error'); return; }
-            showAlertBanner('Safety profile saved ✅', 'success');
-        }
-
-        function updateEmergencyResponderToggleUI() {
-            const toggle = document.getElementById('emergencyResponderToggle');
-            const dot = document.getElementById('emergencyResponderToggleDot');
-            if (!toggle || !dot) return;
-            toggle.classList.toggle('bg-red-500', emergencyResponderEnabled);
-            toggle.classList.toggle('bg-slate-700', !emergencyResponderEnabled);
-            dot.style.transform = emergencyResponderEnabled ? 'translateX(20px)' : 'translateX(0)';
-        }
-
-        async function toggleEmergencyResponder() {
-            emergencyResponderEnabled = !emergencyResponderEnabled;
-            updateEmergencyResponderToggleUI();
-            await supabaseClient.from('profiles').update({ emergency_responder_enabled: emergencyResponderEnabled }).eq('username', currentUser);
-            if (emergencyResponderEnabled) {
-                startEmergencyLocationWatch();
-                showAlertBanner('Responder Mode ON — nearby accident hone par alert milega', 'info');
-            } else {
-                stopEmergencyLocationWatch();
-                showAlertBanner('Responder Mode OFF', 'info');
-            }
-        }
-
-        function startEmergencyLocationWatch() {
-            if (!navigator.geolocation || emergencyLocationWatchId !== null) return;
-            emergencyLocationWatchId = navigator.geolocation.watchPosition(
-                pos => {
-                    supabaseClient.from('profiles').update({
-                        last_lat: pos.coords.latitude,
-                        last_lng: pos.coords.longitude,
-                        location_updated_at: new Date().toISOString()
-                    }).eq('username', currentUser).then(() => {});
-
-                    // Feed the auto-crash-detection speed-drop check (see evaluateCrashSignals).
-                    const speedKmh = pos.coords.speed != null && pos.coords.speed >= 0 ? pos.coords.speed * 3.6 : null;
-                    if (speedKmh != null) {
-                        if (emergencyLastKnownSpeedKmh != null && emergencyLastKnownSpeedKmh > 20) {
-                            emergencyPreImpactSpeedKmh = emergencyLastKnownSpeedKmh;
-                        }
-                        emergencyLastKnownSpeedKmh = speedKmh;
-                    }
-                },
-                err => console.warn('emergency location watch error', err),
-                { enableHighAccuracy: true, maximumAge: 5000 }
-            );
-        }
-
-        function stopEmergencyLocationWatch() {
-            if (emergencyLocationWatchId !== null && navigator.geolocation) {
-                navigator.geolocation.clearWatch(emergencyLocationWatchId);
-                emergencyLocationWatchId = null;
-            }
-        }
-
-        // SOS button — 5 second cancel window (accidental-tap protection), then creates the alert row.
-        function triggerEmergencyAlert() {
-            const btn = document.getElementById('emergencySosBtn');
-            if (!btn || btn.dataset.counting === '1') return;
-            btn.dataset.counting = '1';
-            let secondsLeft = 5;
-            const originalHtml = btn.innerHTML;
-            btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Cancel (${secondsLeft})`;
-            emergencyCountdownTimer = setInterval(() => {
-                secondsLeft--;
-                if (secondsLeft <= 0) {
-                    clearInterval(emergencyCountdownTimer);
-                    btn.innerHTML = originalHtml;
-                    btn.dataset.counting = '0';
-                    sendEmergencyAlertNow();
-                } else {
-                    btn.innerHTML = `<i class="fa-solid fa-xmark"></i> Cancel (${secondsLeft})`;
-                }
-            }, 1000);
-            btn.onclick = () => {
-                if (btn.dataset.counting === '1') {
-                    clearInterval(emergencyCountdownTimer);
-                    btn.innerHTML = originalHtml;
-                    btn.dataset.counting = '0';
-                    btn.onclick = triggerEmergencyAlert;
-                    showAlertBanner('SOS cancel kar diya', 'info');
-                }
-            };
-        }
-
-        async function sendEmergencyAlertNow() {
-            if (!navigator.geolocation) { showAlertBanner('Location access nahi mil paya', 'error'); return; }
-            navigator.geolocation.getCurrentPosition(async pos => {
-                const { data: profile } = await supabaseClient.from('profiles')
-                    .select('medical_blood_group, medical_allergies, medical_conditions, emergency_contact_number')
-                    .eq('username', currentUser).maybeSingle();
-
-                const { error } = await supabaseClient.from('emergency_alerts').insert({
-                    victim_username: currentUser,
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    medical_blood_group: profile?.medical_blood_group || null,
-                    medical_allergies: profile?.medical_allergies || null,
-                    medical_conditions: profile?.medical_conditions || null,
-                    emergency_contact_number: profile?.emergency_contact_number || null,
-                    status: 'active',
-                    current_radius_km: 5
-                });
-                if (error) { showAlertBanner('Alert bhejne mein error aaya', 'error'); return; }
-                showAlertBanner('🚨 Emergency Alert bhej diya gaya — nearby log aur hospital ko notify kiya jaa raha hai', 'warning');
-            }, () => showAlertBanner('Location access allow karo SOS bhejne ke liye', 'error'));
-        }
-
-        // Called from the catch-all realtime channel whenever emergency_alerts changes.
-        async function handleEmergencyAlertEvent(alertRow) {
-            if (!alertRow || alertRow.victim_username === currentUser) return; // don't alert yourself
-            if (alertRow.status !== 'active') return;
-            if (!emergencyResponderEnabled) return;
-
-            const { data: me } = await supabaseClient.from('profiles').select('last_lat, last_lng').eq('username', currentUser).maybeSingle();
-            if (!me || me.last_lat == null) return;
-
-            const distanceKm = haversineKm(me.last_lat, me.last_lng, alertRow.lat, alertRow.lng);
-            if (distanceKm > (alertRow.current_radius_km || 5)) return; // outside current radius, ignore for now
-
-            emergencyActiveIncomingAlert = alertRow;
-            renderIncomingEmergencyAlert(alertRow, distanceKm);
-            document.getElementById('emergencyAlertBadge')?.classList.remove('hidden');
-        }
-
-        function renderIncomingEmergencyAlert(alertRow, distanceKm) {
-            const container = document.getElementById('emergencyIncomingContainer');
-            if (!container) return;
-            container.innerHTML = `
-                <div class="glass-panel rounded-2xl p-4 border border-red-500/50 space-y-2.5 animate-pulse">
-                    <p class="text-xs font-bold text-red-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i> Emergency Nearby (${distanceKm.toFixed(1)} km)</p>
-                    <p class="text-[10px] text-slate-400">Accident detected near ${alertRow.victim_username}'s location.
-                        ${alertRow.medical_blood_group ? `Blood group: ${alertRow.medical_blood_group}.` : ''}</p>
-                    <div class="flex gap-2">
-                        <button onclick="respondToEmergencyAlert('${alertRow.id}','coming')" class="flex-1 bg-emerald-600 hover:bg-emerald-500 py-2 rounded-xl text-[11px] font-bold text-white">I'm Coming</button>
-                        <button onclick="respondToEmergencyAlert('${alertRow.id}','cant_help')" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-[11px] font-bold text-slate-300">Can't Help</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function respondToEmergencyAlert(alertId, responseType) {
-            await supabaseClient.from('alert_responses').insert({
-                alert_id: alertId, responder_username: currentUser, response_type: responseType
-            });
-            if (responseType === 'coming') {
-                await supabaseClient.from('emergency_alerts').update({ status: 'responded' }).eq('id', alertId);
-                showAlertBanner('Thank you — victim ki location tumhe mil gayi hai', 'success');
-            }
-            document.getElementById('emergencyIncomingContainer').innerHTML = '';
-            document.getElementById('emergencyAlertBadge')?.classList.add('hidden');
-            emergencyActiveIncomingAlert = null;
-        }
-
-        // Own-profile-only shortcut card on the profile flip page (see renderNewFeaturesPanel).
-        function renderEmergencyProfileLinkCard(isMe) {
-            const wrap = document.getElementById('emergencyProfileLinkCard');
-            if (!wrap) return;
-            if (!isMe) { wrap.innerHTML = ''; return; }
-            wrap.innerHTML = `
-                <button onclick="openEmergencyModal()" class="w-full flex items-center gap-2.5 text-left bg-gradient-to-r from-red-500/15 via-red-500/5 to-transparent border border-red-500/30 rounded-2xl p-3 hover:border-red-400/60 transition">
-                    <div class="w-9 h-9 rounded-xl bg-red-500/20 text-red-400 flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-truck-medical"></i></div>
-                    <div class="flex-1 min-w-0">
-                        <p class="text-[11px] font-bold text-slate-200">Emergency Alert</p>
-                        <p class="text-[9px] text-slate-500">Safety profile, SOS aur Responder Mode</p>
-                    </div>
-                    <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
-                </button>
-            `;
-        }
-
-        // =====================================================================================
-        // FEATURE: AUTO CRASH DETECTION — multi-signal, opt-in. Runs only while the toggle is on.
-        // Combines accelerometer spike + spike SHARPNESS (duration) + gyroscope rotation + a GPS
-        // speed-drop pattern, so a phone falling, sitting on a seat, or normal hard-braking won't
-        // false-trigger on their own — all signals must agree. Browsers have no native
-        // "in-vehicle" Activity Recognition API (that's Android/iOS-native only), so speed from
-        // GPS is used as the closest available substitute for "was this phone moving fast".
-        // =====================================================================================
-
-        let emergencyAutoDetectEnabled = false;
-        let emergencyMotionHandler = null;
-        let emergencyLastAccel = null;
-        let emergencyLastAccelTime = 0;
-        let emergencyRecentSpikeSharp = false;
-        let emergencyLastRotationSpike = 0;
-        let emergencyLastKnownSpeedKmh = null;
-        let emergencyPreImpactSpeedKmh = null;
-        let emergencySpeedZeroSince = null;
-
-        const CRASH_ACCEL_THRESHOLD = 25;      // m/s^2 combined delta
-        const CRASH_SPIKE_MAX_MS = 150;        // spike must be sharp, not gradual
-        const CRASH_ROTATION_THRESHOLD = 4;    // rad/s, abnormal tilt/spin
-        const CRASH_SIGNAL_WINDOW_MS = 4000;   // signals must line up within this window
-
-        async function toggleEmergencyAutoDetect() {
-            emergencyAutoDetectEnabled = !emergencyAutoDetectEnabled;
-            updateEmergencyAutoDetectToggleUI();
-            await supabaseClient.from('profiles').update({ auto_crash_detection_enabled: emergencyAutoDetectEnabled }).eq('username', currentUser);
-            if (emergencyAutoDetectEnabled) {
-                const ok = await startAutoCrashDetection();
-                if (!ok) {
-                    emergencyAutoDetectEnabled = false;
-                    updateEmergencyAutoDetectToggleUI();
-                    return;
-                }
-                showAlertBanner('Auto Crash Detection ON — background me sensors watch karenge', 'info');
-            } else {
-                stopAutoCrashDetection();
-                showAlertBanner('Auto Crash Detection OFF', 'info');
-            }
-        }
-
-        function updateEmergencyAutoDetectToggleUI() {
-            const toggle = document.getElementById('emergencyAutoDetectToggle');
-            const dot = document.getElementById('emergencyAutoDetectToggleDot');
-            const status = document.getElementById('emergencyAutoDetectStatus');
-            if (toggle && dot) {
-                toggle.classList.toggle('bg-red-500', emergencyAutoDetectEnabled);
-                toggle.classList.toggle('bg-slate-700', !emergencyAutoDetectEnabled);
-                dot.style.transform = emergencyAutoDetectEnabled ? 'translateX(20px)' : 'translateX(0)';
-            }
-            if (status) status.classList.toggle('hidden', !emergencyAutoDetectEnabled);
-        }
-
-        async function startAutoCrashDetection() {
-            // iOS Safari requires an explicit user-gesture permission prompt for motion sensors.
-            if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function') {
-                try {
-                    const res = await DeviceMotionEvent.requestPermission();
-                    if (res !== 'granted') {
-                        showAlertBanner('Motion sensor permission allow karo Auto Detection ke liye', 'error');
-                        return false;
-                    }
-                } catch (e) {
-                    showAlertBanner('Motion sensor permission nahi mil paya', 'error');
-                    return false;
-                }
-            }
-            startEmergencyLocationWatch(); // reuse existing GPS watcher — also updates emergencyLastKnownSpeedKmh below
-
-            emergencyMotionHandler = (event) => {
-                const now = Date.now();
-                const acc = event.accelerationIncludingGravity;
-                const rot = event.rotationRate;
-
-                if (acc && acc.x != null) {
-                    if (emergencyLastAccel) {
-                        const delta = Math.abs(acc.x - emergencyLastAccel.x) + Math.abs(acc.y - emergencyLastAccel.y) + Math.abs(acc.z - emergencyLastAccel.z);
-                        const dt = now - emergencyLastAccelTime;
-                        if (delta > CRASH_ACCEL_THRESHOLD && dt > 0 && dt < CRASH_SPIKE_MAX_MS) {
-                            emergencyRecentSpikeSharp = true;
-                            setTimeout(() => { emergencyRecentSpikeSharp = false; }, CRASH_SIGNAL_WINDOW_MS);
-                        }
-                    }
-                    emergencyLastAccel = { x: acc.x, y: acc.y, z: acc.z };
-                    emergencyLastAccelTime = now;
-                }
-
-                if (rot && (Math.abs(rot.alpha || 0) > CRASH_ROTATION_THRESHOLD || Math.abs(rot.beta || 0) > CRASH_ROTATION_THRESHOLD || Math.abs(rot.gamma || 0) > CRASH_ROTATION_THRESHOLD)) {
-                    emergencyLastRotationSpike = now;
-                }
-
-                evaluateCrashSignals();
-            };
-            window.addEventListener('devicemotion', emergencyMotionHandler);
-            return true;
-        }
-
-        function stopAutoCrashDetection() {
-            if (emergencyMotionHandler) {
-                window.removeEventListener('devicemotion', emergencyMotionHandler);
-                emergencyMotionHandler = null;
-            }
-            if (!emergencyResponderEnabled) stopEmergencyLocationWatch(); // keep GPS running if responder mode still needs it
-        }
-
-        // Called every devicemotion tick — only fires the countdown when ALL signals agree.
-        let emergencyCrashAlreadyPending = false;
-        function evaluateCrashSignals() {
-            if (emergencyCrashAlreadyPending) return;
-            const now = Date.now();
-            const sharpSpike = emergencyRecentSpikeSharp;
-            const rotationRecent = (now - emergencyLastRotationSpike) < CRASH_SIGNAL_WINDOW_MS;
-            const speedDropped = emergencyPreImpactSpeedKmh != null && emergencyPreImpactSpeedKmh > 20 &&
-                emergencyLastKnownSpeedKmh != null && emergencyLastKnownSpeedKmh < 3;
-
-            if (sharpSpike && rotationRecent && speedDropped) {
-                emergencyCrashAlreadyPending = true;
-                triggerEmergencyAlert(); // same manual SOS flow, with its 5-sec cancel window
-                setTimeout(() => { emergencyCrashAlreadyPending = false; }, 30000);
-            }
         }

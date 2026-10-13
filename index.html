@@ -53,24 +53,7 @@
         <i class="fa-solid fa-wifi-slash mr-1"></i> You're offline — showing cached feed. Some actions are paused.
     </div>
 
-    <!-- FEATURE: PANIC MODE — full-screen disguise overlay, real app hides behind this instantly -->
-    <div id="panicModeOverlay" class="hidden fixed inset-0 z-[400] bg-white text-black flex-col">
-        <div class="h-12 px-4 flex items-center border-b border-gray-200 shrink-0">
-            <span id="panicDisguiseTitle" class="text-sm font-semibold text-gray-700">Notes</span>
-        </div>
-        <div class="flex-1 p-4 overflow-y-auto text-sm text-gray-500 space-y-3">
-            <p>Grocery list</p>
-            <p>Milk, eggs, bread, rice</p>
-            <p>Call plumber about the leak</p>
-            <p>Pick up dry cleaning on Friday</p>
-        </div>
-        <div class="p-3 border-t border-gray-200 shrink-0">
-            <input type="password" id="panicUnlockInput" placeholder="•••• tap 5x here to unlock •••• " onclick="handlePanicUnlockTap()" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-xs text-gray-600" readonly>
-        </div>
-    </div>
 
-    <!-- FEATURE: MILESTONE CONFETTI overlay -->
-    <div id="confettiContainer" class="fixed inset-0 z-[300] pointer-events-none overflow-hidden"></div>
 
     <!-- Global Reel Upload Progress Badge - stays visible on top of the whole app, even if the upload modal/screen is closed -->
     <div id="reelUploadProgressBadge" class="fixed top-4 right-4 z-[200] hidden w-52 glass-panel bg-slate-900/95 border border-[#ff4d8d]/40 rounded-2xl p-3 shadow-2xl">
@@ -501,7 +484,7 @@
                 <span id="modalUsernameHeader" class="text-xs font-bold text-slate-200">Profile</span>
                 <div class="flex items-center gap-1.5">
                     <button onclick="openPageCustomize('profile')" class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-[#ff4d8d] transition" title="Customize Page"><i class="fa-solid fa-pencil text-[10px]"></i></button>
-                <!-- FEATURE: PROFILE FLIP — flips the card to reveal newly-added features -->
+                <!-- FEATURE: PROFILE FLIP — flips the card to reveal the extra features panel -->
                 <button id="profileFlipBtn" onclick="toggleProfileFlip()" title="Naye Features" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-[#ff4d8d] transition">
                     <i id="profileFlipBtnIcon" class="fa-solid fa-rotate text-xs"></i>
                 </button>
@@ -527,17 +510,12 @@
                             </h3>
                             <div class="flex items-center gap-2 flex-wrap">
                                 <p class="text-[10px] text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Active on Nexus</p>
-                                <span id="modalStreakBadge" class="hidden text-[10px] font-bold text-amber-400 items-center gap-0.5"><i class="fa-solid fa-fire"></i></span>
-                                <span id="modalMoodBadge" class="hidden text-[10px] text-slate-300"></span>
-                                <!-- FEATURE: CONTENT DNA FINGERPRINT — mini badge, tap to flip straight to the full pattern -->
-                                <span id="dnaMiniBadge" onclick="toggleProfileFlip()" class="hidden cursor-pointer text-[9px] font-bold text-slate-300 items-center gap-1 bg-slate-900 border border-slate-800 rounded-full px-1.5 py-0.5 hover:border-[#9d7bff]/50 transition">🧬 DNA</span>
                             </div>
                         </div>
                     </div>
 
                     <div id="closeFriendToggleWrap" class="hidden gap-2">
                         <button id="closeFriendToggleBtn" onclick="toggleCloseFriend()" class="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-1.5 rounded-xl border transition"></button>
-                        <button onclick="checkVibeMatch(viewingProfileUsername)" class="flex-1 flex items-center justify-center gap-1.5 text-[11px] font-bold py-1.5 rounded-xl border border-[#35c7ff]/40 bg-[#35c7ff]/10 text-[#35c7ff] transition"><i class="fa-solid fa-people-arrows"></i> Vibe Match</button>
                     </div>
 
                     <div class="grid grid-cols-3 gap-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 text-center text-xs">
@@ -565,24 +543,9 @@
                         <p id="personaFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Persona-wise follow ke liye ek chhoti si SQL setup baaki hai (neeche instructions dekho) — tone/bio abhi bhi save ho sakta hai.</p>
                     </div>
 
-                    <!-- FEATURE: SECRET ADMIRER (own profile only) -->
-                    <div id="secretAdmirerCard" class="hidden bg-gradient-to-r from-[#ff4d8d]/10 via-[#9d7bff]/10 to-[#35c7ff]/10 border border-[#9d7bff]/30 rounded-2xl p-3 items-center gap-2.5"></div>
 
                     <div id="profileOtherActions" class="hidden flex gap-2 pt-1">
                         <button id="profileModalChatBtn" class="flex-1 bg-[#35c7ff] hover:bg-[#35c7ff] py-2 rounded-xl text-xs font-bold transition text-white shadow"><i class="fa-solid fa-comment mr-1"></i> Message</button>
-                        <!-- FEATURE: IN-APP WALLET (TIPPING) — send coins straight from their profile -->
-                        <button id="profileSendTipBtn" onclick="openSendTipPrompt(viewingProfileUsername)" class="hidden flex-1 bg-amber-500 hover:bg-amber-400 py-2 rounded-xl text-xs font-bold transition text-white shadow"><i class="fa-solid fa-coins mr-1"></i> Send Tip</button>
-                    </div>
-                    <!-- FEATURE: IN-APP WALLET — inline tip composer, shown only when Send Tip is tapped -->
-                    <div id="sendTipInlineBox" class="hidden glass-panel rounded-2xl p-3 space-y-2 border border-amber-500/30">
-                        <p class="text-[11px] font-bold text-amber-400"><i class="fa-solid fa-coins mr-1"></i> Send Nexus Coins</p>
-                        <input type="number" id="sendTipAmountInput" min="1" step="1" placeholder="Amount (coins)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
-                        <input type="text" id="sendTipNoteInput" maxlength="60" placeholder="Note (optional)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-amber-500">
-                        <div class="flex gap-2">
-                            <button onclick="closeSendTipPrompt()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-1.5 rounded-xl text-xs font-bold transition text-slate-300">Cancel</button>
-                            <button onclick="confirmSendTip()" class="flex-1 bg-amber-500 hover:bg-amber-400 py-1.5 rounded-xl text-xs font-bold transition text-white">Send</button>
-                        </div>
-                        <p id="sendTipFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Wallet ke liye ek chhoti si SQL setup baaki hai (neeche instructions dekho).</p>
                     </div>
 
                     <!-- FEATURE: NEXUS ADMIN VERIFICATION — only visible to the NEXUS account, on
@@ -596,27 +559,9 @@
                         </div>
                         <button onclick="saveProfileChanges()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-1.5 rounded-xl text-xs shadow">Save Username</button>
 
-                        <div class="pt-2 border-t border-slate-800 space-y-1.5">
-                            <p class="text-[11px] font-bold text-slate-200"><i class="fa-solid fa-face-smile mr-1 text-slate-400"></i> Mood Status</p>
-                            <div class="flex gap-1.5">
-                                <div id="moodEmojiPicker" class="flex gap-1 bg-slate-950 border border-slate-800 rounded-xl px-1.5 items-center">
-                                    <span onclick="selectMoodEmoji('😊')" class="cursor-pointer p-1 rounded hover:bg-slate-800 text-sm" data-mood-emoji="😊">😊</span>
-                                    <span onclick="selectMoodEmoji('🔥')" class="cursor-pointer p-1 rounded hover:bg-slate-800 text-sm" data-mood-emoji="🔥">🔥</span>
-                                    <span onclick="selectMoodEmoji('😴')" class="cursor-pointer p-1 rounded hover:bg-slate-800 text-sm" data-mood-emoji="😴">😴</span>
-                                    <span onclick="selectMoodEmoji('🎉')" class="cursor-pointer p-1 rounded hover:bg-slate-800 text-sm" data-mood-emoji="🎉">🎉</span>
-                                    <span onclick="selectMoodEmoji('💔')" class="cursor-pointer p-1 rounded hover:bg-slate-800 text-sm" data-mood-emoji="💔">💔</span>
-                                </div>
-                                <input type="text" id="moodTextInput" maxlength="24" placeholder="kya chal raha hai..." class="flex-1 min-w-0 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
-                            </div>
-                            <button onclick="saveMoodStatus()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-1.5 rounded-xl text-xs text-slate-200 transition">Update Mood</button>
-                            <p id="moodFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Mood status ke liye ek chhoti si SQL setup baaki hai — neeche dekh lo.</p>
-                        </div>
 
-                        <button onclick="generateNexusWrapped()" class="w-full flex items-center justify-center gap-1.5 pt-2 mt-1 border-t border-slate-800 text-xs font-bold text-amber-400 py-1.5 rounded-xl transition hover:bg-amber-500/5"><i class="fa-solid fa-gift"></i> My Nexus Wrapped ✨</button>
                     </div>
 
-                    <!-- FEATURE: ANONYMOUS Q&A -->
-                    <div id="anonQaSection" class="glass-panel rounded-2xl p-3 space-y-2.5"></div>
 
                     <div class="flex border-t border-b border-slate-800 text-xs font-bold">
                         <button onclick="switchProfileTab('posts')" id="profTabPostsBtn" class="flex-1 py-2 text-center text-[#ff4d8d] border-b-2 border-[#ff4d8d] transition"><i class="fa-solid fa-table-cells mr-1"></i> Posts</button>
@@ -643,32 +588,8 @@
                         <button onclick="toggleProfileFlip()" class="text-[10px] font-bold text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition"><i class="fa-solid fa-rotate-left mr-1"></i> Flip Back</button>
                     </div>
 
-                    <!-- FEATURE: EMERGENCY ALERT shortcut — own-profile only, filled by
-                         renderEmergencyProfileLinkCard(isMe) in app.js. Links to the standalone
-                         emergencyModal (also reachable from the header truck-medical icon). -->
-                    <div id="emergencyProfileLinkCard"></div>
 
-                    <!-- FEATURE: YOUR GROWTH — animated tree that grows (seed → sapling → full tree)
-                         as follower count increases. Placed at the very top of the flip page per request. -->
-                    <button onclick="openGrowthTreeModal(viewingProfileUsername)" class="w-full flex items-center gap-2.5 text-left bg-gradient-to-r from-emerald-500/15 via-emerald-500/5 to-transparent border border-emerald-500/30 rounded-2xl p-3 hover:border-emerald-400/60 transition">
-                        <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-tree"></i></div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[11px] font-bold text-slate-200">Your Growth</p>
-                            <p id="growthTreeTeaser" class="text-[9px] text-slate-500">Followers ke saath tumhara tree dekho</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
-                    </button>
 
-                    <!-- FEATURE: GROWTH FOREST — this profile's tree AND their close friends' trees,
-                         growing together in one shared 3D forest that anyone involved can visit. -->
-                    <button onclick="openGrowthForestModal(viewingProfileUsername)" class="w-full flex items-center gap-2.5 text-left bg-gradient-to-r from-emerald-500/15 via-teal-500/5 to-transparent border border-emerald-500/30 rounded-2xl p-3 hover:border-emerald-400/60 transition">
-                        <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-seedling"></i></div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-[11px] font-bold text-slate-200">Growth Forest</p>
-                            <p class="text-[9px] text-slate-500">Mutual follows ke saath shared forest — dono visit kar sakte ho</p>
-                        </div>
-                        <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
-                    </button>
 
                     <!-- FEATURE: PRESENCE CONSTELLATION — mutuals as ambient stars in a night sky,
                          brightness driven by how much you two actually interact. No notifications. -->
@@ -725,26 +646,12 @@
                         </div>
                     </div>
 
-                    <!-- FEATURE: LIVE GLOBAL PULSE — real-time activity radar -->
-                    <div id="livePulseCard" class="glass-panel rounded-2xl p-3 space-y-2 text-center"></div>
 
-                    <!-- FEATURE: NEXUS AURA BATTLE — head-to-head vibe comparison vs a friend -->
-                    <div id="auraBattleCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
-                    <!-- FEATURE: NEXUS VIBE CARD — shareable recap card, designed to drive app downloads -->
-                    <div id="vibeCardCard" class="glass-panel rounded-2xl p-3 space-y-2 text-center"></div>
 
-                    <!-- FEATURE: SLOW FOLLOW -->
-                    <div id="slowFollowCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
-                    <!-- FEATURE: SILENT SUPPORT PING -->
-                    <div id="silentSupportPingCard" class="glass-panel rounded-2xl p-3 space-y-2 text-center"></div>
 
-                    <!-- FEATURE: CONTENT DNA FINGERPRINT -->
-                    <div id="contentDnaCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
-                    <!-- FEATURE: HONEST USAGE MIRROR -->
-                    <div id="honestUsageMirrorCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
                     <!-- FEATURE: YOUR NEXUS UNIVERSE -->
                     <div id="nexusUniverseCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
@@ -764,8 +671,6 @@
                     <!-- FEATURE: TRUE DELETE -->
                     <div id="trueDeleteCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
-                    <!-- FEATURE: IN-APP WALLET (TIPPING) -->
-                    <div id="walletCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
                     <!-- FEATURE: OFFLINE MODE -->
                     <div id="offlineModeCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
@@ -773,8 +678,6 @@
                     <!-- FEATURE: SCREENSHOT ALERT -->
                     <div id="screenshotAlertCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
-                    <!-- FEATURE: PANIC MODE -->
-                    <div id="panicModeCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
 
                     <!-- FEATURE: MULTI-LANGUAGE UI -->
                     <div id="languageCard" class="glass-panel rounded-2xl p-3 space-y-2"></div>
@@ -912,110 +815,10 @@
         </div>
     </div>
 
-    <!-- FEATURE: VIBE MATCH -->
-    <div id="vibeMatchModal" class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-5">
-        <div class="glass-panel w-full max-w-xs rounded-3xl p-5 text-center space-y-3 relative">
-            <button onclick="document.getElementById('vibeMatchModal').classList.add('hidden')" class="absolute top-3 right-3 text-slate-500 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <p class="text-[10px] tracking-wide text-slate-400">Vibe Match</p>
-            <div id="vibeMatchBody" class="py-6"><i class="fa-solid fa-spinner fa-spin text-2xl text-[#35c7ff]"></i></div>
-        </div>
-    </div>
 
-    <!-- FEATURE: NEXUS WRAPPED -->
-    <div id="wrappedModal" class="fixed inset-0 z-[70] bg-black/95 backdrop-blur-md hidden flex items-center justify-center p-5">
-        <div class="w-full max-w-xs rounded-3xl p-6 text-center space-y-3 relative bg-gradient-to-br from-[#ff4d8d] via-[#9d7bff] to-[#35c7ff] shadow-2xl">
-            <button onclick="document.getElementById('wrappedModal').classList.add('hidden')" class="absolute top-3 right-3 text-white/70 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <p class="font-display font-bold text-white text-lg tracking-tight">✨ Nexus Wrapped</p>
-            <div id="wrappedBody" class="py-6 text-white"><i class="fa-solid fa-spinner fa-spin text-2xl"></i></div>
-        </div>
-    </div>
 
-    <!-- FEATURE: TIME CAPSULE -->
-    <div id="timeCapsuleModal" class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-5">
-        <div class="glass-panel w-full max-w-xs rounded-3xl p-5 space-y-3 relative max-h-[85vh] overflow-y-auto">
-            <button onclick="document.getElementById('timeCapsuleModal').classList.add('hidden')" class="absolute top-3 right-3 text-slate-500 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-envelope text-[#9d7bff]"></i> Time Capsule <span id="timeCapsuleForUser" class="text-slate-500 font-normal"></span></p>
-            <textarea id="timeCapsuleText" rows="3" placeholder="Future ke liye ek message likho..." class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff] resize-none"></textarea>
-            <input type="date" id="timeCapsuleDate" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-            <button onclick="sendTimeCapsule()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-1.5 rounded-xl text-xs shadow text-white">Lock & Send 🔒</button>
-            <p id="timeCapsuleFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Time Capsule ke liye ek chhoti si SQL setup baaki hai.</p>
-            <div class="pt-2 border-t border-slate-800 space-y-1.5">
-                <p class="text-[10px] font-bold text-slate-400 tracking-wide">Tumhare Capsules</p>
-                <div id="timeCapsuleList" class="space-y-1.5"></div>
-            </div>
-        </div>
-    </div>
 
-    <!-- FEATURE: CUSTOM CHAT THEMES -->
-    <div id="chatThemeModal" class="fixed inset-0 z-[70] bg-black/90 backdrop-blur-md hidden flex items-center justify-center p-5">
-        <div class="glass-panel w-full max-w-xs rounded-3xl p-5 space-y-3 relative">
-            <button onclick="document.getElementById('chatThemeModal').classList.add('hidden')" class="absolute top-3 right-3 text-slate-500 hover:text-white text-sm"><i class="fa-solid fa-xmark"></i></button>
-            <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-palette text-[#9d7bff]"></i> Chat Theme <span id="chatThemeForUser" class="text-slate-500 font-normal"></span></p>
-            <div id="chatThemeGrid" class="grid grid-cols-4 gap-2"></div>
-        </div>
-    </div>
 
-    <!-- FEATURE: GIFs & STICKERS — shared picker for both DM and group chat, opened via
-         openGifStickerModal('dm' | 'group'). GIF search uses the GIPHY API (Tenor's API was
-         permanently shut down by Google on 30 June 2026 — see the comment near GIPHY_API_KEY
-         in app.js). Sending either a GIF or a sticker just inserts a normal chat message row
-         with type='gif'/'sticker', so it travels over the same real-time channels every other
-         message already uses. -->
-    <div id="gifStickerModal" class="fixed inset-0 z-[120] bg-black/90 backdrop-blur-md hidden flex items-end sm:items-center justify-center p-0 sm:p-5" onclick="if(event.target===this) closeGifStickerModal()">
-        <div class="glass-panel w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-3 space-y-2.5 relative flex flex-col" style="height:72vh; max-height:620px;">
-            <button onclick="closeGifStickerModal()" class="absolute top-3 right-3 text-slate-500 hover:text-white text-sm z-10"><i class="fa-solid fa-xmark"></i></button>
-
-            <div class="glass-panel rounded-2xl p-1 shadow-lg flex items-center gap-1 shrink-0">
-                <button id="gifTabBtn" onclick="switchGifStickerTab('gif')" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition bg-[#ff4d8d] text-white shadow"><i class="fa-solid fa-film mr-1"></i> GIFs</button>
-                <button id="stickerTabBtn" onclick="switchGifStickerTab('sticker')" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition text-slate-400 hover:text-slate-200"><i class="fa-solid fa-icons mr-1"></i> Stickers</button>
-            </div>
-
-            <!-- GIF TAB -->
-            <div id="gifPickerPanel" class="flex-1 flex flex-col min-h-0 space-y-2">
-                <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2 shrink-0">
-                    <i class="fa-solid fa-search text-slate-500 text-[10px]"></i>
-                    <input type="text" id="gifSearchInput" oninput="onGifSearchInput(this.value)" placeholder="Search GIFs..." class="flex-1 bg-transparent text-xs focus:outline-none text-slate-200 placeholder-slate-500">
-                </div>
-                <div id="gifResultsGrid" class="flex-1 overflow-y-auto no-scrollbar grid grid-cols-3 gap-1.5 content-start"></div>
-                <p class="text-center text-[8px] text-slate-600 shrink-0">Powered by GIPHY</p>
-            </div>
-
-            <!-- STICKER TAB -->
-            <div id="stickerPickerPanel" class="hidden flex-1 flex flex-col min-h-0 space-y-2">
-                <div id="stickerPackSelector" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 pb-0.5"></div>
-                <div id="stickerResultsGrid" class="flex-1 overflow-y-auto no-scrollbar grid grid-cols-4 gap-2 content-start"></div>
-
-                <details class="shrink-0 bg-slate-950/60 border border-slate-800 rounded-xl">
-                    <summary class="text-[10px] font-bold text-slate-400 px-3 py-2 cursor-pointer select-none"><i class="fa-solid fa-plus mr-1"></i> Get more / add stickers</summary>
-                    <div class="p-2.5 pt-0 space-y-2">
-                        <div>
-                            <p class="text-[9px] text-slate-500 mb-1">Quick-add a starter pack:</p>
-                            <div class="flex flex-wrap gap-1.5">
-                                <button onclick="addStarterStickerPack('reactions')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold px-2.5 py-1.5 rounded-full transition">😂 Reactions</button>
-                                <button onclick="addStarterStickerPack('desi')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold px-2.5 py-1.5 rounded-full transition">🎉 Desi Vibes</button>
-                                <button onclick="addStarterStickerPack('love')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold px-2.5 py-1.5 rounded-full transition">😍 Love</button>
-                            </div>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <input type="text" id="newStickerPackNameInput" placeholder="New pack name..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-[10px] focus:outline-none focus:border-[#35c7ff] text-slate-200">
-                            <button onclick="createNewStickerPack()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold px-2.5 py-1.5 rounded-xl transition shrink-0">Create</button>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <label class="flex-1 cursor-pointer bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-[10px] text-slate-400 truncate">
-                                <i class="fa-solid fa-upload mr-1"></i> Upload images to selected pack
-                                <input type="file" id="stickerUploadFileInput" accept="image/*" multiple class="hidden" onchange="handleStickerUploadSelect(this)">
-                            </label>
-                            <button onclick="uploadSelectedStickersToPack()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold px-2.5 py-1.5 rounded-xl transition shrink-0">Upload</button>
-                        </div>
-                        <div class="flex items-center gap-1.5">
-                            <input type="text" id="importPackUrlInput" placeholder="Or paste a pack JSON URL to download..." class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-[10px] focus:outline-none focus:border-[#35c7ff] text-slate-200">
-                            <button onclick="importStickerPackFromUrl()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[9px] font-bold px-2.5 py-1.5 rounded-xl transition shrink-0"><i class="fa-solid fa-download"></i></button>
-                        </div>
-                    </div>
-                </details>
-            </div>
-        </div>
-    </div>
 
     <div id="cropperModal" class="fixed inset-0 z-50 bg-black/90 backdrop-blur-md hidden flex flex-col items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-4 space-y-3 text-center">
@@ -1051,17 +854,6 @@
                     <input type="text" id="storyCaptionInput" placeholder="Say something..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
                 </div>
 
-                <!-- FEATURE: REVERSE REVEAL STORY -->
-                <div class="flex items-center justify-between bg-slate-900/50 border border-slate-800 rounded-xl px-3 py-2">
-                    <div>
-                        <p class="text-[11px] font-bold text-slate-200"><i class="fa-solid fa-eye-low-vision mr-1 text-slate-400"></i> Reveal Slowly</p>
-                        <p class="text-[9px] text-slate-500">Story blurred rehti hai; jo genuinely ruk kar dekhega, usi ko clarity milegi</p>
-                    </div>
-                    <button type="button" onclick="toggleRevealSlowlyOption()" id="revealSlowlyToggleBtn" class="w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0">
-                        <span id="revealSlowlyToggleDot" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
-                    </button>
-                </div>
-                <p id="revealSlowlyFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Reveal Slowly ke liye ek chhoti si SQL setup baaki hai — story phir bhi normally post ho jayegi, bas slow-reveal off rahega.</p>
 
                 <div id="storyUploadStatus" class="text-[10px] text-[#35c7ff] hidden text-center font-bold">Uploading story...</div>
                 <p class="text-[9px] text-slate-500 text-center">Story automatically disappears after 24 hours.</p>
@@ -1086,8 +878,6 @@
                 </div>
             </div>
             <div id="storyMediaContainer" class="flex-1 flex items-center justify-center relative overflow-hidden bg-slate-950"></div>
-            <!-- FEATURE: REVERSE REVEAL STORY -->
-            <span id="storyRevealBadge" class="hidden absolute top-14 left-2 z-30 text-[9px] font-bold text-white bg-black/50 px-2 py-1 rounded-full"><i class="fa-solid fa-eye-low-vision mr-1"></i> Reveal Slowly — ruko, dekho</span>
             <div class="absolute inset-y-0 left-0 w-1/3 z-20" onclick="storyNavPrev()"></div>
             <div class="absolute inset-y-0 right-0 w-1/3 z-20" onclick="storyNavNext()"></div>
             <p id="storyCaptionOverlay" class="absolute bottom-4 left-4 right-4 z-30 text-xs text-white text-center bg-black/40 rounded-xl p-2"></p>
@@ -1102,15 +892,6 @@
         </div>
     </div>
 
-    <!-- FEATURE: HONEST USAGE MIRROR — undismissable-for-5s nudge -->
-    <div id="usageNudgeModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-6">
-        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 text-center space-y-3 border border-amber-500/30">
-            <p class="text-3xl">⏳</p>
-            <p class="text-sm font-bold text-slate-200">Ab bas karo?</p>
-            <p id="usageNudgeText" class="text-[11px] text-slate-400">Tum kaafi der se scroll kar rahe ho.</p>
-            <button id="usageNudgeCloseBtn" onclick="closeUsageNudgeModal()" disabled class="w-full bg-slate-800 text-slate-500 font-bold py-2.5 rounded-xl text-xs cursor-not-allowed transition">Wait 5s...</button>
-        </div>
-    </div>
 
     <!-- FEATURE: TRUE DELETE -->
     <div id="trueDeleteModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-6">
@@ -1141,46 +922,7 @@
         </div>
     </div>
 
-    <!-- FEATURE: YOUR GROWTH — follower count ko ek seed se ek poore ped mein badalta hai,
-         animated growth ke saath. Seed (kam followers) se lekar ek badi ped tak. -->
-    <div id="growthTreeModal" class="fixed inset-0 z-[210] bg-black hidden flex-col">
-        <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
-            <span id="growthTreeTitle" class="text-xs font-bold text-slate-200">Your Growth</span>
-            <button onclick="closeGrowthTreeModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="flex-1 relative overflow-hidden">
-            <div id="growthTreeCanvasContainer" class="w-full h-full" style="touch-action:none;"></div>
-            <div class="absolute top-3 inset-x-0 flex justify-center pointer-events-none">
-                <span id="growthTreeStageLabel" class="text-xs font-bold text-slate-100 bg-slate-900/80 border border-slate-700 rounded-full px-3 py-1"></span>
-            </div>
-            <p class="absolute bottom-2 inset-x-0 text-center text-[9px] text-slate-500 pointer-events-none">Drag se ghumao</p>
-        </div>
-        <div class="p-4 border-t border-slate-800 bg-slate-900/90 shrink-0 text-center space-y-1">
-            <p class="text-[11px] text-slate-400"><span id="growthTreeFollowerCount" class="font-bold text-slate-200">0</span> followers</p>
-            <p id="growthTreeNextTierText" class="text-[10px] text-slate-500"></p>
-        </div>
-    </div>
 
-    <!-- FEATURE: GROWTH FOREST — this profile + their close friends' Growth trees, planted together
-         in one shared 3D forest. Fully derived from public followers/close-friends data, so whoever
-         opens a given username's forest sees the exact same trees in the exact same spots — it's a
-         real shared, visitable space, not a private simulation. -->
-    <div id="growthForestModal" class="fixed inset-0 z-[210] bg-black hidden flex-col">
-        <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
-            <span id="growthForestTitle" class="text-xs font-bold text-slate-200">Growth Forest</span>
-            <button onclick="closeGrowthForestModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-xmark"></i></button>
-        </div>
-        <div class="flex-1 relative overflow-hidden forest-backdrop">
-            <div id="growthForestCanvasContainer" class="w-full h-full" style="touch-action:none;"></div>
-            <div id="growthForestEmptyState" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center px-8 space-y-2">
-                <i class="fa-solid fa-seedling text-emerald-500/60 text-2xl"></i>
-                <p class="text-xs font-bold text-slate-300">Forest abhi khaali hai</p>
-                <p class="text-[10px] text-slate-500">Kisi ko follow karo aur wo tumhe follow kare — tabhi unka tree yahaan saath mein ugega.</p>
-            </div>
-            <div id="growthForestLegend" class="absolute top-3 left-3 right-3 flex flex-wrap gap-1.5 pointer-events-none"></div>
-            <p class="absolute bottom-2 inset-x-0 text-center text-[9px] text-slate-500 pointer-events-none">Drag se ghumao, pinch/scroll se zoom — tap ek tree pe uska naam dekhne ke liye</p>
-        </div>
-    </div>
 
     <!-- FEATURE: PRESENCE CONSTELLATION — mutuals as ambient stars in a night sky. No badges, no
          counters, no push notification — just a quiet, glanceable sense of who you're closest to
@@ -1268,32 +1010,6 @@
         </div>
     </div>
 
-    <!-- FEATURE: BOTS/AUTOMATION -->
-    <div id="botsModal" class="fixed inset-0 z-[150] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
-        <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl max-h-[88vh] flex flex-col">
-            <div class="flex justify-between items-center border-b border-slate-800 pb-2 shrink-0">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-robot text-[#9d7bff] mr-1.5"></i> Bots &amp; Automation</h3>
-                <button onclick="closeBotsModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
-            </div>
-
-            <div class="overflow-y-auto space-y-3 pr-1 flex-1 min-h-0">
-                <p class="text-[10px] font-bold text-slate-400 px-1">Your Bots</p>
-                <div id="myBotsListContainer" class="space-y-1.5"></div>
-
-                <div class="pt-2 border-t border-slate-800 space-y-2">
-                    <p class="text-[10px] font-bold text-slate-400 px-1">Create a New Bot</p>
-                    <input type="text" id="newBotUsernameInput" placeholder="Bot username (e.g. weather_bot)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                    <input type="text" id="newBotDefaultReplyInput" placeholder="Default reply (when no keyword matches)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-
-                    <p class="text-[10px] font-bold text-slate-400 px-1">Auto-Reply Rules</p>
-                    <div id="newBotRulesContainer" class="space-y-1.5"></div>
-                    <button onclick="addBotRuleRow()" class="w-full bg-slate-900 border border-dashed border-slate-700 hover:border-[#9d7bff] text-slate-300 hover:text-[#9d7bff] font-bold py-2 rounded-xl text-[10px] transition"><i class="fa-solid fa-plus mr-1"></i> Add Rule</button>
-
-                    <button onclick="submitCreateBot()" class="w-full bg-gradient-to-r from-[#9d7bff] to-indigo-600 font-bold py-2.5 rounded-xl text-xs text-white shadow"><i class="fa-solid fa-robot mr-1.5"></i> Create Bot</button>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Multi-Account Switcher Modal -->
     <div id="accountSwitcherModal" class="fixed inset-0 z-[145] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
@@ -1484,70 +1200,6 @@
         </div>
     </div>
 
-    <!-- FEATURE: EMERGENCY ALERT — fully self-contained modal (own IDs, own functions in app.js,
-         piggybacks on the existing 'public:all_changes' realtime channel like Live Global Pulse does).
-         Nothing here touches switchTab(), existing modals, or existing DB tables — it only adds new
-         columns (via emergency_migration.sql) and two new tables. Safe to ignore if unused. -->
-    <div id="emergencyModal" class="fixed inset-0 z-[220] bg-black/95 backdrop-blur-lg hidden flex flex-col overflow-hidden">
-        <div class="w-full max-w-xl mx-auto h-full flex flex-col glass-panel border-x border-slate-800">
-            <div class="flex items-center justify-between p-3 border-b border-slate-800 shrink-0">
-                <button onclick="closeEmergencyModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
-                <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-truck-medical text-red-400 mr-1"></i> Emergency Alert</span>
-                <span class="w-14"></span>
-            </div>
-
-            <div class="flex-1 overflow-y-auto p-4 space-y-4">
-
-                <!-- Incoming nearby alerts (only visible when one exists) -->
-                <div id="emergencyIncomingContainer" class="space-y-2"></div>
-
-                <!-- Big SOS trigger -->
-                <div class="glass-panel rounded-2xl p-4 border border-red-500/30 text-center space-y-2">
-                    <p class="text-[11px] text-slate-400">Accident ho gaya? Dabao aur nearby logon + hospital ko turant alert jayega.</p>
-                    <button id="emergencySosBtn" onclick="triggerEmergencyAlert()" class="w-full py-4 rounded-2xl text-sm font-display font-bold text-white bg-gradient-to-r from-red-600 to-red-500 hover:from-red-500 hover:to-red-400 shadow-lg shadow-red-900/40 flex items-center justify-center gap-2">
-                        <i class="fa-solid fa-triangle-exclamation"></i> SOS — I've Had An Accident
-                    </button>
-                    <p id="emergencyAutoDetectStatus" class="hidden text-[9px] text-emerald-400"><i class="fa-solid fa-circle-dot mr-1"></i> Auto detection active — watching for crashes</p>
-                </div>
-
-                <!-- Safety profile setup -->
-                <div class="glass-panel rounded-2xl p-4 space-y-3">
-                    <h3 class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-notes-medical text-[#ff4d8d]"></i> My Safety Profile</h3>
-                    <div class="grid grid-cols-2 gap-2">
-                        <input id="emergencyBloodGroup" type="text" placeholder="Blood Group (e.g. O+)" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-red-400/50">
-                        <input id="emergencyContactNumber" type="text" placeholder="Emergency Contact #" class="bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-red-400/50">
-                    </div>
-                    <textarea id="emergencyAllergies" rows="2" placeholder="Allergies (comma separated)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-red-400/50"></textarea>
-                    <textarea id="emergencyConditions" rows="2" placeholder="Existing conditions (diabetes, heart issue, etc.)" class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-red-400/50"></textarea>
-                    <button onclick="saveEmergencyProfile()" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-slate-200">Save Safety Profile</button>
-                </div>
-
-                <!-- Auto crash detection opt-in -->
-                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-[11px] font-bold text-slate-300">Auto Crash Detection</h3>
-                        <p class="text-[9px] text-slate-500">On rakhoge to phone ke sensors se crash automatically detect hoga aur 15-sec countdown ke baad khud SOS chala jayega.</p>
-                    </div>
-                    <button id="emergencyAutoDetectToggle" onclick="toggleEmergencyAutoDetect()" class="w-11 h-6 rounded-full bg-slate-700 relative shrink-0 transition">
-                        <span id="emergencyAutoDetectToggleDot" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform"></span>
-                    </button>
-                </div>
-
-                <!-- Responder opt-in -->
-                <div class="glass-panel rounded-2xl p-4 flex items-center justify-between gap-3">
-                    <div>
-                        <h3 class="text-[11px] font-bold text-slate-300">Emergency Responder Mode</h3>
-                        <p class="text-[9px] text-slate-500">On rakhoge to nearby accident hone par tumhe alert milega, taaki tum madad kar sako.</p>
-                    </div>
-                    <button id="emergencyResponderToggle" onclick="toggleEmergencyResponder()" class="w-11 h-6 rounded-full bg-slate-700 relative shrink-0 transition">
-                        <span id="emergencyResponderToggleDot" class="absolute top-0.5 left-0.5 w-5 h-5 rounded-full bg-white transition-transform"></span>
-                    </button>
-                </div>
-
-                <p class="text-[9px] text-slate-600 text-center px-4">Location sirf tab share hoti hai jab Responder Mode on ho ya jab tum khud SOS bhejo. Ye official emergency services ka replacement nahi hai — hamesha 112/108 ko bhi call karo.</p>
-            </div>
-        </div>
-    </div>
 
     <div id="main-app" class="hidden h-full flex flex-col overflow-hidden">
         
@@ -1567,7 +1219,6 @@
                     <button onclick="switchTab('reels')" id="tab-reels" data-i18n="nav_reels" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Reels</button>
                     <button onclick="switchTab('explore')" id="tab-explore" data-i18n="nav_explore" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Explore</button>
                     <button onclick="switchTab('calls')" id="tab-calls" data-i18n="nav_calls" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Calls</button>
-                    <button onclick="switchTab('ai')" id="tab-ai" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0"><i class="fa-solid fa-wand-magic-sparkles mr-0.5"></i>AI</button>
                 </nav>
 
                 <div class="flex items-center space-x-1.5">
@@ -1578,12 +1229,6 @@
                     <button id="notificationsBellBtn" onclick="openNotificationsModal()" class="relative p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Notifications">
                         <i class="fa-solid fa-bell"></i>
                         <span id="notificationsBadge" class="hidden absolute -top-1 -right-1 bg-[#ff4d8d] text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
-                    </button>
-                    <!-- FEATURE: EMERGENCY ALERT — standalone icon + modal, self-contained so it can't
-                         interfere with existing tabs/nav logic. Turns red/pulses when a nearby alert is active. -->
-                    <button id="emergencyAlertBtn" onclick="openEmergencyModal()" class="relative p-1.5 text-slate-400 hover:text-red-400 transition text-xs rounded-lg hover:bg-slate-900" title="Emergency Alert">
-                        <i class="fa-solid fa-truck-medical"></i>
-                        <span id="emergencyAlertBadge" class="hidden absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center animate-pulse">!</span>
                     </button>
                     <button id="followRequestsBellBtn" onclick="openFollowRequestsModal()" class="relative hidden p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Follow Requests">
                         <i class="fa-solid fa-user-clock"></i>
@@ -1666,34 +1311,6 @@
                 </div>
             </section>
 
-            <section id="section-ai" class="hidden relative flex-1 glass-panel rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full min-h-0">
-                <div class="h-12 px-3 border-b border-slate-800 bg-slate-900/60 flex items-center justify-between shrink-0">
-                    <div class="flex items-center space-x-2">
-                        <div class="w-6 h-6 rounded-lg bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-white text-[11px] shadow shrink-0">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i>
-                        </div>
-                        <div class="leading-tight">
-                            <p class="text-xs font-bold text-slate-200">Nexus AI</p>
-                            <p class="text-[9px] text-slate-500 flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>Online</p>
-                        </div>
-                    </div>
-                    <button onclick="clearAiChat()" class="text-[10px] font-bold text-slate-400 hover:text-[#ff4d8d] transition px-2 py-1 rounded-lg hover:bg-slate-800">Clear</button>
-                </div>
-
-                <div id="aiMessages" class="flex-1 overflow-y-auto p-3 space-y-3"></div>
-
-                <div id="aiQuickActions" class="flex items-center gap-1.5 overflow-x-auto no-scrollbar px-3 pb-2 shrink-0"></div>
-
-                <div class="p-2.5 border-t border-slate-800 bg-slate-900/60 flex items-end gap-2 shrink-0">
-                    <textarea id="aiInput" rows="1" placeholder="Nexus AI se kuch bhi pucho..."
-                        class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200 resize-none max-h-24"
-                        oninput="aiAutoResize(this)"
-                        onkeydown="if(event.key==='Enter' && !event.shiftKey){event.preventDefault();sendAiMessage();}"></textarea>
-                    <button id="aiSendBtn" onclick="sendAiMessage()" class="w-9 h-9 rounded-xl bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] hover:opacity-90 text-white flex items-center justify-center shadow transition shrink-0" title="Send">
-                        <i class="fa-solid fa-paper-plane text-xs"></i>
-                    </button>
-                </div>
-            </section>
 
             <section id="section-chat" class="hidden relative flex-1 glass-panel rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full min-h-0">
                 <div id="chatUsersView" class="flex-1 flex flex-col h-full overflow-hidden">
@@ -1701,7 +1318,6 @@
                         <div class="flex justify-between items-center text-xs font-bold text-slate-300">
                             <span><i class="fa-solid fa-users text-[#ff4d8d] mr-1.5"></i> Active Users</span>
                             <div class="flex items-center gap-1.5">
-                                <button onclick="openBotsModal()" class="text-[9px] font-bold text-[#9d7bff] bg-[#9d7bff]/10 border border-[#9d7bff]/30 px-2 py-1 rounded-full hover:bg-[#9d7bff]/20 transition" title="Bots &amp; Automation"><i class="fa-solid fa-robot mr-1"></i>Bots</button>
                                 <button id="messageRequestsBellBtn" onclick="openMessageRequestsModal()" class="relative hidden text-[9px] font-bold text-[#35c7ff] bg-[#35c7ff]/10 border border-[#35c7ff]/30 px-2 py-1 rounded-full hover:bg-[#35c7ff]/20 transition" title="Message Requests"><i class="fa-solid fa-envelope mr-1"></i>Requests
                                     <span id="messageRequestsBadge" class="hidden absolute -top-1.5 -right-1.5 bg-[#ff4d8d] text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
                                 </button>
@@ -1730,15 +1346,12 @@
                             </div>
                         </div>
                         <div class="flex items-center gap-1.5 shrink-0">
-                            <button onclick="openTimeCapsuleModal()" title="Time Capsule" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-[#9d7bff] flex items-center justify-center transition shadow"><i class="fa-solid fa-envelope text-xs"></i></button>
-                            <button onclick="summarizeChatVibe()" id="chatVibeBtn" title="AI Vibe Check" class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] hover:opacity-90 text-white flex items-center justify-center transition shadow"><i class="fa-solid fa-sparkles text-xs"></i></button>
                             <button onclick="toggleDisappearingMode()" id="disappearingToggleBtn" title="Disappearing Messages (24h)" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition shadow"><i class="fa-solid fa-fire text-xs" id="disappearingIcon"></i></button>
                             <button onclick="startRealCall(activeChatUser, 'audio')" title="Audio Call" class="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition shadow"><i class="fa-solid fa-phone text-xs"></i></button>
                             <button onclick="startRealCall(activeChatUser, 'video')" title="Video Call" class="w-8 h-8 rounded-full bg-[#9d7bff] hover:bg-[#9d7bff] text-white flex items-center justify-center transition shadow"><i class="fa-solid fa-video text-xs"></i></button>
                             <div class="relative">
                                 <button onclick="toggleChatOptionsMenu(event)" id="chatOptionsBtn" title="More options" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition shadow"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
                                 <div id="chatOptionsMenu" class="hidden absolute right-0 top-9 w-40 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-30 overflow-hidden">
-                                    <button onclick="event.stopPropagation(); document.getElementById('chatOptionsMenu').classList.add('hidden'); openChatThemeModal()" class="w-full text-left px-3 py-2.5 text-xs text-slate-300 hover:bg-slate-800 flex items-center gap-2"><i class="fa-solid fa-palette text-[#9d7bff]"></i> Chat Theme</button>
                                     <button onclick="event.stopPropagation(); document.getElementById('chatOptionsMenu').classList.add('hidden'); openDeleteChatModal(activeChatUser)" class="w-full text-left px-3 py-2.5 text-xs text-red-400 hover:bg-slate-800 flex items-center gap-2"><i class="fa-solid fa-trash"></i> Delete Chat</button>
                                 </div>
                             </div>
@@ -1773,8 +1386,6 @@
                         <button type="button" onclick="cancelReply()" class="text-slate-400 hover:text-white text-xs bg-slate-800 w-6 h-6 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
                     </div>
 
-                    <!-- FEATURE: AI SMART REPLIES -->
-                    <div id="smartReplyChips" class="hidden gap-1.5 px-3 pt-2 shrink-0 z-20 overflow-x-auto no-scrollbar"></div>
 
                     <!-- FEATURE: MESSAGE REQUESTS — shown instead of the chat form when THIS chat
                          is a pending request the other person sent me; I must Accept/Decline first -->
@@ -1799,7 +1410,6 @@
                             <i class="fa-solid fa-paperclip"></i>
                             <input type="file" id="chatMediaFileInput" accept="image/*,video/*" class="hidden" onchange="handleChatMediaSelect(this)">
                         </label>
-                        <button type="button" onclick="openGifStickerModal('dm')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 shrink-0 rounded-xl text-xs transition shadow flex items-center justify-center" title="GIFs & Stickers"><i class="fa-solid fa-icons"></i></button>
                         <input type="text" id="chatInputText" placeholder="Type message..." autocomplete="off" 
                             class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#35c7ff] text-slate-200">
                         <button type="button" onclick="toggleVoiceRecording()" id="voiceRecordBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-xs transition shadow" title="Record voice note"><i class="fa-solid fa-microphone" id="voiceRecordIcon"></i></button>
@@ -1895,7 +1505,6 @@
                             <i class="fa-solid fa-paperclip"></i>
                             <input type="file" id="groupMediaFileInput" accept="image/*,video/*" class="hidden" onchange="handleGroupMediaSelect(this)">
                         </label>
-                        <button type="button" onclick="openGifStickerModal('group')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 w-8 h-8 shrink-0 rounded-xl text-xs transition shadow flex items-center justify-center" title="GIFs & Stickers"><i class="fa-solid fa-icons"></i></button>
                         <input type="text" id="groupMessageInput" placeholder="Message group..." autocomplete="off" 
                             class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#35c7ff] text-slate-200">
                         <button type="submit" class="bg-[#35c7ff] hover:bg-[#35c7ff] px-3.5 py-2 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
@@ -1910,13 +1519,6 @@
                         <i class="fa-solid fa-user-plus text-[#ff4d8d]"></i> Suggested For You
                     </h2>
                     <div id="suggestedUsersContainer" class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1"></div>
-                </div>
-                <!-- FEATURE: STREAK LEADERBOARD -->
-                <div class="glass-panel rounded-2xl p-3 shadow-lg space-y-2.5">
-                    <h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-trophy text-amber-400"></i> Streak Leaderboard
-                    </h2>
-                    <div id="streakLeaderboardContainer" class="space-y-1.5"></div>
                 </div>
                 <div class="glass-panel rounded-2xl p-3 shadow-lg space-y-2.5">
                     <h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
@@ -1938,8 +1540,6 @@
         </main>
     </div>
 
-    <!-- three.js (last version with a classic global-script build, so it shares scope with app.js like every other script here) — powers the real 3D "Your Growth" tree -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.149.0/build/three.min.js"></script>
     <script src="supabase-config.js"></script>
     <script src="app.js"></script>
 </body>
