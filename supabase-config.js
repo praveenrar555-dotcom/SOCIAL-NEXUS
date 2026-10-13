@@ -10,3 +10,11 @@ const SUPABASE_URL = "https://znhyjuibgbcmrcqijtpi.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_hMMTzT2Jojy2ZQfpxlLy-A_UR4V86BM";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+// ============================================================
+// GOOGLE DRIVE STORAGE (optional but recommended)
+// Paste your OAuth "Web application" Client ID here (steps in SETUP-GOOGLE-DRIVE.md).
+// Leave it as "" to keep using Supabase Storage for media.
+// This is NOT a secret — Client IDs are meant to be public.
+// ============================================================
+const GOOGLE_CLIENT_ID = "";

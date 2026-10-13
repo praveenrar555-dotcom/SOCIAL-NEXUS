@@ -48,3 +48,8 @@ static server (e.g. `npx serve .`).
   Realtime subscriptions are a natural next addition.
 - No image/video compression before upload yet — consider capping
   file size client-side so people don't upload huge files.
+
+## Performance + Google Drive (new)
+- `app.js` now loads only the newest posts (+ yours), fetches likes/comments only for those,
+  and realtime events trigger a light refresh instead of re-downloading everything.
+- `drive-storage.js` + `SETUP-GOOGLE-DRIVE.md`: media is stored in each user's own Google Drive.

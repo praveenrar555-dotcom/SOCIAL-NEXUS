@@ -489,16 +489,8 @@
                         const uploadedUrls = [];
                         for (const fileObj of selectedFileObjects) {
                             const fileName = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}_${fileObj.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                            const { error: uploadError } = await supabaseClient.storage
-                                .from('media')
-                                .upload(fileName, fileObj);
-
-                            if (!uploadError) {
-                                const { data: publicUrlData } = supabaseClient.storage
-                                    .from('media')
-                                    .getPublicUrl(fileName);
-                                uploadedUrls.push(publicUrlData.publicUrl);
-                            }
+                            const up = await uploadMediaFile(fileName, fileObj);
+                            if (!up.error) uploadedUrls.push(up.url);
                         }
 
                         if (uploadedUrls.length > 0) {
@@ -613,6 +605,32 @@
                 if (activeChatUser) sendTypingBroadcast();
             });
         });
+
+        // STORAGE: single entry point for every media upload. If the user connected Google
+        // Drive (see drive-storage.js) the file goes to THEIR Drive and only the link is saved
+        // in Supabase; otherwise (or if Drive fails) it falls back to Supabase Storage.
+        async function driveAvailable() {
+            if (!window.DriveStore || !DriveStore.isEnabled()) return false;
+            if (DriveStore.isReady()) return true;
+            // Google access tokens last ~1 hour; returning users get a fresh one silently.
+            return DriveStore.isConnectedBefore() ? await DriveStore.tryReady() : false;
+        }
+
+        async function uploadMediaFile(fileName, file, opts = {}) {
+            if (await driveAvailable()) {
+                try {
+                    const url = await DriveStore.upload(fileName, file, opts);
+                    return { url, error: null, via: 'drive' };
+                } catch (driveErr) {
+                    console.warn('[Drive] upload failed, falling back to Supabase:', driveErr);
+                }
+            }
+            const { error } = await supabaseClient.storage.from('media')
+                .upload(fileName, file, opts.contentType ? { contentType: opts.contentType } : undefined);
+            if (error) return { url: null, error, via: 'supabase' };
+            const { data } = supabaseClient.storage.from('media').getPublicUrl(fileName);
+            return { url: data.publicUrl, error: null, via: 'supabase' };
+        }
 
         // PERF: chat/group photo attachments used to upload at whatever size the camera/gallery
         // gave them (often 3-5MB straight off a phone) — that's slow to send AND slow for
@@ -1049,12 +1067,22 @@
         function scheduleGlobalDataRefresh() {
             clearTimeout(allChangesRefreshTimer);
             allChangesRefreshTimer = setTimeout(async () => {
+                // PERF: nobody is looking at a hidden tab — refresh once when it becomes visible
+                if (document.hidden) { refreshPendingWhileHidden = true; return; }
                 if (isFeedScrolling) { scheduleGlobalDataRefresh(); return; }
-                await fetchAllData();
+                await fetchAllData({ light: true });
                 if (viewingProfileUsername) openProfile(viewingProfileUsername, false);
                 if (activeModalPostId) renderCommentModal(activeModalPostId);
-            }, 600);
+            }, 2500);
         }
+
+        let refreshPendingWhileHidden = false;
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && refreshPendingWhileHidden) {
+                refreshPendingWhileHidden = false;
+                scheduleGlobalDataRefresh();
+            }
+        });
 
         // PERF: dozens of places across the app call `await fetchAllData()` right after a
         // single action (like, comment, follow, etc). If several of those happen close
@@ -1065,23 +1093,118 @@
         // a refresh mid-flight), instead of stacking up redundant network round-trips.
         let fetchAllDataInFlight = null;
         let fetchAllDataQueuedAgain = false;
+        let fetchAllDataQueuedFull = false;
 
-        function fetchAllData() {
+        // PERF (Supabase load): fetchAllData used to download EVERY row of ~20 tables on every call
+        // (and it is called after almost every action + on every realtime event from any user).
+        // Now:
+        //   * posts = newest FEED_POST_WINDOW + my own posts (+ posts of profiles I opened);
+        //     likes / comments / story views are fetched only for those posts
+        //   * "light" refresh (used by realtime events) only re-reads posts, likes, comments,
+        //     follows, follow requests and stories
+        //   * big rarely-changing tables (profiles, groups, group members, reactions) are cached
+        //     for STATIC_CACHE_TTL_MS and re-read earlier only if I wrote to them (see wrapper below)
+        let FEED_POST_WINDOW = 60;
+        const MY_POST_WINDOW = 150;
+        const STATIC_CACHE_TTL_MS = 45000;
+        let lastStaticFetchAt = 0;
+        let staticCacheDirty = true;
+        const extraPostsByUser = new Map();   // username -> posts fetched on demand (profile view)
+        const extraPostsRequested = new Set();
+
+        (function installStaticWriteTracker() {
+            const STATIC_TABLES = new Set(['profiles', 'groups', 'group_members', 'message_reactions']);
+            const origFrom = supabaseClient.from.bind(supabaseClient);
+            supabaseClient.from = function (table) {
+                const q = origFrom(table);
+                if (STATIC_TABLES.has(table)) {
+                    ['insert', 'update', 'delete', 'upsert'].forEach(m => {
+                        const orig = q[m];
+                        if (typeof orig === 'function') q[m] = function (...a) { staticCacheDirty = true; return orig.apply(q, a); };
+                    });
+                }
+                return q;
+            };
+        })();
+
+        function extraPostsFlat() {
+            const out = [];
+            extraPostsByUser.forEach(arr => out.push(...arr));
+            return out;
+        }
+
+        async function fetchPostsWindow() {
+            const [recent, mine] = await Promise.all([
+                supabaseClient.from('posts').select('*').order('created_at', { ascending: false }).limit(FEED_POST_WINDOW),
+                supabaseClient.from('posts').select('*').eq('username', currentUser).order('created_at', { ascending: false }).limit(MY_POST_WINDOW)
+            ]);
+            if (recent.error && !recent.data) return recent;
+            const map = new Map();
+            [...(recent.data || []), ...(mine.data || []), ...extraPostsFlat()].forEach(p => map.set(String(p.id), p));
+            const arr = Array.from(map.values()).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            return { data: arr };
+        }
+
+        // Runs `select *` for rows whose `col` is in `ids`, in small chunks (keeps URLs short).
+        async function fetchByIds(table, col, ids, build) {
+            if (!ids || !ids.length) return { data: [] };
+            const chunks = [];
+            for (let i = 0; i < ids.length; i += 80) chunks.push(ids.slice(i, i + 80));
+            const results = await Promise.all(chunks.map(c => {
+                let q = supabaseClient.from(table).select('*').in(col, c);
+                if (build) q = build(q);
+                return q;
+            }));
+            const data = [];
+            let error = null;
+            results.forEach(r => { if (r.error) error = r.error; else if (r.data) data.push(...r.data); });
+            return { data, error };
+        }
+
+        // Loads (once) the latest posts of a profile that is not already in the cache, so that
+        // older posts still show on that profile without downloading every post for everyone.
+        async function ensureUserPostsLoaded(username) {
+            if (!username || username === currentUser || extraPostsRequested.has(username)) return;
+            extraPostsRequested.add(username);
+            try {
+                const { data, error } = await supabaseClient.from('posts').select('*')
+                    .eq('username', username).order('created_at', { ascending: false }).limit(60);
+                if (error || !data) { extraPostsRequested.delete(username); return; }
+                const known = new Set(globalPostsCache.map(p => String(p.id)));
+                if (!data.some(p => !known.has(String(p.id)))) return;
+                if (extraPostsByUser.size >= 8) extraPostsByUser.delete(extraPostsByUser.keys().next().value);
+                extraPostsByUser.set(username, data);
+                await fetchAllData({ light: true });
+                if (viewingProfileUsername === username) openProfile(username, false);
+            } catch (e) { extraPostsRequested.delete(username); }
+        }
+
+        function loadMoreFeedPosts() {
+            FEED_POST_WINDOW += 60;
+            return fetchAllData({ light: true });
+        }
+
+        function fetchAllData(opts) {
+            const light = !!(opts && opts.light);
             if (fetchAllDataInFlight) {
                 fetchAllDataQueuedAgain = true;
+                if (!light) fetchAllDataQueuedFull = true;
                 return fetchAllDataInFlight;
             }
-            fetchAllDataInFlight = _fetchAllDataImpl().finally(() => {
+            fetchAllDataInFlight = _fetchAllDataImpl({ light }).finally(() => {
                 fetchAllDataInFlight = null;
                 if (fetchAllDataQueuedAgain) {
+                    const nextLight = !fetchAllDataQueuedFull;
                     fetchAllDataQueuedAgain = false;
-                    fetchAllData();
+                    fetchAllDataQueuedFull = false;
+                    fetchAllData({ light: nextLight });
                 }
             });
             return fetchAllDataInFlight;
         }
 
-        async function _fetchAllDataImpl() {
+        async function _fetchAllDataImpl(opts) {
+            const light = !!(opts && opts.light);
             // FEATURE: OFFLINE MODE — no point hitting the network when we know it's down;
             // fall back straight to whatever feed we last cached.
             if (typeof navigator !== 'undefined' && !navigator.onLine) {
@@ -1099,22 +1222,29 @@
                 // fetchAllData) feel lighter — without changing what data gets fetched or any
                 // of the existing optional-table fallback behavior below.
                 const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+                const fetchStatic = !light && (staticCacheDirty || (Date.now() - lastStaticFetchAt) > STATIC_CACHE_TTL_MS);
+                const skipped = Promise.resolve({ data: null, skipped: true });
+                if (fetchStatic) staticCacheDirty = false;
 
-                const [
-                    profilesRes, followsRes, postsRes, likesRes, commentsRes,
-                    storiesRes, storyViewsRes, groupsRes, groupMembersRes, reactionsRes
-                ] = await Promise.all([
-                    supabaseClient.from('profiles').select('*'),
+                const [profilesRes, followsRes, postsRes, storiesRes, groupsRes, groupMembersRes] = await Promise.all([
+                    fetchStatic ? supabaseClient.from('profiles').select('*') : skipped,
                     supabaseClient.from('follows').select('*'),
-                    supabaseClient.from('posts').select('*').order('created_at', { ascending: false }),
-                    supabaseClient.from('post_likes').select('*'),
-                    supabaseClient.from('comments').select('*').order('created_at', { ascending: true }),
+                    fetchPostsWindow(),
                     supabaseClient.from('stories').select('*').gte('created_at', cutoff).order('created_at', { ascending: true }),
-                    supabaseClient.from('story_views').select('*'),
-                    supabaseClient.from('groups').select('*'),
-                    supabaseClient.from('group_members').select('*'),
-                    supabaseClient.from('message_reactions').select('*')
+                    fetchStatic ? supabaseClient.from('groups').select('*') : skipped,
+                    fetchStatic ? supabaseClient.from('group_members').select('*') : skipped
                 ]);
+
+                const windowPostIds = (postsRes.data || []).map(p => p.id);
+                const windowStoryIds = (storiesRes.data || []).map(s => s.id);
+                const [likesRes, commentsRes, storyViewsRes, reactionsRes] = await Promise.all([
+                    fetchByIds('post_likes', 'post_id', windowPostIds),
+                    fetchByIds('comments', 'post_id', windowPostIds, q => q.order('created_at', { ascending: true })),
+                    light ? skipped : fetchByIds('story_views', 'story_id', windowStoryIds),
+                    fetchStatic ? supabaseClient.from('message_reactions').select('*') : skipped
+                ]);
+                if (fetchStatic) lastStaticFetchAt = Date.now();
+                if (commentsRes.data) commentsRes.data.sort((x, y) => new Date(x.created_at) - new Date(y.created_at));
 
                 const profiles = profilesRes.data;
                 if (profiles) {
@@ -1127,19 +1257,56 @@
                 globalLikesCache = likesRes.data || [];
                 globalCommentsCache = commentsRes.data || [];
                 globalStoriesCache = storiesRes.data || [];
-                globalStoryViewsCache = storyViewsRes.data || [];
-                globalGroupsCache = groupsRes.data || [];
-                globalGroupMembersCache = groupMembersRes.data || [];
-                globalReactionsCache = reactionsRes.data || [];
+                if (!storyViewsRes.skipped) globalStoryViewsCache = storyViewsRes.data || [];
+                if (!groupsRes.skipped) globalGroupsCache = groupsRes.data || [];
+                if (!groupMembersRes.skipped) globalGroupMembersCache = groupMembersRes.data || [];
+                if (!reactionsRes.skipped) globalReactionsCache = reactionsRes.data || [];
 
                 // The rest are optional tables (each no-ops quietly until its SQL setup has
                 // been run) — same per-query try/catch as before, just fired in parallel too.
-                await Promise.all([
+                try { const { data: fr } = await supabaseClient.from('follow_requests').select('*'); globalFollowRequestsCache = fr || []; } catch(e) { globalFollowRequestsCache = []; }
+
+                if (!light) await Promise.all([
                     (async () => { try { const { data: gjr } = await supabaseClient.from('group_join_requests').select('*'); globalGroupJoinRequestsCache = gjr || []; } catch(e) { globalGroupJoinRequestsCache = []; } })(),
-                    (async () => { try { const { data: cl } = await supabaseClient.from('comment_likes').select('*'); globalCommentLikesCache = cl || []; } catch(e) { globalCommentLikesCache = []; } })(),
-                    (async () => { try { const { data: bl } = await supabaseClient.from('blocked_users').select('*'); globalBlockedCache = bl || []; } catch(e) { globalBlockedCache = []; } })(),
-                    (async () => { try { const { data: fr } = await supabaseClient.from('follow_requests').select('*'); globalFollowRequestsCache = fr || []; } catch(e) { globalFollowRequestsCache = []; } })(),
-                    (async () => { try { const { data: pv } = await supabaseClient.from('post_views').select('*'); globalPostViewsCache = pv || []; } catch(e) { globalPostViewsCache = []; } })(),
+                    (async () => {
+                        // PERF: only likes on the most recent 400 comments (was: every comment like ever)
+                        try {
+                            const ids = (globalCommentsCache || []).slice(-400).map(c => c.id);
+                            const { data: cl } = await fetchByIds('comment_likes', 'comment_id', ids);
+                            globalCommentLikesCache = cl || [];
+                        } catch(e) { globalCommentLikesCache = []; }
+                    })(),
+                    (async () => {
+                        // PERF: only block rows that involve ME (that is all isBlockedWith() ever looks at)
+                        try {
+                            const me = String(currentUser).replace(/"/g, '');
+                            const { data: bl, error: blErr } = await supabaseClient.from('blocked_users').select('*')
+                                .or(`blocker.eq."${me}",blocked.eq."${me}"`);
+                            if (blErr) throw blErr;
+                            globalBlockedCache = bl || [];
+                        } catch(e) {
+                            try { const { data: bl2 } = await supabaseClient.from('blocked_users').select('*'); globalBlockedCache = bl2 || []; } catch(e2) { globalBlockedCache = []; }
+                        }
+                    })(),
+                    (async () => {
+                        // PERF: was the ENTIRE post_views table. Now: my own views (to avoid double
+                        // counting) + the views on MY posts (for the analytics counters).
+                        try {
+                            const myPostIds = (globalPostsCache || []).filter(p => p.username === currentUser).map(p => p.id);
+                            const [mineRes, onMyPostsRes] = await Promise.all([
+                                supabaseClient.from('post_views').select('*').eq('viewer', currentUser).limit(1000),
+                                fetchByIds('post_views', 'post_id', myPostIds)
+                            ]);
+                            const seen = new Set();
+                            const merged = [];
+                            [...(mineRes.data || []), ...(onMyPostsRes.data || [])].forEach(v => {
+                                const k = String(v.post_id) + '|' + v.viewer;
+                                if (v.id !== undefined && v.id !== null) { const kk = 'id' + v.id; if (seen.has(kk)) return; seen.add(kk); merged.push(v); return; }
+                                if (seen.has(k)) return; seen.add(k); merged.push(v);
+                            });
+                            globalPostViewsCache = merged;
+                        } catch(e) { globalPostViewsCache = []; }
+                    })(),
                     (async () => {
                         // FEATURE: SAVE POST/REEL — optional table; only ever need our OWN saved list
                         try {
@@ -1839,7 +2006,12 @@
 
             try {
                 // Initialize all profiles & posts with a default base timestamp
-                const { data: profiles, error: profilesErr } = await supabaseClient.from('profiles').select('username');
+                // PERF: reuse the already-cached profile list instead of re-downloading it on every
+                // incoming message / chat-list refresh.
+                const cachedNames = Object.keys(globalProfilesFullCache || {});
+                let profiles = cachedNames.length ? cachedNames.map(u => ({ username: u })) : null;
+                let profilesErr = null;
+                if (!profiles) { const pr = await supabaseClient.from('profiles').select('username'); profiles = pr.data; profilesErr = pr.error; }
                 if (profilesErr) {
                     // Surface this loudly: if this select fails (e.g. missing/blocking RLS
                     // SELECT policy on "profiles"), the chat/search user list silently
@@ -1863,8 +2035,16 @@
                 });
 
                 // Fetch all messages involving the current user to sort chat section by most recent interaction (Instagram style)
-                const { data: msgs } = await supabaseClient.from('messages').select('sender, receiver, created_at, text, read_at');
+                // PERF: only MY messages (sent + received), newest 800 each, and no message text —
+                // plus one tiny query for the unread counts (was: every message in the table).
+                const [sentRes, recvRes, unreadRes] = await Promise.all([
+                    supabaseClient.from('messages').select('sender, receiver, created_at, read_at').eq('sender', currentUser).order('created_at', { ascending: false }).limit(800),
+                    supabaseClient.from('messages').select('sender, receiver, created_at, read_at').eq('receiver', currentUser).order('created_at', { ascending: false }).limit(800),
+                    supabaseClient.from('messages').select('sender').eq('receiver', currentUser).is('read_at', null).limit(2000)
+                ]);
+                const msgs = [...(sentRes.data || []), ...(recvRes.data || [])];
                 unreadCountsBySender = {};
+                (unreadRes.data || []).forEach(m => { if (m.sender && m.sender !== currentUser) unreadCountsBySender[m.sender] = (unreadCountsBySender[m.sender] || 0) + 1; });
                 if (msgs) {
                     msgs.forEach(m => {
                         let partner = null;
@@ -1882,9 +2062,7 @@
 
                         // FEATURE: UNREAD MESSAGE COUNT — count messages THEY sent me that I
                         // haven't read yet, per sender, so the chat list can badge their name.
-                        if (m.receiver === currentUser && m.sender !== currentUser && !m.read_at) {
-                            unreadCountsBySender[m.sender] = (unreadCountsBySender[m.sender] || 0) + 1;
-                        }
+                        // (unread counts now come from the dedicated unread query above)
                     });
                 }
             } catch (err) {
@@ -2605,6 +2783,7 @@
         }
 
         function openProfile(username, resetTab = true) {
+            ensureUserPostsLoaded(username); // PERF: older posts of this profile are fetched on demand
             const isNewProfileView = viewingProfileUsername !== username;
             viewingProfileUsername = username;
             if (resetTab) profileActiveTab = 'posts';
@@ -4976,10 +5155,10 @@
                 const fileObj = new File([blob], fileName, { type: 'image/jpeg' });
 
                 try {
-                    const { data, error } = await supabaseClient.storage.from('media').upload(fileName, fileObj);
+                    const upAv = await uploadMediaFile(fileName, fileObj);
+                    const data = null, error = upAv.error;
                     if (!error) {
-                        const { data: publicUrlData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
-                        const publicUrl = publicUrlData.publicUrl;
+                        const publicUrl = upAv.url;
 
                         // FEATURE: GROUP DP — same crop/upload flow as the profile picture, but
                         // writes to groups.avatar_url for the group open in Group Info instead of
@@ -5456,10 +5635,9 @@
                 let mediaUrl = null;
                 if (pm.mediaFile) {
                     const fileName = `chat_${Date.now()}_${pm.mediaFile.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                    const { error: uploadErr } = await supabaseClient.storage.from('media').upload(fileName, pm.mediaFile);
-                    if (uploadErr) throw uploadErr;
-                    const { data: pubData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
-                    mediaUrl = pubData.publicUrl;
+                    const upC = await uploadMediaFile(fileName, pm.mediaFile);
+                    if (upC.error) throw upC.error;
+                    mediaUrl = upC.url;
                 }
 
                 const messagePayload = {
@@ -6089,6 +6267,15 @@
                     io.observe(card);
                 }
             });
+
+            // PERF: the feed only holds the newest FEED_POST_WINDOW posts; this loads 60 more.
+            if (globalPostsCache.length >= FEED_POST_WINDOW) {
+                const more = document.createElement('button');
+                more.className = 'w-full py-2.5 text-xs font-bold text-slate-300 glass-panel rounded-2xl hover:text-[#ff4d8d] transition';
+                more.textContent = 'Aur posts dekho';
+                more.onclick = () => { more.disabled = true; more.textContent = 'Loading...'; loadMoreFeedPosts(); };
+                feedStream.appendChild(more);
+            }
         }
 
         function renderReels() {
@@ -6305,6 +6492,21 @@
                 // required a real authenticated user (see ensureAuthSession). Fetching the
                 // real session's access_token and sending THAT fixes it, while still using
                 // raw XHR (instead of supabaseClient.storage.upload) so we can track % progress.
+                // STORAGE: try the user's own Google Drive first (with real progress); only if
+                // that isn't connected / fails do we use the Supabase XHR path below.
+                let videoUrl = null;
+                if (await driveAvailable()) {
+                    try {
+                        videoUrl = await DriveStore.upload(fileName, file, {
+                            contentType: file.type,
+                            onProgress: (pct) => updateReelUploadProgress(pct, `Uploading to your Drive... ${pct}%`)
+                        });
+                    } catch (driveErr) {
+                        console.warn('[Drive] reel upload failed, falling back to Supabase:', driveErr);
+                        videoUrl = null;
+                    }
+                }
+                if (!videoUrl) {
                 const { data: sessionData } = await supabaseClient.auth.getSession();
                 const accessToken = sessionData && sessionData.session ? sessionData.session.access_token : SUPABASE_ANON_KEY;
 
@@ -6331,7 +6533,8 @@
                 updateReelUploadProgress(100, 'Finishing up...');
 
                 const { data: publicUrlData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
-                const videoUrl = publicUrlData.publicUrl;
+                videoUrl = publicUrlData.publicUrl;
+                }
 
                 const basePostRow = { username: currentUser, platform: 'Reel', content: caption, image_url: videoUrl, likes_count: 0 };
                 // FEATURE: MUSIC/SOUND LIBRARY — try with the music columns first; if that schema
@@ -6904,10 +7107,10 @@
 
             try {
                 const fileName = `story_${Date.now()}_${selectedStoryFileObject.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                const { error: uploadError } = await supabaseClient.storage.from('media').upload(fileName, selectedStoryFileObject);
-                if (uploadError) throw uploadError;
+                const upS = await uploadMediaFile(fileName, selectedStoryFileObject);
+                if (upS.error) throw upS.error;
 
-                const { data: pubData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
+                const pubData = { publicUrl: upS.url };
                 const mediaType = selectedStoryFileObject.type.startsWith('video') ? 'video' : 'image';
 
                 const { data: insertedRows, error: insertError } = await supabaseClient.from('stories').insert({
@@ -7644,10 +7847,9 @@
             if (selectedGroupMediaObject) {
                 try {
                     const fileName = `group_${Date.now()}_${selectedGroupMediaObject.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
-                    const { error: uploadErr } = await supabaseClient.storage.from('media').upload(fileName, selectedGroupMediaObject);
-                    if (!uploadErr) {
-                        const { data: pubData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
-                        mediaUrl = pubData.publicUrl;
+                    const upG = await uploadMediaFile(fileName, selectedGroupMediaObject);
+                    if (!upG.error) {
+                        mediaUrl = upG.url;
                     }
                 } catch (err) { console.error(err); }
             }
@@ -7904,9 +8106,9 @@
             if (!(await ensureMessageRequestForSend(activeChatUser))) return;
             try {
                 const fileName = `voice_${Date.now()}_${currentUser}.webm`;
-                const { error: uploadErr } = await supabaseClient.storage.from('media').upload(fileName, blob, { contentType: 'audio/webm' });
-                if (uploadErr) throw uploadErr;
-                const { data: pubData } = supabaseClient.storage.from('media').getPublicUrl(fileName);
+                const upV = await uploadMediaFile(fileName, blob, { contentType: 'audio/webm' });
+                if (upV.error) throw upV.error;
+                const pubData = { publicUrl: upV.url };
 
                 const messagePayload = {
                     sender: currentUser,
