@@ -6291,6 +6291,16 @@
             }
         }
 
+        // Show the whole reel: contain by default (wide/square videos are never cropped);
+        // only a video whose shape already matches the screen fills it edge to edge.
+        function nxFitReel(v) {
+            if (!v.videoWidth || !v.videoHeight) return;
+            const box = v.getBoundingClientRect();
+            if (!box.width || !box.height) return;
+            const diff = Math.abs((v.videoWidth / v.videoHeight) / (box.width / box.height) - 1);
+            v.style.objectFit = diff < 0.2 ? 'cover' : 'contain';
+        }
+
         function renderReels() {
             const container = document.getElementById('reelsStreamContainer');
             const reels = globalPostsCache.filter(p => (p.platform === 'Reel' || (p.image_url && p.image_url.match(/\.(mp4|mov|webm)$/i))) && !isBlockedWith(p.username) && !isPrivateAndNotFollowing(p.username));
@@ -6308,7 +6318,7 @@
 
                 return `
                     <div class="reel-item w-full h-full flex flex-col justify-between bg-black relative">
-                        <video src="${reel.image_url}" loop ${reelSoundMuted ? 'muted' : ''} playsinline onclick="toggleReelSound(this)" class="reel-video absolute inset-0 w-full h-full object-cover"></video>
+                        <video src="${reel.image_url}" loop ${reelSoundMuted ? 'muted' : ''} playsinline onclick="toggleReelSound(this)" onloadedmetadata="nxFitReel(this)" class="reel-video absolute inset-0 w-full h-full" style="object-fit:contain;background:#000"></video>
                         <div class="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/80 pointer-events-none"></div>
 
                         <div class="relative p-4 flex justify-between items-center z-10">
