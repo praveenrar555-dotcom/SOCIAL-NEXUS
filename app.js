@@ -6124,16 +6124,22 @@
 
             if (urls.length === 1) {
                 const isVideo = post.platform === 'Reel' || urls[0].match(/\.(mp4|mov|webm)$/i);
+                if (isVideo) {
+                    return `
+                    <div class="nx-media">
+                        <video src="${urls[0]}#t=0.1" class="nx-media-el" controls muted loop playsinline preload="metadata" onplay="nxPauseOtherVideos(this)"></video>
+                    </div>`;
+                }
                 return `
-                    <div onclick="openPostDetailModal('${post.id}')" class="rounded-xl overflow-hidden border border-slate-800 bg-slate-950 flex justify-center cursor-pointer">
-                        ${isVideo ? `<video src="${urls[0]}" class="w-full max-h-80 object-cover pointer-events-none"></video>` : `<img src="${urls[0]}" class="w-full max-h-80 object-cover" />`}
+                    <div onclick="openPostDetailModal('${post.id}')" class="nx-media cursor-pointer">
+                        <img src="${urls[0]}" class="nx-media-el" loading="lazy" decoding="async" alt="">
                     </div>`;
             }
 
-            const slides = urls.map(u => `<img src="${u}" class="w-full h-full object-cover snap-center shrink-0" style="scroll-snap-align: center;">`).join('');
+            const slides = urls.map(u => `<img src="${u}" class="nx-slide" loading="lazy" decoding="async" alt="" style="scroll-snap-align: center;">`).join('');
             return `
-                <div class="relative rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
-                    <div id="${carouselId}" onscroll="updateCarouselDots('${carouselId}')" onclick="openPostDetailModal('${post.id}')" class="flex overflow-x-auto no-scrollbar w-full h-72 cursor-pointer" style="scroll-snap-type: x mandatory;">
+                <div class="nx-media relative">
+                    <div id="${carouselId}" onscroll="updateCarouselDots('${carouselId}')" onclick="openPostDetailModal('${post.id}')" class="nx-carousel no-scrollbar cursor-pointer" style="scroll-snap-type: x mandatory;">
                         ${slides}
                     </div>
                     <span id="${carouselId}-counter" class="absolute top-2 right-2 bg-black/60 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">1/${urls.length}</span>
@@ -6141,6 +6147,11 @@
                         ${urls.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}" data-dot-index="${i}"></span>`).join('')}
                     </div>
                 </div>`;
+        }
+
+        // Only one feed video plays at a time.
+        function nxPauseOtherVideos(current) {
+            document.querySelectorAll('video.nx-media-el').forEach(v => { if (v !== current && !v.paused) v.pause(); });
         }
 
         // Keeps the "1/N" counter and dot indicators in sync as the user swipes through a carousel.
