@@ -38,9 +38,10 @@
     function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 30000; }
     function wasConnected() { return lsGet(LS_CONNECTED) === '1'; }
 
-    async function loadGis() {
+    async function loadGis(allowAsk) {
         // The Google sign-in script is optional: it only loads if the user agreed in the consent banner.
         if (window.NexusConsent && !NexusConsent.has('google')) {
+            if (!allowAsk) throw new Error('Google sign-in was not allowed in your cookie settings');
             const ok = await NexusConsent.ask('google');
             if (!ok) throw new Error('Google sign-in was not allowed in your cookie settings');
         }
@@ -58,9 +59,9 @@
         });
     }
 
-    async function initTokenClient() {
+    async function initTokenClient(allowAsk) {
         if (tokenClient) return tokenClient;
-        await loadGis();
+        await loadGis(allowAsk);
         tokenClient = google.accounts.oauth2.initTokenClient({
             client_id: clientId(),
             scope: SCOPE,
@@ -69,6 +70,7 @@
                     accessToken = resp.access_token;
                     tokenExpiresAt = Date.now() + (Number(resp.expires_in || 3600) * 1000);
                     lsSet(LS_CONNECTED, '1');
+                    scheduleRefresh();
                     if (pendingTokenResolve) pendingTokenResolve(accessToken);
                 } else if (pendingTokenReject) {
                     pendingTokenReject(new Error((resp && resp.error) || 'Google authorization failed'));
@@ -83,20 +85,44 @@
         return tokenClient;
     }
 
-    // interactive=true must be called from a click handler (opens Google's consent popup).
+    function requestToken(prompt, timeoutMs) {
+        return new Promise((resolve, reject) => {
+            const timer = setTimeout(() => {
+                if (pendingTokenReject === wrappedReject) { pendingTokenReject(new Error('Google authorization timed out')); pendingTokenResolve = pendingTokenReject = null; }
+            }, timeoutMs);
+            const wrappedResolve = (v) => { clearTimeout(timer); resolve(v); };
+            const wrappedReject = (e) => { clearTimeout(timer); reject(e); };
+            pendingTokenResolve = wrappedResolve;
+            pendingTokenReject = wrappedReject;
+            tokenClient.requestAccessToken({ prompt });
+        });
+    }
+
+    // Google asks for permission only ONCE (the first "Connect"). After that this gets a fresh
+    // access token silently (prompt:'none' = no popup, no consent screen) whenever the old one
+    // is about to expire. Only if Google really needs the person (e.g. signed out of Google)
+    // does a click on the button bring up a popup again.
+    // interactive=true must be called from a click handler (it may open Google's popup).
     async function ensureToken(interactive) {
         if (!isEnabled()) throw new Error('Google Drive is not configured');
         if (hasValidToken()) return accessToken;
-        const tc = await initTokenClient();
-        return new Promise((resolve, reject) => {
-            pendingTokenResolve = resolve;
-            pendingTokenReject = reject;
-            // Already-consented users get a token with no consent screen (prompt '').
-            tc.requestAccessToken({ prompt: (interactive && !wasConnected()) ? 'consent' : '' });
-            setTimeout(() => {
-                if (pendingTokenReject) { pendingTokenReject(new Error('Google authorization timed out')); pendingTokenResolve = pendingTokenReject = null; }
-            }, 60000);
-        });
+        await initTokenClient(!!interactive);
+        if (wasConnected()) {
+            try { return await requestToken('none', 8000); } catch (e) { if (!interactive) throw e; }
+        }
+        return requestToken((interactive && !wasConnected()) ? 'consent' : '', 60000);
+    }
+
+    let refreshTimer = null;
+    function scheduleRefresh() {
+        clearTimeout(refreshTimer);
+        const ms = Math.max(60000, tokenExpiresAt - Date.now() - 5 * 60 * 1000);
+        refreshTimer = setTimeout(() => { silentRefresh(); }, ms);
+    }
+    async function silentRefresh() {
+        if (!isEnabled() || !wasConnected()) return false;
+        try { await initTokenClient(false); await requestToken('none', 8000); return true; }
+        catch (e) { return false; }
     }
 
     async function driveFetch(url, options) {
@@ -230,6 +256,7 @@
     window.DriveStore = {
         isEnabled,
         isReady: () => isEnabled() && hasValidToken(),
+        silentRefresh,
         isConnectedBefore: wasConnected,
         connect: () => ensureToken(true),
         // Silent token refresh for people who already connected before (no UI unless Google needs it).
@@ -250,4 +277,9 @@
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButton);
     else mountButton();
+
+    // Returning users: reconnect by themselves, no click and no popup.
+    function autoReconnect() { if (wasConnected() && !hasValidToken()) silentRefresh(); }
+    window.addEventListener('load', () => setTimeout(autoReconnect, 1500));
+    document.addEventListener('visibilitychange', () => { if (!document.hidden) autoReconnect(); });
 })();
