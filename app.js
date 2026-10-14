@@ -1967,7 +1967,6 @@
 
             document.getElementById('section-' + tab).classList.remove('hidden');
             document.getElementById('tab-' + tab).className = "px-2 py-1 rounded-md text-[11px] font-bold fast-transition bg-[#2563eb] text-white shadow shrink-0";
-            applyPageAccentFromStorage(tab); // FEATURE: PAGE CUSTOMIZATION
             
             if(tab === 'chat') {
                 if(!activeChatUser) {
@@ -2788,7 +2787,6 @@
             viewingProfileUsername = username;
             if (resetTab) profileActiveTab = 'posts';
             if (isNewProfileView) resetProfileFlipToFront();
-            applyPageAccentFromStorage('profile'); // FEATURE: PAGE CUSTOMIZATION
             // Collapse the persona panel again whenever a different profile is opened
             const personaPanel = document.getElementById('personaCardsContainer');
             const personaChevron = document.getElementById('personaPanelChevron');
@@ -8753,140 +8751,94 @@
         }
 
         // =====================================================================================
-        // FEATURE: DARK / LIGHT THEME TOGGLE (now backs the full 5-theme picker in the pencil
-        // "Customize Page" modal too — see THEME_OPTIONS below). toggleTheme() stays as the
-        // small header shortcut and just flips between Midnight/Light.
+        // THEMES: exactly three — Dark, Light and Old Film (black & white TV look).
+        // The header button cycles through them; the pencil opens a small picker.
         // =====================================================================================
-        const THEME_CLASS_MAP = { dark: null, light: 'light-theme', ocean: 'theme-ocean', sunset: 'theme-sunset', forest: 'theme-forest' };
+        const THEME_CLASS_MAP = { dark: null, light: 'light-theme', film: 'film-theme' };
+        const THEME_ORDER = ['dark', 'light', 'film'];
+        const THEME_OPTIONS = [
+            { key: 'dark', label: 'Dark', preview: '#0b0d10', ring: '#3a424d' },
+            { key: 'light', label: 'Light', preview: '#f5f5f5', ring: '#c8c8c8' },
+            { key: 'film', label: 'Old Film', preview: '#1b1b1b', ring: '#8a8a8a' }
+        ];
+        const THEME_ICONS = { dark: 'fa-moon', light: 'fa-sun', film: 'fa-film' };
+
+        function normalizeTheme(t) { return THEME_CLASS_MAP.hasOwnProperty(t) ? t : 'dark'; }
+        function currentThemeKey() {
+            let t = null;
+            try { t = localStorage.getItem('nexus_theme'); } catch (e) {}
+            return normalizeTheme(t);
+        }
 
         function applyTheme(theme) {
+            theme = normalizeTheme(theme);
             const html = document.documentElement;
             Object.values(THEME_CLASS_MAP).forEach(cls => { if (cls) html.classList.remove(cls); });
             const cls = THEME_CLASS_MAP[theme];
             if (cls) html.classList.add(cls);
-            html.classList.toggle('dark', theme !== 'light'); // keeps Tailwind's dark: variants working on every non-light theme
+            html.classList.toggle('dark', theme !== 'light'); // keeps Tailwind's dark: variants working on the non-light themes
             const icon = document.getElementById('themeToggleIcon');
-            if (icon) icon.className = theme === 'light' ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            if (icon) icon.className = 'fa-solid ' + THEME_ICONS[theme];
+            const btn = document.getElementById('themeToggleBtn');
+            if (btn) btn.title = 'Theme: ' + (THEME_OPTIONS.find(t => t.key === theme) || THEME_OPTIONS[0]).label + ' (tap to change)';
         }
 
         function toggleTheme() {
-            const current = localStorage.getItem('nexus_theme') || 'dark';
-            const next = current === 'light' ? 'dark' : 'light';
-            localStorage.setItem('nexus_theme', next);
+            const next = THEME_ORDER[(THEME_ORDER.indexOf(currentThemeKey()) + 1) % THEME_ORDER.length];
+            try { localStorage.setItem('nexus_theme', next); } catch (e) {}
             applyTheme(next);
         }
 
-        // Apply saved theme preference immediately on load
-        applyTheme(localStorage.getItem('nexus_theme') || 'dark');
+        // Apply saved theme immediately; old saved themes (ocean/sunset/forest) fall back to Dark.
+        // Also drop the per-page accent colours the old Customize Page feature saved.
+        try {
+            const saved = localStorage.getItem('nexus_theme');
+            if (saved && !THEME_CLASS_MAP.hasOwnProperty(saved)) localStorage.setItem('nexus_theme', 'dark');
+            Object.keys(localStorage).filter(k => k.startsWith('nexus_page_accent_')).forEach(k => localStorage.removeItem(k));
+        } catch (e) {}
+        applyTheme(currentThemeKey());
 
-        // =====================================================================================
-        // FEATURE: PAGE CUSTOMIZATION — pencil icon on every page (Feed, Chat, Explore, Reels,
-        // Groups, Calls, AI, Profile) opens a picker with just two things: an accent color for
-        // that page, and an app-wide theme. Chosen color tints that page's top border + a subtle
-        // background wash, saved per-page/per-user in localStorage. "Default" clears both back
-        // to the original look. Purely cosmetic/local — no schema needed.
-        // =====================================================================================
-        const PAGE_CUSTOMIZE_KEYS = ['feed', 'chat', 'reels', 'calls', 'groups', 'explore', 'profile'];
-        const PAGE_ACCENT_SWATCHES = ['#3b82f6', '#14b8a6', '#38bdf8', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#64748b'];
-        const THEME_OPTIONS = [
-            { key: 'dark', label: 'Midnight', preview: 'linear-gradient(135deg, #0b0d10, #2a313a)' },
-            { key: 'light', label: 'Light', preview: 'linear-gradient(135deg, #ffffff, #d8d5e3)' },
-            { key: 'ocean', label: 'Ocean', preview: 'linear-gradient(135deg, #050a12, #16283a)' },
-            { key: 'sunset', label: 'Sunset', preview: 'linear-gradient(135deg, #170d0a, #34190d)' },
-            { key: 'forest', label: 'Forest', preview: 'linear-gradient(135deg, #060c08, #16301a)' }
-        ];
+        // The pencil icon opens the theme picker. (customizingPageKey is only kept so that
+        // "Reset" can also put that page's block order back to default.)
         let customizingPageKey = null;
 
+        // Which element holds a page's reorderable blocks (used by the layout-reorder feature).
         function pageCustomizeElementId(key) {
             return key === 'profile' ? 'profileModalPanel' : 'section-' + key;
         }
 
-        function pageAccentStorageKey(key) {
-            return `nexus_page_accent_${currentUser}_${key}`;
-        }
-
-        function hexToRgba(hex, alpha) {
-            const h = hex.replace('#', '');
-            const r = parseInt(h.substring(0, 2), 16), g = parseInt(h.substring(2, 4), 16), b = parseInt(h.substring(4, 6), 16);
-            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
-        }
-
-        function applyPageAccentStyle(key, color) {
-            const el = document.getElementById(pageCustomizeElementId(key));
-            if (!el) return;
-            if (color) {
-                el.style.borderTop = `3px solid ${color}`;
-                el.style.backgroundImage = `linear-gradient(180deg, ${hexToRgba(color, 0.10)} 0%, transparent 220px)`;
-            } else {
-                el.style.borderTop = '';
-                el.style.backgroundImage = '';
-            }
-        }
-
-        // Call once per page whenever it's shown (tab switch / profile open) so the saved
-        // accent (if any) re-applies even after a full page reload.
-        function applyPageAccentFromStorage(key) {
-            if (!currentUser) return;
-            const saved = localStorage.getItem(pageAccentStorageKey(key));
-            applyPageAccentStyle(key, saved || null);
-        }
-
-        // Single header pencil icon — figures out which page is currently open (profile
-        // modal takes priority since it overlays everything else) and customizes that one.
         function openPageCustomizeForCurrentPage() {
             const profileModal = document.getElementById('profileModal');
-            if (profileModal && !profileModal.classList.contains('hidden')) {
-                openPageCustomize('profile');
-            } else {
-                openPageCustomize(currentTab);
-            }
+            openPageCustomize(profileModal && !profileModal.classList.contains('hidden') ? 'profile' : currentTab);
         }
         window.openPageCustomizeForCurrentPage = openPageCustomizeForCurrentPage;
 
         function openPageCustomize(key) {
             customizingPageKey = key;
-            document.getElementById('pageCustomizeTitle').innerText = key.charAt(0).toUpperCase() + key.slice(1);
-            const saved = localStorage.getItem(pageAccentStorageKey(key));
-            document.getElementById('pageCustomizeSwatches').innerHTML = PAGE_ACCENT_SWATCHES.map(c => `
-                <button onclick="applyPageAccent('${c}')" class="w-8 h-8 rounded-full border-2 transition ${saved === c ? 'border-white scale-110' : 'border-transparent'}" style="background:${c}"></button>
-            `).join('');
-
-            const currentTheme = localStorage.getItem('nexus_theme') || 'dark';
+            const cur = currentThemeKey();
             document.getElementById('pageCustomizeThemes').innerHTML = THEME_OPTIONS.map(t => `
-                <button onclick="applyThemeChoice('${t.key}')" class="flex flex-col items-center gap-1 shrink-0">
-                    <span class="w-10 h-10 rounded-xl border-2 ${currentTheme === t.key ? 'border-white scale-105' : 'border-transparent'} transition block" style="background:${t.preview}"></span>
-                    <span class="text-[11px] font-bold ${currentTheme === t.key ? 'text-white' : 'text-slate-400'}">${t.label}</span>
+                <button onclick="applyThemeChoice('${t.key}')" class="flex flex-col items-center gap-1 shrink-0" aria-pressed="${cur === t.key}">
+                    <span class="w-12 h-12 rounded-xl border-2 ${cur === t.key ? 'scale-105' : ''} transition flex items-center justify-center" style="background:${t.preview};border-color:${cur === t.key ? '#ffffff' : t.ring}">
+                        <i class="fa-solid ${THEME_ICONS[t.key]}" style="color:${t.key === 'light' ? '#161616' : '#e6e6e6'}"></i>
+                    </span>
+                    <span class="text-[11px] font-bold ${cur === t.key ? 'text-white' : 'text-slate-400'}">${t.label}</span>
                 </button>
             `).join('');
-
             document.getElementById('pageCustomizeModal').classList.remove('hidden');
             document.getElementById('pageCustomizeModal').classList.add('flex');
         }
         window.openPageCustomize = openPageCustomize;
 
-        // FEATURE: PAGE CUSTOMIZATION — theme swatch tap. Theme is app-wide (unlike accent
-        // color, which is per-page), so this just re-uses the existing applyTheme() engine.
         function applyThemeChoice(themeKey) {
-            localStorage.setItem('nexus_theme', themeKey);
+            try { localStorage.setItem('nexus_theme', normalizeTheme(themeKey)); } catch (e) {}
             applyTheme(themeKey);
             if (customizingPageKey) openPageCustomize(customizingPageKey); // re-render so the picked theme shows selected
         }
         window.applyThemeChoice = applyThemeChoice;
 
-        function applyPageAccent(color) {
-            if (!customizingPageKey) return;
-            localStorage.setItem(pageAccentStorageKey(customizingPageKey), color);
-            applyPageAccentStyle(customizingPageKey, color);
-            openPageCustomize(customizingPageKey); // re-render swatches so the picked one shows selected
-        }
-        window.applyPageAccent = applyPageAccent;
-
         function resetPageCustomization() {
-            if (!customizingPageKey) return;
-            localStorage.removeItem(pageAccentStorageKey(customizingPageKey));
-            applyPageAccentStyle(customizingPageKey, null);
-            resetLayoutOrder(customizingPageKey); // FEATURE: LAYOUT REORDER — Default undoes both color + layout
-            localStorage.setItem('nexus_theme', 'dark');
+            if (customizingPageKey) resetLayoutOrder(customizingPageKey); // also undoes any block re-ordering
+            try { localStorage.setItem('nexus_theme', 'dark'); } catch (e) {}
             applyTheme('dark');
             closePageCustomizeModal();
         }
@@ -8900,7 +8852,6 @@
         window.closePageCustomizeModal = closePageCustomizeModal;
 
         function applyAllSavedPageCustomizations() {
-            PAGE_CUSTOMIZE_KEYS.forEach(k => applyPageAccentFromStorage(k));
             applyLayoutOrder('feed'); // only Feed supports reordering for now
         }
 

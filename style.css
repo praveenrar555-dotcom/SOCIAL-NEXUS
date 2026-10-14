@@ -1,5 +1,5 @@
         *, ::before, ::after { box-sizing: border-box; }
-        html, body { background-color: #0b0d10; color: #f3f1fa; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; }
+        html, body { background-color: #0b0d10; color: #f2f2f2; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; }
         body { background-image: none; }
 
         ::-webkit-scrollbar { width: 4px; height: 4px; }
@@ -55,56 +55,54 @@
         }
 
         /* ===== LIGHT THEME OVERRIDES (Dark/Light Theme Toggle Feature) ===== */
-        html.light-theme, html.light-theme body { background-color: #f4f3f8 !important; color: #17141f !important; background-image: none !important; }
+        html.light-theme, html.light-theme body { background-color: #f5f5f5 !important; color: #161616 !important; background-image: none !important; }
         html.light-theme .glass-panel { background: rgba(255,255,255,0.97) !important; border: 1px solid rgba(0,0,0,0.07) !important; }
-        html.light-theme .bg-darker, html.light-theme .bg-slate-950, html.light-theme .bg-slate-950\/80, html.light-theme .bg-slate-950\/60 { background-color: #eeecf3 !important; }
+        html.light-theme .bg-darker, html.light-theme .bg-slate-950, html.light-theme .bg-slate-950\/80, html.light-theme .bg-slate-950\/60 { background-color: #ececec !important; }
         html.light-theme .bg-slate-900, html.light-theme .bg-slate-900\/90, html.light-theme .bg-slate-900\/95, html.light-theme .bg-slate-900\/60, html.light-theme .bg-slate-900\/80, html.light-theme .bg-slate-900\/50 { background-color: #ffffff !important; }
-        html.light-theme .bg-slate-800, html.light-theme .bg-slate-800\/80, html.light-theme .bg-slate-800\/50 { background-color: #e7e5ee !important; }
-        html.light-theme .border-slate-800, html.light-theme .border-slate-800\/50, html.light-theme .border-slate-800\/80, html.light-theme .border-slate-700 { border-color: #d8d5e3 !important; }
-        html.light-theme .text-slate-200, html.light-theme .text-slate-100, html.light-theme .text-slate-300 { color: #221f2e !important; }
-        html.light-theme .text-slate-400, html.light-theme .text-slate-400 { color: #504b60 !important; }
-        html.light-theme ::-webkit-scrollbar-track { background: #f4f3f8; }
-        html.light-theme ::-webkit-scrollbar-thumb { background: #d8d5e3; }
-        html.light-theme .story-ring-seen { background: #d8d5e3; }
+        html.light-theme .bg-slate-800, html.light-theme .bg-slate-800\/80, html.light-theme .bg-slate-800\/50 { background-color: #e2e2e2 !important; }
+        html.light-theme .border-slate-800, html.light-theme .border-slate-800\/50, html.light-theme .border-slate-800\/80, html.light-theme .border-slate-700 { border-color: #d4d4d4 !important; }
+        html.light-theme .text-slate-200, html.light-theme .text-slate-100, html.light-theme .text-slate-300 { color: #1f1f1f !important; }
+        html.light-theme .text-slate-400, html.light-theme .text-slate-400 { color: #555555 !important; }
+        html.light-theme ::-webkit-scrollbar-track { background: #f5f5f5; }
+        html.light-theme ::-webkit-scrollbar-thumb { background: #d4d4d4; }
+        html.light-theme .story-ring-seen { background: #d4d4d4; }
 
-        /* ===== OCEAN THEME OVERRIDES (Page Customize → Theme) ===== */
-        html.theme-ocean, html.theme-ocean body { background-color: #050a12 !important; color: #dceffa !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(56,189,248,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(34,197,148,0.10), transparent 60%) !important; }
-        html.theme-ocean .glass-panel { background: rgba(11,22,34,0.97) !important; border: 1px solid rgba(56,189,248,0.10) !important; }
-        html.theme-ocean .bg-darker, html.theme-ocean .bg-slate-950, html.theme-ocean .bg-slate-950\/80, html.theme-ocean .bg-slate-950\/60 { background-color: #060d16 !important; }
-        html.theme-ocean .bg-slate-900, html.theme-ocean .bg-slate-900\/90, html.theme-ocean .bg-slate-900\/95, html.theme-ocean .bg-slate-900\/60, html.theme-ocean .bg-slate-900\/80, html.theme-ocean .bg-slate-900\/50 { background-color: #0b1622 !important; }
-        html.theme-ocean .bg-slate-800, html.theme-ocean .bg-slate-800\/80, html.theme-ocean .bg-slate-800\/50 { background-color: #16283a !important; }
-        html.theme-ocean .border-slate-800, html.theme-ocean .border-slate-800\/50, html.theme-ocean .border-slate-800\/80, html.theme-ocean .border-slate-700 { border-color: #1f3347 !important; }
-        html.theme-ocean .text-slate-200, html.theme-ocean .text-slate-100, html.theme-ocean .text-slate-300 { color: #dceffa !important; }
-        html.theme-ocean .text-slate-400, html.theme-ocean .text-slate-400 { color: #7fa8bf !important; }
-        html.theme-ocean ::-webkit-scrollbar-track { background: #050a12; }
-        html.theme-ocean ::-webkit-scrollbar-thumb { background: #1f3347; }
-        html.theme-ocean .story-ring-seen { background: #1f3347; }
-
-        /* ===== SUNSET THEME OVERRIDES (Page Customize → Theme) ===== */
-        html.theme-sunset, html.theme-sunset body { background-color: #120a08 !important; color: #ffe9d9 !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(59,130,246,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(245,165,36,0.12), transparent 60%) !important; }
-        html.theme-sunset .glass-panel { background: rgba(36,18,9,0.97) !important; border: 1px solid rgba(245,165,36,0.10) !important; }
-        html.theme-sunset .bg-darker, html.theme-sunset .bg-slate-950, html.theme-sunset .bg-slate-950\/80, html.theme-sunset .bg-slate-950\/60 { background-color: #170d0a !important; }
-        html.theme-sunset .bg-slate-900, html.theme-sunset .bg-slate-900\/90, html.theme-sunset .bg-slate-900\/95, html.theme-sunset .bg-slate-900\/60, html.theme-sunset .bg-slate-900\/80, html.theme-sunset .bg-slate-900\/50 { background-color: #241209 !important; }
-        html.theme-sunset .bg-slate-800, html.theme-sunset .bg-slate-800\/80, html.theme-sunset .bg-slate-800\/50 { background-color: #34190d !important; }
-        html.theme-sunset .border-slate-800, html.theme-sunset .border-slate-800\/50, html.theme-sunset .border-slate-800\/80, html.theme-sunset .border-slate-700 { border-color: #4a2413 !important; }
-        html.theme-sunset .text-slate-200, html.theme-sunset .text-slate-100, html.theme-sunset .text-slate-300 { color: #ffe9d9 !important; }
-        html.theme-sunset .text-slate-400, html.theme-sunset .text-slate-400 { color: #d19a75 !important; }
-        html.theme-sunset ::-webkit-scrollbar-track { background: #120a08; }
-        html.theme-sunset ::-webkit-scrollbar-thumb { background: #4a2413; }
-        html.theme-sunset .story-ring-seen { background: #4a2413; }
-
-        /* ===== FOREST THEME OVERRIDES (Page Customize → Theme) ===== */
-        html.theme-forest, html.theme-forest body { background-color: #060c08 !important; color: #dcf5df !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(34,197,94,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(56,189,248,0.08), transparent 60%) !important; }
-        html.theme-forest .glass-panel { background: rgba(14,28,16,0.97) !important; border: 1px solid rgba(34,197,94,0.10) !important; }
-        html.theme-forest .bg-darker, html.theme-forest .bg-slate-950, html.theme-forest .bg-slate-950\/80, html.theme-forest .bg-slate-950\/60 { background-color: #081209 !important; }
-        html.theme-forest .bg-slate-900, html.theme-forest .bg-slate-900\/90, html.theme-forest .bg-slate-900\/95, html.theme-forest .bg-slate-900\/60, html.theme-forest .bg-slate-900\/80, html.theme-forest .bg-slate-900\/50 { background-color: #0e1c10 !important; }
-        html.theme-forest .bg-slate-800, html.theme-forest .bg-slate-800\/80, html.theme-forest .bg-slate-800\/50 { background-color: #16301a !important; }
-        html.theme-forest .border-slate-800, html.theme-forest .border-slate-800\/50, html.theme-forest .border-slate-800\/80, html.theme-forest .border-slate-700 { border-color: #234a28 !important; }
-        html.theme-forest .text-slate-200, html.theme-forest .text-slate-100, html.theme-forest .text-slate-300 { color: #dcf5df !important; }
-        html.theme-forest .text-slate-400, html.theme-forest .text-slate-400 { color: #7fb489 !important; }
-        html.theme-forest ::-webkit-scrollbar-track { background: #060c08; }
-        html.theme-forest ::-webkit-scrollbar-thumb { background: #234a28; }
-        html.theme-forest .story-ring-seen { background: #234a28; }
+        /* ===== OLD FILM THEME (black & white TV) =====
+           Everything is rendered in greys, like an old black-and-white television: the whole page
+           is desaturated (photos and videos too), with a faint scan-line pattern, a little film
+           grain and darkened corners. Text stays high-contrast. The grain/scan-line layers do not
+           intercept taps and are switched off for people who prefer reduced motion. */
+        html.film-theme { filter: grayscale(1) contrast(1.06); }
+        html.film-theme, html.film-theme body { background-color: #0a0a0a !important; color: #ececec !important; }
+        html.film-theme .glass-panel { background: rgba(20,20,20,0.97) !important; border: 1px solid rgba(255,255,255,0.14) !important; }
+        html.film-theme .bg-darker, html.film-theme .bg-slate-950, html.film-theme .bg-slate-950\/80, html.film-theme .bg-slate-950\/60 { background-color: #0e0e0e !important; }
+        html.film-theme .bg-slate-900, html.film-theme .bg-slate-900\/90, html.film-theme .bg-slate-900\/95, html.film-theme .bg-slate-900\/60, html.film-theme .bg-slate-900\/80 { background-color: #171717 !important; }
+        html.film-theme .bg-slate-800, html.film-theme .bg-slate-800\/80, html.film-theme .bg-slate-800\/50 { background-color: #242424 !important; }
+        html.film-theme .border-slate-800, html.film-theme .border-slate-800\/50, html.film-theme .border-slate-800\/80, html.film-theme .border-slate-700 { border-color: #3a3a3a !important; }
+        html.film-theme .text-slate-200, html.film-theme .text-slate-100, html.film-theme .text-slate-300 { color: #ececec !important; }
+        html.film-theme .text-slate-400, html.film-theme .text-slate-500 { color: #a6a6a6 !important; }
+        html.film-theme ::-webkit-scrollbar-track { background: #0a0a0a; }
+        html.film-theme ::-webkit-scrollbar-thumb { background: #3a3a3a; }
+        html.film-theme .story-ring-unseen { background: #e6e6e6; }
+        html.film-theme .story-ring-seen { background: #3a3a3a; }
+        /* primary buttons: light-grey fill with dark text, the way a b/w screen would show them */
+        html.film-theme .bg-\[\#2563eb\] { background-color: #e6e6e6 !important; color: #0a0a0a !important; }
+        html.film-theme body::before {
+            content: ''; position: fixed; inset: 0; z-index: 2147482000; pointer-events: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.035) 0, rgba(255,255,255,0.035) 1px, transparent 1px, transparent 3px),
+                radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,0.5) 100%);
+        }
+        html.film-theme body::after {
+            content: ''; position: fixed; inset: -60px; z-index: 2147482001; pointer-events: none; opacity: 0.09; mix-blend-mode: overlay;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
+            animation: nxGrain 0.9s steps(6) infinite;
+        }
+        @keyframes nxGrain {
+            0% { transform: translate(0, 0); } 20% { transform: translate(-18px, 12px); } 40% { transform: translate(14px, -20px); }
+            60% { transform: translate(-10px, -8px); } 80% { transform: translate(20px, 16px); } 100% { transform: translate(0, 0); }
+        }
+        @media (prefers-reduced-motion: reduce) { html.film-theme body::after { animation: none; } }
 
         /* ===================================================================
            FEATURE: FADING MEMORIES WALL — old posts get visually "old" (faded,
