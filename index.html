@@ -2,7 +2,7 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>SocialNexus</title>
     <meta name="description" content="SocialNexus: posts, reels, stories, chat and calls in one app.">
     
@@ -1212,44 +1212,81 @@
 
     <div id="main-app" class="hidden h-full flex flex-col overflow-hidden">
         
-        <header id="mainNavbar" class="glass-panel shrink-0 border-b border-slate-800/80 z-40">
-            <div class="w-full max-w-xl mx-auto px-3 h-12 flex justify-between items-center">
-                <div class="flex items-center space-x-1.5">
-                    <div class="w-7 h-7 bg-[#334155] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow">
-                        <i class="fa-solid fa-layer-group"></i>
-                    </div>
-                    <span class="font-display text-xs font-bold tracking-tight text-slate-100">Nexus</span>
+        <header id="mainNavbar" class="nx-header glass-panel shrink-0 border-b border-slate-800/80 z-40">
+            <div class="nx-bar">
+                <button id="menuBtn" type="button" onclick="openNavDrawer()" aria-label="Open menu" aria-haspopup="dialog" aria-expanded="false" aria-controls="navDrawer" class="nx-icon-btn">
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+                </button>
+                <div class="nx-brand">
+                    <div class="nx-logo"><i class="fa-solid fa-layer-group"></i></div>
+                    <span class="nx-brand-name">Nexus</span>
                 </div>
-
-                <nav class="flex space-x-0.5 bg-slate-900/90 p-0.5 rounded-lg border border-slate-800 overflow-x-auto max-w-[180px] sm:max-w-none no-scrollbar">
-                    <button onclick="switchTab('feed')" id="tab-feed" data-i18n="nav_feed" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Feed</button>
-                    <button onclick="switchTab('chat')" id="tab-chat" data-i18n="nav_chat" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Chat</button>
-                    <button onclick="switchTab('groups')" id="tab-groups" data-i18n="nav_groups" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Groups</button>
-                    <button onclick="switchTab('reels')" id="tab-reels" data-i18n="nav_reels" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Reels</button>
-                    <button onclick="switchTab('explore')" id="tab-explore" data-i18n="nav_explore" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Explore</button>
-                    <button onclick="switchTab('calls')" id="tab-calls" data-i18n="nav_calls" class="px-2 py-1 rounded-md text-[11px] font-bold fast-transition shrink-0">Calls</button>
-                </nav>
-
-                <div class="flex items-center space-x-1.5">
-                    <span id="ghostModeNavIndicator" class="hidden text-[#2dd4bf] text-xs px-1" title="Ghost Mode is ON"><i class="fa-solid fa-ghost"></i></span>
-                    <!-- FEATURE: PAGE CUSTOMIZATION — single pencil icon, customizes whichever page/tab is currently open -->
-                    <button onclick="openPageCustomizeForCurrentPage()" class="p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Customize Page"><i class="fa-solid fa-pencil"></i></button>
+                <div class="nx-actions">
+                    <span id="ghostModeNavIndicator" class="nx-ghost hidden" title="Ghost Mode is ON"><i class="fa-solid fa-ghost"></i></span>
                     <!-- FEATURE: NOTIFICATIONS -->
-                    <button id="notificationsBellBtn" onclick="openNotificationsModal()" class="relative p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Notifications">
+                    <button id="notificationsBellBtn" type="button" onclick="openNotificationsModal()" class="nx-icon-btn" title="Notifications" aria-label="Notifications">
                         <i class="fa-solid fa-bell"></i>
-                        <span id="notificationsBadge" class="hidden absolute -top-1 -right-1 bg-[#2563eb] text-white text-[11px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                        <span id="notificationsBadge" class="nx-badge hidden">0</span>
                     </button>
-                    <button id="followRequestsBellBtn" onclick="openFollowRequestsModal()" class="relative hidden p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Follow Requests">
+                    <button id="followRequestsBellBtn" type="button" onclick="openFollowRequestsModal()" class="nx-icon-btn hidden" title="Follow Requests" aria-label="Follow requests">
                         <i class="fa-solid fa-user-clock"></i>
-                        <span id="followRequestsBadge" class="hidden absolute -top-1 -right-1 bg-[#2563eb] text-white text-[11px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                        <span id="followRequestsBadge" class="nx-badge hidden">0</span>
                     </button>
-                    <button onclick="toggleTheme()" id="themeToggleBtn" class="p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Change theme"><i class="fa-solid fa-moon" id="themeToggleIcon"></i></button>
-                    <span id="displayUsername" onclick="openProfile(currentUser)" class="text-[11px] font-bold px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 truncate max-w-[80px] cursor-pointer hover:text-[#60a5fa] transition" title="Tap to open your profile">User</span>
-                    <button onclick="openAccountSwitcher()" class="p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Switch Account"><i class="fa-solid fa-people-arrows"></i></button>
-                    <button onclick="logout()" class="p-1.5 text-slate-400 hover:text-red-400 transition text-xs rounded-lg hover:bg-slate-900" title="Logout"><i class="fa-solid fa-power-off"></i></button>
+                    <button type="button" id="displayUsername" onclick="openProfile(currentUser)" class="nx-user-chip" title="Open my profile"></button>
                 </div>
             </div>
+            <nav id="mainTabs" aria-label="Main sections" class="nx-tabs">
+                <button type="button" onclick="switchTab('feed')" id="tab-feed" class="nx-tab"><i class="fa-solid fa-house"></i><span data-i18n="nav_feed">Feed</span></button>
+                <button type="button" onclick="switchTab('chat')" id="tab-chat" class="nx-tab"><i class="fa-solid fa-comments"></i><span data-i18n="nav_chat">Chat</span></button>
+                <button type="button" onclick="switchTab('groups')" id="tab-groups" class="nx-tab"><i class="fa-solid fa-users"></i><span data-i18n="nav_groups">Groups</span></button>
+                <button type="button" onclick="switchTab('reels')" id="tab-reels" class="nx-tab"><i class="fa-solid fa-clapperboard"></i><span data-i18n="nav_reels">Reels</span></button>
+                <button type="button" onclick="switchTab('explore')" id="tab-explore" class="nx-tab"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="nav_explore">Explore</span></button>
+                <button type="button" onclick="switchTab('calls')" id="tab-calls" class="nx-tab"><i class="fa-solid fa-phone"></i><span data-i18n="nav_calls">Calls</span></button>
+            </nav>
         </header>
+
+        <!-- MENU (hamburger) -->
+        <div id="navDrawerOverlay" class="nx-overlay" onclick="closeNavDrawer()" aria-hidden="true"></div>
+        <aside id="navDrawer" class="nx-drawer" role="dialog" aria-modal="true" aria-label="Menu" aria-hidden="true">
+            <div class="nx-drawer-head">
+                <div class="nx-drawer-id">
+                    <div class="nx-logo nx-logo-lg"><i class="fa-solid fa-layer-group"></i></div>
+                    <div class="nx-drawer-names">
+                        <p class="nx-drawer-name">Nexus</p>
+                        <p id="drawerUsername" class="nx-drawer-user"></p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeNavDrawer()" class="nx-icon-btn" aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="nx-drawer-body">
+                <p class="nx-drawer-title">Explore</p>
+                <button type="button" class="nx-item" data-go-tab="feed"><i class="fa-solid fa-house"></i><span data-i18n="nav_feed">Feed</span></button>
+                <button type="button" class="nx-item" data-go-tab="chat"><i class="fa-solid fa-comments"></i><span data-i18n="nav_chat">Chat</span></button>
+                <button type="button" class="nx-item" data-go-tab="groups"><i class="fa-solid fa-users"></i><span data-i18n="nav_groups">Groups</span></button>
+                <button type="button" class="nx-item" data-go-tab="reels"><i class="fa-solid fa-clapperboard"></i><span data-i18n="nav_reels">Reels</span></button>
+                <button type="button" class="nx-item" data-go-tab="explore"><i class="fa-solid fa-magnifying-glass"></i><span data-i18n="nav_explore">Explore</span></button>
+                <button type="button" class="nx-item" data-go-tab="calls"><i class="fa-solid fa-phone"></i><span data-i18n="nav_calls">Calls</span></button>
+
+                <p class="nx-drawer-title">Account</p>
+                <button type="button" class="nx-item" data-go="profile"><i class="fa-solid fa-user"></i><span>My profile</span></button>
+                <button type="button" class="nx-item" data-go="notifications"><i class="fa-solid fa-bell"></i><span>Notifications</span></button>
+                <button type="button" class="nx-item" data-go="switch"><i class="fa-solid fa-people-arrows"></i><span>Switch account</span></button>
+
+                <p class="nx-drawer-title">App</p>
+                <button type="button" id="themeToggleBtn" onclick="toggleTheme()" class="nx-item" title="Change theme"><i class="fa-solid fa-moon" id="themeToggleIcon"></i><span>Theme: <b id="themeToggleLabel">Dark</b></span></button>
+                <button type="button" class="nx-item" data-go="customize"><i class="fa-solid fa-pencil"></i><span>Theme &amp; layout</span></button>
+
+                <p class="nx-drawer-title">About</p>
+                <a class="nx-item" href="about.html" target="_blank" rel="noopener"><i class="fa-solid fa-circle-info"></i><span>About us</span></a>
+                <a class="nx-item" href="privacy.html" target="_blank" rel="noopener"><i class="fa-solid fa-shield-halved"></i><span>Privacy Policy</span></a>
+                <a class="nx-item" href="terms.html" target="_blank" rel="noopener"><i class="fa-solid fa-file-lines"></i><span>Terms &amp; Conditions</span></a>
+                <a class="nx-item" href="#" data-cookie-settings data-close-drawer><i class="fa-solid fa-cookie-bite"></i><span>Cookie settings</span></a>
+                <a class="nx-item" href="data-deletion.html" target="_blank" rel="noopener"><i class="fa-solid fa-trash-can"></i><span>Delete my data</span></a>
+            </div>
+            <div class="nx-drawer-foot">
+                <button type="button" class="nx-item nx-item-danger" data-go="logout"><i class="fa-solid fa-right-from-bracket"></i><span>Log out</span></button>
+            </div>
+        </aside>
 
         <main class="w-full max-w-xl mx-auto flex-1 flex flex-col min-h-0 overflow-hidden px-2 py-2">
 
@@ -1553,6 +1590,7 @@
     <script src="consent.js"></script>
     <script src="drive-storage.js"></script>
     <script src="text-motion.js"></script>
+    <script src="nav.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

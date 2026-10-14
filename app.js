@@ -1962,11 +1962,15 @@
             ['feed', 'chat', 'reels', 'calls', 'groups', 'explore'].forEach(t => {
                 document.getElementById('section-' + t).classList.add('hidden');
                 const btn = document.getElementById('tab-' + t);
-                btn.className = "px-2 py-1 rounded-md text-[11px] font-bold fast-transition text-slate-400 hover:text-slate-200 shrink-0";
+                btn.className = 'nx-tab';
+                btn.removeAttribute('aria-current');
             });
 
             document.getElementById('section-' + tab).classList.remove('hidden');
-            document.getElementById('tab-' + tab).className = "px-2 py-1 rounded-md text-[11px] font-bold fast-transition bg-[#2563eb] text-white shadow shrink-0";
+            const activeTabBtn = document.getElementById('tab-' + tab);
+            activeTabBtn.className = 'nx-tab is-active';
+            activeTabBtn.setAttribute('aria-current', 'page');
+            if (typeof window.nxSyncDrawer === 'function') window.nxSyncDrawer(tab);
             
             if(tab === 'chat') {
                 if(!activeChatUser) {
@@ -8779,6 +8783,8 @@
             html.classList.toggle('dark', theme !== 'light'); // keeps Tailwind's dark: variants working on the non-light themes
             const icon = document.getElementById('themeToggleIcon');
             if (icon) icon.className = 'fa-solid ' + THEME_ICONS[theme];
+            const lab = document.getElementById('themeToggleLabel');
+            if (lab) lab.textContent = (THEME_OPTIONS.find(t => t.key === theme) || THEME_OPTIONS[0]).label;
             const btn = document.getElementById('themeToggleBtn');
             if (btn) btn.title = 'Theme: ' + (THEME_OPTIONS.find(t => t.key === theme) || THEME_OPTIONS[0]).label + ' (tap to change)';
         }
