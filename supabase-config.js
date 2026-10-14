@@ -17,4 +17,4 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_
 // Leave it as "" to keep using Supabase Storage for media.
 // This is NOT a secret — Client IDs are meant to be public.
 // ============================================================
-const GOOGLE_CLIENT_ID = "";
+const GOOGLE_CLIENT_ID = "324372310725-04ni6sotd9di0ibf3hl5i6ifq6pqljv9.apps.googleusercontent.com";
