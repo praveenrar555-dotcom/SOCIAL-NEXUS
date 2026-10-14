@@ -1,15 +1,10 @@
         *, ::before, ::after { box-sizing: border-box; }
-        html, body { background-color: #050509; color: #f3f1fa; font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; }
-        body {
-            background-image:
-                radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,77,141,0.10), transparent 60%),
-                radial-gradient(ellipse 900px 500px at 100% 10%, rgba(53,199,255,0.08), transparent 60%);
-            background-attachment: fixed;
-        }
+        html, body { background-color: #0b0d10; color: #f3f1fa; font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Noto Sans', 'Helvetica Neue', Arial, sans-serif; margin: 0; padding: 0; height: 100%; overflow: hidden; position: fixed; width: 100%; }
+        body { background-image: none; }
 
         ::-webkit-scrollbar { width: 4px; height: 4px; }
-        ::-webkit-scrollbar-track { background: #050509; }
-        ::-webkit-scrollbar-thumb { background: #26263a; border-radius: 9999px; }
+        ::-webkit-scrollbar-track { background: #0b0d10; }
+        ::-webkit-scrollbar-thumb { background: #2a313a; border-radius: 9999px; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
 
@@ -23,30 +18,21 @@
         }
 
         /* Story ring gradient - unseen (bright) vs seen (dull) — keyed to the three post styles */
-        .story-ring-unseen { background: linear-gradient(45deg, #ff4d8d, #9d7bff, #35c7ff); }
-        .story-ring-seen { background: #26263a; }
+        .story-ring-unseen { background: #3b82f6; }
+        .story-ring-seen { background: #2a313a; }
 
         @keyframes storyProgress { from { width: 0%; } to { width: 100%; } }
 
         /* Signature motif: every panel carries a thin tri-color gradient seam along its top edge —
            the one consistent, deliberate accent that ties the whole app's visual identity together. */
         .glass-panel {
-            background: rgba(15, 15, 24, 0.97);
+            background: rgba(18, 22, 27, 0.97);
             backdrop-filter: blur(14px);
             -webkit-backdrop-filter: blur(14px);
             border: 1px solid rgba(255, 255, 255, 0.06);
             position: relative;
         }
-        .glass-panel::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 14px; right: 14px;
-            height: 1px;
-            background: linear-gradient(90deg, rgba(255,77,141,0.55), rgba(157,123,255,0.55), rgba(53,199,255,0.55));
-            border-radius: 9999px;
-            pointer-events: none;
-        }
-        .fast-transition { transition: transform 0.1s ease, background-color 0.1s ease, opacity 0.1s ease; }
+                .fast-transition { transition: transform 0.1s ease, background-color 0.1s ease, opacity 0.1s ease; }
         
         .reel-container {
             scroll-snap-type: y mandatory;
@@ -76,46 +62,46 @@
         html.light-theme .bg-slate-800, html.light-theme .bg-slate-800\/80, html.light-theme .bg-slate-800\/50 { background-color: #e7e5ee !important; }
         html.light-theme .border-slate-800, html.light-theme .border-slate-800\/50, html.light-theme .border-slate-800\/80, html.light-theme .border-slate-700 { border-color: #d8d5e3 !important; }
         html.light-theme .text-slate-200, html.light-theme .text-slate-100, html.light-theme .text-slate-300 { color: #221f2e !important; }
-        html.light-theme .text-slate-400, html.light-theme .text-slate-500 { color: #504b60 !important; }
+        html.light-theme .text-slate-400, html.light-theme .text-slate-400 { color: #504b60 !important; }
         html.light-theme ::-webkit-scrollbar-track { background: #f4f3f8; }
         html.light-theme ::-webkit-scrollbar-thumb { background: #d8d5e3; }
         html.light-theme .story-ring-seen { background: #d8d5e3; }
 
         /* ===== OCEAN THEME OVERRIDES (Page Customize → Theme) ===== */
-        html.theme-ocean, html.theme-ocean body { background-color: #050a12 !important; color: #dceffa !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(53,199,255,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(34,197,148,0.10), transparent 60%) !important; }
-        html.theme-ocean .glass-panel { background: rgba(11,22,34,0.97) !important; border: 1px solid rgba(53,199,255,0.10) !important; }
+        html.theme-ocean, html.theme-ocean body { background-color: #050a12 !important; color: #dceffa !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(56,189,248,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(34,197,148,0.10), transparent 60%) !important; }
+        html.theme-ocean .glass-panel { background: rgba(11,22,34,0.97) !important; border: 1px solid rgba(56,189,248,0.10) !important; }
         html.theme-ocean .bg-darker, html.theme-ocean .bg-slate-950, html.theme-ocean .bg-slate-950\/80, html.theme-ocean .bg-slate-950\/60 { background-color: #060d16 !important; }
         html.theme-ocean .bg-slate-900, html.theme-ocean .bg-slate-900\/90, html.theme-ocean .bg-slate-900\/95, html.theme-ocean .bg-slate-900\/60, html.theme-ocean .bg-slate-900\/80, html.theme-ocean .bg-slate-900\/50 { background-color: #0b1622 !important; }
         html.theme-ocean .bg-slate-800, html.theme-ocean .bg-slate-800\/80, html.theme-ocean .bg-slate-800\/50 { background-color: #16283a !important; }
         html.theme-ocean .border-slate-800, html.theme-ocean .border-slate-800\/50, html.theme-ocean .border-slate-800\/80, html.theme-ocean .border-slate-700 { border-color: #1f3347 !important; }
         html.theme-ocean .text-slate-200, html.theme-ocean .text-slate-100, html.theme-ocean .text-slate-300 { color: #dceffa !important; }
-        html.theme-ocean .text-slate-400, html.theme-ocean .text-slate-500 { color: #7fa8bf !important; }
+        html.theme-ocean .text-slate-400, html.theme-ocean .text-slate-400 { color: #7fa8bf !important; }
         html.theme-ocean ::-webkit-scrollbar-track { background: #050a12; }
         html.theme-ocean ::-webkit-scrollbar-thumb { background: #1f3347; }
         html.theme-ocean .story-ring-seen { background: #1f3347; }
 
         /* ===== SUNSET THEME OVERRIDES (Page Customize → Theme) ===== */
-        html.theme-sunset, html.theme-sunset body { background-color: #120a08 !important; color: #ffe9d9 !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(255,77,141,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(245,165,36,0.12), transparent 60%) !important; }
+        html.theme-sunset, html.theme-sunset body { background-color: #120a08 !important; color: #ffe9d9 !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(59,130,246,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(245,165,36,0.12), transparent 60%) !important; }
         html.theme-sunset .glass-panel { background: rgba(36,18,9,0.97) !important; border: 1px solid rgba(245,165,36,0.10) !important; }
         html.theme-sunset .bg-darker, html.theme-sunset .bg-slate-950, html.theme-sunset .bg-slate-950\/80, html.theme-sunset .bg-slate-950\/60 { background-color: #170d0a !important; }
         html.theme-sunset .bg-slate-900, html.theme-sunset .bg-slate-900\/90, html.theme-sunset .bg-slate-900\/95, html.theme-sunset .bg-slate-900\/60, html.theme-sunset .bg-slate-900\/80, html.theme-sunset .bg-slate-900\/50 { background-color: #241209 !important; }
         html.theme-sunset .bg-slate-800, html.theme-sunset .bg-slate-800\/80, html.theme-sunset .bg-slate-800\/50 { background-color: #34190d !important; }
         html.theme-sunset .border-slate-800, html.theme-sunset .border-slate-800\/50, html.theme-sunset .border-slate-800\/80, html.theme-sunset .border-slate-700 { border-color: #4a2413 !important; }
         html.theme-sunset .text-slate-200, html.theme-sunset .text-slate-100, html.theme-sunset .text-slate-300 { color: #ffe9d9 !important; }
-        html.theme-sunset .text-slate-400, html.theme-sunset .text-slate-500 { color: #d19a75 !important; }
+        html.theme-sunset .text-slate-400, html.theme-sunset .text-slate-400 { color: #d19a75 !important; }
         html.theme-sunset ::-webkit-scrollbar-track { background: #120a08; }
         html.theme-sunset ::-webkit-scrollbar-thumb { background: #4a2413; }
         html.theme-sunset .story-ring-seen { background: #4a2413; }
 
         /* ===== FOREST THEME OVERRIDES (Page Customize → Theme) ===== */
-        html.theme-forest, html.theme-forest body { background-color: #060c08 !important; color: #dcf5df !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(34,197,94,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(53,199,255,0.08), transparent 60%) !important; }
+        html.theme-forest, html.theme-forest body { background-color: #060c08 !important; color: #dcf5df !important; background-image: radial-gradient(ellipse 900px 500px at 15% -10%, rgba(34,197,94,0.14), transparent 60%), radial-gradient(ellipse 900px 500px at 100% 10%, rgba(56,189,248,0.08), transparent 60%) !important; }
         html.theme-forest .glass-panel { background: rgba(14,28,16,0.97) !important; border: 1px solid rgba(34,197,94,0.10) !important; }
         html.theme-forest .bg-darker, html.theme-forest .bg-slate-950, html.theme-forest .bg-slate-950\/80, html.theme-forest .bg-slate-950\/60 { background-color: #081209 !important; }
         html.theme-forest .bg-slate-900, html.theme-forest .bg-slate-900\/90, html.theme-forest .bg-slate-900\/95, html.theme-forest .bg-slate-900\/60, html.theme-forest .bg-slate-900\/80, html.theme-forest .bg-slate-900\/50 { background-color: #0e1c10 !important; }
         html.theme-forest .bg-slate-800, html.theme-forest .bg-slate-800\/80, html.theme-forest .bg-slate-800\/50 { background-color: #16301a !important; }
         html.theme-forest .border-slate-800, html.theme-forest .border-slate-800\/50, html.theme-forest .border-slate-800\/80, html.theme-forest .border-slate-700 { border-color: #234a28 !important; }
         html.theme-forest .text-slate-200, html.theme-forest .text-slate-100, html.theme-forest .text-slate-300 { color: #dcf5df !important; }
-        html.theme-forest .text-slate-400, html.theme-forest .text-slate-500 { color: #7fb489 !important; }
+        html.theme-forest .text-slate-400, html.theme-forest .text-slate-400 { color: #7fb489 !important; }
         html.theme-forest ::-webkit-scrollbar-track { background: #060c08; }
         html.theme-forest ::-webkit-scrollbar-thumb { background: #234a28; }
         html.theme-forest .story-ring-seen { background: #234a28; }
@@ -158,20 +144,20 @@
         .constellation-star {
             position: absolute;
             border-radius: 9999px;
-            background: radial-gradient(circle, #ffffff 0%, #cdeaff 45%, rgba(157,123,255,0) 75%);
+            background: radial-gradient(circle, #ffffff 0%, #cdeaff 45%, rgba(20,184,166,0) 75%);
             animation: starTwinkle 3.6s ease-in-out infinite;
             cursor: pointer;
         }
         .constellation-star-you {
             position: absolute;
             border-radius: 9999px;
-            background: radial-gradient(circle, #ffe8a3 0%, #ff4d8d 60%, rgba(255,77,141,0) 80%);
-            box-shadow: 0 0 14px 3px rgba(255,77,141,0.55);
+            background: radial-gradient(circle, #ffe8a3 0%, #3b82f6 60%, rgba(59,130,246,0) 80%);
+            box-shadow: 0 0 14px 3px rgba(59,130,246,0.55);
         }
         .constellation-sky {
             background:
-                radial-gradient(ellipse 700px 400px at 20% -10%, rgba(157,123,255,0.12), transparent 60%),
-                radial-gradient(ellipse 500px 500px at 90% 100%, rgba(53,199,255,0.10), transparent 60%),
+                radial-gradient(ellipse 700px 400px at 20% -10%, rgba(20,184,166,0.12), transparent 60%),
+                radial-gradient(ellipse 500px 500px at 90% 100%, rgba(56,189,248,0.10), transparent 60%),
                 #04040a;
         }
 
@@ -187,7 +173,7 @@
         .handshake-ring {
             position: absolute; inset: 0; margin: auto;
             border-radius: 9999px;
-            border: 2px solid rgba(157,123,255,0.55);
+            border: 2px solid rgba(20,184,166,0.55);
             animation: handshakePulse 1.8s ease-out infinite;
         }
         .handshake-ring-delay { animation-delay: 0.6s; }
@@ -197,3 +183,31 @@
         }
         .handshake-match-card { animation: handshakeMatchPop 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
+
+/* ===== Smooth text motion =====
+   Text eases in (fade + small upward slide) when a section or dialog is opened and when the
+   login screen appears. Content that re-renders in place (feed, chat) is NOT animated, so
+   nothing flickers on refresh. Turned off for people who ask for reduced motion. */
+@keyframes nxTextIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+main section[id^="section-"] :is(h1, h2, h3),
+[id$="Modal"] :is(h1, h2, h3),
+#authTabsWrap ~ form :is(label, p) {
+    animation: nxTextIn 0.45s cubic-bezier(.2, .7, .2, 1) both;
+}
+.nx-word {
+    display: inline-block;
+    opacity: 0;
+    transform: translateY(0.45em);
+    animation: nxTextIn 0.55s cubic-bezier(.2, .7, .2, 1) forwards;
+    animation-delay: calc(var(--i, 0) * 45ms + 80ms);
+}
+button, a, input, select, textarea {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+@media (prefers-reduced-motion: reduce) {
+    main section[id^="section-"] :is(h1, h2, h3),
+    [id$="Modal"] :is(h1, h2, h3),
+    #authTabsWrap ~ form :is(label, p),
+    .nx-word { animation: none !important; opacity: 1 !important; transform: none !important; }
+}

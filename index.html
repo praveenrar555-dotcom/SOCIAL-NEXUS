@@ -2,26 +2,24 @@
 <html lang="en" class="dark">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>SocialNexus — Real-Time Omni-Social App</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SocialNexus</title>
+    <meta name="description" content="SocialNexus: posts, reels, stories, chat and calls in one app.">
     
     <link rel="preconnect" href="https://cdn.tailwindcss.com">
     <link rel="preconnect" href="https://cdnjs.cloudflare.com">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#050509">
+    <meta name="theme-color" content="#0b0d10">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
-                    colors: { darker: '#050509', cardbg: '#0f0f18' },
+                    colors: { darker: '#0b0d10', cardbg: '#12161b' },
                     fontFamily: {
-                        sans: ['Inter', 'system-ui', 'sans-serif'],
-                        display: ['Sora', 'system-ui', 'sans-serif']
+                        sans: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Noto Sans', 'Helvetica Neue', 'Arial', 'sans-serif'],
+                        display: ['system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Noto Sans', 'Helvetica Neue', 'Arial', 'sans-serif']
                     }
                 }
             }
@@ -34,7 +32,7 @@
 
     <link rel="stylesheet" href="style.css">
 </head>
-<body class="h-full flex flex-col antialiased selection:bg-fuchsia-500/70 selection:text-white font-sans">
+<body class="h-full flex flex-col antialiased selection:bg-blue-500/60 selection:text-white font-sans">
 
     <!-- Floating Emoji Reaction Picker (positioned dynamically near tapped message) -->
     <div id="reactionPicker" class="fixed z-[150] hidden bg-slate-900 border border-slate-700 rounded-full shadow-2xl px-2 py-1.5 flex gap-1.5 items-center">
@@ -56,34 +54,32 @@
 
 
     <!-- Global Reel Upload Progress Badge - stays visible on top of the whole app, even if the upload modal/screen is closed -->
-    <div id="reelUploadProgressBadge" class="fixed top-4 right-4 z-[200] hidden w-52 glass-panel bg-slate-900/95 border border-[#ff4d8d]/40 rounded-2xl p-3 shadow-2xl">
+    <div id="reelUploadProgressBadge" class="fixed top-4 right-4 z-[200] hidden w-52 glass-panel bg-slate-900/95 border border-[#3b82f6]/40 rounded-2xl p-3 shadow-2xl">
         <div class="flex items-center justify-between mb-1.5">
-            <span class="text-[10px] font-bold text-slate-200 flex items-center gap-1"><i class="fa-solid fa-clapperboard text-[#ff4d8d]"></i> Uploading Reel</span>
-            <span id="reelUploadProgressPercentText" class="text-[10px] font-display font-bold text-[#ff4d8d]">0%</span>
+            <span class="text-[11px] font-bold text-slate-200 flex items-center gap-1"><i class="fa-solid fa-clapperboard text-[#60a5fa]"></i> Uploading Reel</span>
+            <span id="reelUploadProgressPercentText" class="text-[11px] font-display font-bold text-[#60a5fa]">0%</span>
         </div>
         <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
-            <div id="reelUploadProgressBar" class="h-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] fast-transition" style="width: 0%"></div>
+            <div id="reelUploadProgressBar" class="h-full bg-[#2563eb] fast-transition" style="width: 0%"></div>
         </div>
-        <p id="reelUploadProgressLabel" class="text-[9px] text-slate-500 mt-1">Uploading...</p>
+        <p id="reelUploadProgressLabel" class="text-[11px] text-slate-400 mt-1">Uploading...</p>
     </div>
 
     <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-darker p-4 overflow-y-auto">
         <div class="glass-panel w-full max-w-sm p-6 rounded-3xl shadow-2xl space-y-4 relative overflow-hidden my-6">
             <button type="button" id="authScreenBackBtn" onclick="cancelAddAccount()" class="hidden absolute top-3 left-3 z-10 text-slate-400 hover:text-white text-xs bg-slate-800/80 backdrop-blur p-2 rounded-full" title="Cancel"><i class="fa-solid fa-arrow-left"></i></button>
-            <div class="absolute -top-20 -right-20 w-36 h-36 bg-fuchsia-500/15 rounded-full blur-2xl pointer-events-none"></div>
-            <div class="absolute -bottom-20 -left-20 w-36 h-36 bg-[#35c7ff]/15 rounded-full blur-2xl pointer-events-none"></div>
             
             <div class="text-center space-y-1.5">
-                <div class="inline-flex p-3 bg-gradient-to-tr from-[#ff4d8d] via-[#9d7bff] to-[#35c7ff] rounded-2xl shadow-lg shadow-fuchsia-500/20 text-white text-lg">
+                <div class="inline-flex p-3 bg-[#2563eb] rounded-2xl text-white text-lg">
                     <i class="fa-solid fa-layer-group"></i>
                 </div>
-                <h1 class="font-display text-lg font-bold tracking-tight bg-gradient-to-r from-[#ff4d8d] via-[#9d7bff] to-[#35c7ff] bg-clip-text text-transparent">Nexus</h1>
-                <p class="text-[10px] text-slate-400">One feed. Three styles.</p>
+                <h1 class="font-display text-lg font-bold tracking-tight text-slate-100">Nexus</h1>
+                <p data-reveal class="text-[11px] text-slate-400">One feed. Three styles.</p>
             </div>
 
             <!-- LOGIN / SIGNUP TABS -->
             <div id="authTabsWrap" class="flex bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs font-bold">
-                <button type="button" onclick="switchAuthTab('login')" id="authTabLoginBtn" data-i18n="btn_login" class="flex-1 py-1.5 rounded-lg transition bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white">Login</button>
+                <button type="button" onclick="switchAuthTab('login')" id="authTabLoginBtn" data-i18n="btn_login" class="flex-1 py-1.5 rounded-lg transition bg-[#2563eb] text-white">Login</button>
                 <button type="button" onclick="switchAuthTab('signup')" id="authTabSignupBtn" data-i18n="btn_signup" class="flex-1 py-1.5 rounded-lg transition text-slate-400">Sign Up</button>
             </div>
 
@@ -92,24 +88,24 @@
                 <div class="space-y-1">
                     <label class="text-[11px] font-semibold text-slate-400 px-1">Username</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-at text-xs"></i></span>
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-at text-xs"></i></span>
                         <input type="text" id="loginUsername" required placeholder="Enter username..." 
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
                     </div>
                 </div>
                 <div class="space-y-1">
                     <label class="text-[11px] font-semibold text-slate-400 px-1">Password</label>
                     <div class="relative">
-                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-lock text-xs"></i></span>
+                        <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock text-xs"></i></span>
                         <input type="password" id="loginPassword" required placeholder="Enter password" 
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
                     </div>
-                    <p id="loginError" class="text-[10px] text-red-400 px-1 hidden">Incorrect username ya password!</p>
+                    <p id="loginError" class="text-[11px] text-red-400 px-1 hidden">Incorrect username ya password!</p>
                     <div class="text-right px-1">
-                        <button type="button" onclick="openForgotPasswordModal()" class="text-[10px] text-[#35c7ff] hover:underline font-semibold">Forgot password?</button>
+                        <button type="button" onclick="openForgotPasswordModal()" class="text-[11px] text-[#38bdf8] hover:underline font-semibold">Forgot password?</button>
                     </div>
                 </div>
-                <button type="submit" id="loginSubmitBtn" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-[#ff4d8d]/20 fast-transition active:scale-[0.98]">
+                <button type="submit" id="loginSubmitBtn" class="w-full bg-[#2563eb] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-sm fast-transition active:scale-[0.98]">
                     Launch System
                 </button>
             </form>
@@ -117,17 +113,17 @@
             <!-- 2FA VERIFICATION STEP (shown after correct password, if account has 2FA enabled) -->
             <form id="login2faForm" class="space-y-3.5 hidden">
                 <div class="text-center space-y-1">
-                    <i class="fa-solid fa-shield-halved text-[#9d7bff] text-lg"></i>
+                    <i class="fa-solid fa-shield-halved text-[#2dd4bf] text-lg"></i>
                     <p class="text-xs font-bold text-slate-200">Two-Factor Verification</p>
-                    <p class="text-[10px] text-slate-500">Apna 4-6 digit security PIN daalo</p>
+                    <p class="text-[11px] text-slate-400">Apna 4-6 digit security PIN daalo</p>
                 </div>
                 <input type="password" inputmode="numeric" id="login2faPin" required maxlength="6" placeholder="Enter 2FA PIN"
-                    class="w-full text-center tracking-[6px] bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#9d7bff] text-slate-200">
-                <p id="login2faError" class="text-[10px] text-red-400 px-1 hidden text-center">Galat PIN!</p>
-                <button type="submit" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-[#ff4d8d]/20 fast-transition active:scale-[0.98]">
+                    class="w-full text-center tracking-[6px] bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#14b8a6] text-slate-200">
+                <p id="login2faError" class="text-[11px] text-red-400 px-1 hidden text-center">Galat PIN!</p>
+                <button type="submit" class="w-full bg-[#2563eb] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-sm fast-transition active:scale-[0.98]">
                     Verify & Continue
                 </button>
-                <button type="button" onclick="cancelLogin2fa()" class="w-full text-[10px] text-slate-400 hover:text-white">Cancel</button>
+                <button type="button" onclick="cancelLogin2fa()" class="w-full text-[11px] text-slate-400 hover:text-white">Cancel</button>
             </form>
 
             <!-- SIGNUP FORM -->
@@ -135,28 +131,28 @@
                 <div class="space-y-1">
                     <label class="text-[11px] font-semibold text-slate-400 px-1">Username</label>
                     <input type="text" id="signupUsername" required placeholder="Choose a username..."
-                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[11px] font-semibold text-slate-400 px-1">Set Password</label>
                     <input type="password" id="signupPassword" required minlength="4" placeholder="Set a password..."
-                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
                 </div>
                 <div class="space-y-1">
                     <label class="text-[11px] font-semibold text-slate-400 px-1">Confirm Password</label>
                     <input type="password" id="signupPasswordConfirm" required minlength="4" placeholder="Re-enter password..."
-                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
+                        class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
                 </div>
                 <div class="pt-1 border-t border-slate-800 space-y-2.5">
-                    <p class="text-[10px] font-bold text-[#9d7bff] flex items-center gap-1.5 pt-2"><i class="fa-solid fa-shield-halved"></i> Two-Factor Authentication (Required)</p>
+                    <p class="text-[11px] font-bold text-[#2dd4bf] flex items-center gap-1.5 pt-2"><i class="fa-solid fa-shield-halved"></i> Two-Factor Authentication (Required)</p>
                     <div class="space-y-1">
                         <label class="text-[11px] font-semibold text-slate-400 px-1">Set a 4-6 digit 2FA PIN</label>
                         <input type="password" inputmode="numeric" id="signupTwoFaPin" required maxlength="6" minlength="4" placeholder="e.g. 1234"
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#9d7bff] text-slate-200">
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#14b8a6] text-slate-200">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[11px] font-semibold text-slate-400 px-1">Security Question (for password reset)</label>
-                        <select id="signupSecurityQuestion" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#9d7bff] text-slate-200">
+                        <select id="signupSecurityQuestion" required class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#14b8a6] text-slate-200">
                             <option value="">Choose a question...</option>
                             <option value="Your childhood nickname?">Your childhood nickname?</option>
                             <option value="Your favorite teacher's name?">Your favorite teacher's name?</option>
@@ -164,44 +160,53 @@
                             <option value="Your birth city?">Your birth city?</option>
                         </select>
                         <input type="text" id="signupSecurityAnswer" required placeholder="Your answer..."
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#9d7bff] text-slate-200 mt-1.5">
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#14b8a6] text-slate-200 mt-1.5">
                     </div>
                 </div>
-                <p id="signupError" class="text-[10px] text-red-400 px-1 hidden"></p>
-                <button type="submit" id="signupSubmitBtn" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-[#ff4d8d]/20 fast-transition active:scale-[0.98]">
+                <label class="flex items-start gap-2 px-1 text-[11px] text-slate-400 leading-snug">
+                    <input type="checkbox" id="signupAgreeLegal" required class="mt-0.5 accent-[#2563eb]">
+                    <span>I have read and agree to the <a href="terms.html" target="_blank" rel="noopener" class="text-[#7db4fb] underline">Terms &amp; Conditions</a> and the <a href="privacy.html" target="_blank" rel="noopener" class="text-[#7db4fb] underline">Privacy Policy</a>.</span>
+                </label>
+                <p id="signupError" class="text-[11px] text-red-400 px-1 hidden"></p>
+                <button type="submit" id="signupSubmitBtn" class="w-full bg-[#2563eb] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-sm fast-transition active:scale-[0.98]">
                     Create Account
                 </button>
             </form>
+            <nav aria-label="Legal" class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-500 pt-1">
+                <a href="privacy.html" target="_blank" rel="noopener" class="hover:text-slate-300 underline-offset-2 hover:underline">Privacy Policy</a>
+                <a href="terms.html" target="_blank" rel="noopener" class="hover:text-slate-300 underline-offset-2 hover:underline">Terms &amp; Conditions</a>
+                <a href="#" data-cookie-settings class="hover:text-slate-300 underline-offset-2 hover:underline">Cookie settings</a>
+            </nav>
         </div>
     </div>
 
     <!-- FEATURE: FORGOT PASSWORD -->
     <div id="forgotPasswordModal" class="fixed inset-0 z-[220] bg-black/90 backdrop-blur-md hidden items-center justify-center p-5">
-        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#9d7bff]/30">
+        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#14b8a6]/30">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-key text-[#9d7bff]"></i> Reset Password</p>
+                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-key text-[#2dd4bf]"></i> Reset Password</p>
                 <button onclick="closeForgotPasswordModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <div id="fpStep1" class="space-y-2.5">
-                <p class="text-[10px] text-slate-500">Apna username daalo</p>
-                <input type="text" id="fpUsername" placeholder="Username" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                <p id="fpStep1Error" class="text-[10px] text-red-400 hidden"></p>
+                <p class="text-[11px] text-slate-400">Apna username daalo</p>
+                <input type="text" id="fpUsername" placeholder="Username" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+                <p id="fpStep1Error" class="text-[11px] text-red-400 hidden"></p>
                 <button onclick="fpFindUser()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs text-slate-200 transition">Continue</button>
             </div>
 
             <div id="fpStep2" class="space-y-2.5 hidden">
                 <p id="fpQuestionText" class="text-[11px] text-slate-300 font-semibold"></p>
-                <input type="text" id="fpAnswer" placeholder="Your answer..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                <p id="fpStep2Error" class="text-[10px] text-red-400 hidden"></p>
+                <input type="text" id="fpAnswer" placeholder="Your answer..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+                <p id="fpStep2Error" class="text-[11px] text-red-400 hidden"></p>
                 <button onclick="fpVerifyAnswer()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs text-slate-200 transition">Verify Answer</button>
             </div>
 
             <div id="fpStep3" class="space-y-2.5 hidden">
-                <input type="password" id="fpNewPassword" minlength="4" placeholder="New password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                <input type="password" id="fpNewPasswordConfirm" minlength="4" placeholder="Confirm new password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                <p id="fpStep3Error" class="text-[10px] text-red-400 hidden"></p>
-                <button onclick="fpSubmitNewPassword()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white transition">Set New Password</button>
+                <input type="password" id="fpNewPassword" minlength="4" placeholder="New password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+                <input type="password" id="fpNewPasswordConfirm" minlength="4" placeholder="Confirm new password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+                <p id="fpStep3Error" class="text-[11px] text-red-400 hidden"></p>
+                <button onclick="fpSubmitNewPassword()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Set New Password</button>
             </div>
         </div>
     </div>
@@ -211,10 +216,10 @@
         <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-amber-500/30 text-center">
             <i class="fa-solid fa-shield-halved text-amber-400 text-2xl"></i>
             <p class="text-xs font-bold text-slate-200">Secure your account</p>
-            <p class="text-[10px] text-slate-500">Tumne abhi tak Two-Factor Authentication set up nahi kiya hai. Apne account ko extra secure banane ke liye profile ke flip page pe jaake ise on karo.</p>
+            <p class="text-[11px] text-slate-400">Tumne abhi tak Two-Factor Authentication set up nahi kiya hai. Apne account ko extra secure banane ke liye profile ke flip page pe jaake ise on karo.</p>
             <div class="flex gap-2 pt-1">
                 <button onclick="dismissTwoFaReminder()" class="flex-1 bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs text-slate-300 transition">Kal Yaad Dilana</button>
-                <button onclick="goSetupTwoFaFromReminder()" class="flex-1 bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white transition">Set Up Now</button>
+                <button onclick="goSetupTwoFaFromReminder()" class="flex-1 bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Set Up Now</button>
             </div>
         </div>
     </div>
@@ -223,14 +228,14 @@
     <div id="sharePostModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-4">
         <div class="glass-panel max-w-xs w-full rounded-3xl p-4 space-y-3 border border-slate-800 max-h-[80vh] flex flex-col">
             <div class="flex items-center justify-between shrink-0">
-                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-share-nodes text-[#ff4d8d]"></i> Share Post</p>
+                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-share-nodes text-[#60a5fa]"></i> Share Post</p>
                 <button onclick="closeSharePostModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <button onclick="shareToOwnStory()" id="shareToStoryBtn" class="w-full bg-slate-800 hover:bg-slate-700 border border-[#ff4d8d]/30 font-bold py-2.5 rounded-xl text-xs text-[#ff4d8d] transition flex items-center justify-center gap-2 shrink-0">
+            <button onclick="shareToOwnStory()" id="shareToStoryBtn" class="w-full bg-slate-800 hover:bg-slate-700 border border-[#3b82f6]/30 font-bold py-2.5 rounded-xl text-xs text-[#60a5fa] transition flex items-center justify-center gap-2 shrink-0">
                 <i class="fa-solid fa-circle-plus"></i> Add to Your Story
             </button>
             <div class="shrink-0">
-                <input type="text" id="sharePostUserSearch" oninput="renderSharePostUserList()" placeholder="Search a user to DM..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#35c7ff]">
+                <input type="text" id="sharePostUserSearch" oninput="renderSharePostUserList()" placeholder="Search a user to DM..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
             </div>
             <div id="sharePostUserList" class="space-y-1.5 overflow-y-auto flex-1"></div>
         </div>
@@ -240,19 +245,19 @@
     <div id="activeCallScreen" class="fixed inset-0 z-[100] bg-slate-950 flex flex-col justify-between items-center p-6 hidden">
         <!-- Top Corner App Logo / Branding Overlay -->
         <div class="absolute top-4 left-4 z-20 flex items-center space-x-1.5 bg-slate-900/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-slate-800">
-            <div class="w-5 h-5 bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] rounded-md flex items-center justify-center text-white font-bold text-[10px] shadow">
+            <div class="w-5 h-5 bg-[#334155] rounded-md flex items-center justify-center text-white font-bold text-[11px] shadow">
                 <i class="fa-solid fa-layer-group"></i>
             </div>
-            <span class="text-[11px] font-display font-bold tracking-tight bg-gradient-to-r from-[#9d7bff] via-[#ff4d8d] to-[#35c7ff] bg-clip-text text-transparent">Nexus Call</span>
+            <span class="text-[11px] font-display font-bold tracking-tight bg-[#2563eb] bg-clip-text text-transparent">Nexus Call</span>
         </div>
 
         <div class="absolute inset-0 overflow-hidden z-0 flex flex-col">
             <!-- Remote User Video (Main Full Screen view when video call) -->
             <video id="remoteVideoElement" autoplay playsinline class="w-full h-full object-cover hidden"></video>
             <div id="callBackgroundOverlay" class="absolute inset-0 bg-gradient-to-b from-slate-900/90 via-slate-950 to-black flex flex-col items-center justify-center">
-                <div id="callUserAvatarBox" class="w-24 h-24 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-3xl text-white shadow-2xl mb-4 overflow-hidden">U</div>
+                <div id="callUserAvatarBox" class="w-24 h-24 rounded-full bg-[#334155] flex items-center justify-center font-bold text-3xl text-white shadow-2xl mb-4 overflow-hidden">U</div>
                 <h2 id="callingUserNameTitle" class="text-base font-bold text-white tracking-wide">Connecting...</h2>
-                <p id="callStatusTimerText" class="text-xs text-[#35c7ff] mt-1">Establishing secure connection...</p>
+                <p id="callStatusTimerText" class="text-xs text-[#38bdf8] mt-1">Establishing secure connection...</p>
             </div>
         </div>
 
@@ -263,7 +268,7 @@
             <!-- Local User PiP Video Box -->
             <div class="w-20 h-28 rounded-xl overflow-hidden border-2 border-slate-700 bg-slate-900 shadow-xl relative">
                 <video id="localVideoElement" autoplay playsinline muted class="w-full h-full object-cover"></video>
-                <span class="absolute bottom-1 left-1 bg-black/60 text-[8px] text-white px-1 rounded">You</span>
+                <span class="absolute bottom-1 left-1 bg-black/60 text-[11px] text-white px-1 rounded">You</span>
             </div>
         </div>
 
@@ -286,10 +291,10 @@
     <!-- Incoming Call Ringing Popup Modal -->
     <div id="incomingCallModal" class="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-6 text-center space-y-4 border border-slate-700 shadow-2xl animate-pulse">
-            <div id="incomingCallerAvatar" class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-2xl font-bold text-white shadow-lg overflow-hidden">U</div>
+            <div id="incomingCallerAvatar" class="w-20 h-20 mx-auto rounded-full bg-[#334155] flex items-center justify-center text-2xl font-bold text-white shadow-lg overflow-hidden">U</div>
             <div class="space-y-1">
                 <h3 id="incomingCallerName" class="text-sm font-bold text-white">Incoming Call...</h3>
-                <p id="incomingCallTypeLabel" class="text-xs text-[#35c7ff]">Incoming Video Call</p>
+                <p id="incomingCallTypeLabel" class="text-xs text-[#38bdf8]">Incoming Video Call</p>
             </div>
             <div class="flex gap-3 pt-2">
                 <button onclick="rejectIncomingCall()" class="flex-1 bg-red-600 hover:bg-red-500 py-2.5 rounded-xl text-xs font-bold text-white shadow flex items-center justify-center gap-1.5"><i class="fa-solid fa-phone-slash"></i> Decline</button>
@@ -302,11 +307,11 @@
         <div class="glass-panel w-full max-w-xs rounded-3xl p-5 space-y-3 shadow-2xl relative border border-slate-700 text-center">
             <button onclick="closeUserActionModal()" class="absolute top-3 right-3 text-slate-400 hover:text-white text-xs bg-slate-800/80 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             <div class="space-y-1">
-                <div id="actionModalAvatar" class="w-12 h-12 mx-auto rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-base text-white shadow-lg overflow-hidden">U</div>
+                <div id="actionModalAvatar" class="w-12 h-12 mx-auto rounded-full bg-[#334155] flex items-center justify-center font-bold text-base text-white shadow-lg overflow-hidden">U</div>
                 <h3 id="actionModalUsername" class="text-xs font-bold text-slate-100">Username</h3>
             </div>
             <div class="pt-2 space-y-2">
-                <button id="actionMsgBtn" class="w-full bg-[#35c7ff] hover:bg-[#35c7ff] py-2 rounded-xl text-xs font-bold transition text-white shadow flex items-center justify-center gap-1.5"><i class="fa-solid fa-comment"></i> Message</button>
+                <button id="actionMsgBtn" class="w-full bg-[#38bdf8] hover:bg-[#38bdf8] py-2 rounded-xl text-xs font-bold transition text-white shadow flex items-center justify-center gap-1.5"><i class="fa-solid fa-comment"></i> Message</button>
                 <button id="actionProfileBtn" class="w-full bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold transition text-slate-200 shadow flex items-center justify-center gap-1.5"><i class="fa-solid fa-user"></i> Open Profile</button>
                 <div class="flex gap-2 pt-1">
                     <button id="actionBlockBtn" class="flex-1 bg-slate-800 hover:bg-red-900/60 py-2 rounded-xl text-[11px] font-bold transition text-red-400 shadow flex items-center justify-center gap-1"><i class="fa-solid fa-ban"></i> <span id="actionBlockBtnLabel">Block</span></button>
@@ -338,7 +343,7 @@
     <div id="notificationsModal" class="fixed inset-0 z-[57] bg-black/95 backdrop-blur-lg hidden flex-col overflow-hidden">
         <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
             <button onclick="closeNotificationsModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
-            <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-bell text-[#ff4d8d] mr-1"></i> Notifications</span>
+            <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-bell text-[#60a5fa] mr-1"></i> Notifications</span>
             <div class="w-12"></div>
         </div>
         <div id="notificationsListContainer" class="flex-1 overflow-y-auto p-3 space-y-2"></div>
@@ -347,7 +352,7 @@
     <div id="followRequestsModal" class="fixed inset-0 z-[55] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-4 space-y-3 shadow-2xl relative border border-slate-700">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-100 tracking-wide"><i class="fa-solid fa-user-clock text-[#ff4d8d] mr-1"></i> Follow Requests</h3>
+                <h3 class="text-xs font-bold text-slate-100 tracking-wide"><i class="fa-solid fa-user-clock text-[#60a5fa] mr-1"></i> Follow Requests</h3>
                 <button onclick="closeFollowRequestsModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="followRequestsContainer" class="space-y-2 max-h-72 overflow-y-auto"></div>
@@ -358,7 +363,7 @@
     <div id="messageRequestsModal" class="fixed inset-0 z-[55] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-4 space-y-3 shadow-2xl relative border border-slate-700">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-100 tracking-wide"><i class="fa-solid fa-envelope-circle-check text-[#35c7ff] mr-1"></i> Message Requests</h3>
+                <h3 class="text-xs font-bold text-slate-100 tracking-wide"><i class="fa-solid fa-envelope-circle-check text-[#38bdf8] mr-1"></i> Message Requests</h3>
                 <button onclick="closeMessageRequestsModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="messageRequestsContainer" class="space-y-2 max-h-72 overflow-y-auto"></div>
@@ -370,15 +375,15 @@
     <div id="pageCustomizeModal" class="fixed inset-0 z-[59] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-pencil text-[#ff4d8d] mr-1.5"></i> Customize <span id="pageCustomizeTitle">Page</span></h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-pencil text-[#60a5fa] mr-1.5"></i> Customize <span id="pageCustomizeTitle">Page</span></h3>
                 <button onclick="closePageCustomizeModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="space-y-2">
-                <p class="text-[10px] text-slate-500">Is page ka accent color chuno — turant apply ho jayega.</p>
+                <p class="text-[11px] text-slate-400">Is page ka accent color chuno — turant apply ho jayega.</p>
                 <div id="pageCustomizeSwatches" class="grid grid-cols-6 gap-2"></div>
             </div>
             <div class="space-y-2 pt-1 border-t border-slate-800">
-                <p class="text-[10px] text-slate-500 pt-2">Poori app ka theme chuno.</p>
+                <p class="text-[11px] text-slate-400 pt-2">Poori app ka theme chuno.</p>
                 <div id="pageCustomizeThemes" class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1"></div>
             </div>
             <button onclick="resetPageCustomization()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-slate-200 transition"><i class="fa-solid fa-rotate-left mr-1"></i> Default</button>
@@ -389,7 +394,7 @@
     <div id="postAnalyticsModal" class="fixed inset-0 z-[58] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-chart-simple text-[#ff4d8d] mr-1.5"></i> Post Analytics</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-chart-simple text-[#60a5fa] mr-1.5"></i> Post Analytics</h3>
                 <button onclick="closePostAnalyticsModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="postAnalyticsContent" class="space-y-2.5 text-xs"></div>
@@ -410,17 +415,17 @@
     <div id="commentModal" class="fixed inset-0 z-[58] bg-black/80 backdrop-blur-sm hidden flex items-end sm:items-center justify-center p-0 sm:p-4">
         <div class="glass-panel w-full max-w-md h-[75vh] sm:h-[500px] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl border border-slate-700">
             <div class="p-3 border-b border-slate-800 flex justify-between items-center bg-slate-900/90 shrink-0">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-comments text-[#ff4d8d] mr-1.5"></i> Comments</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-comments text-[#60a5fa] mr-1.5"></i> Comments</h3>
                 <button onclick="closeCommentModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="commentModalList" class="flex-1 overflow-y-auto p-3 space-y-2.5"></div>
             <div id="commentReplyPreviewBar" class="hidden px-3 py-1.5 bg-slate-900 border-t border-slate-800 items-center justify-between gap-2 shrink-0">
-                <p id="commentReplyPreviewText" class="text-[10px] font-bold text-[#35c7ff]"></p>
+                <p id="commentReplyPreviewText" class="text-[11px] font-bold text-[#38bdf8]"></p>
                 <button type="button" onclick="cancelCommentReply()" class="text-slate-400 hover:text-white text-xs bg-slate-800 w-5 h-5 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="commentModalForm" onsubmit="submitModalComment(event)" class="p-3 bg-slate-900 border-t border-slate-800 flex gap-2 shrink-0">
-                <input type="text" id="commentModalInput" placeholder="Add a comment..." required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
-                <button type="submit" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] px-4 py-2 rounded-xl text-xs font-bold text-white shadow"><i class="fa-solid fa-paper-plane"></i></button>
+                <input type="text" id="commentModalInput" placeholder="Add a comment..." required class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
+                <button type="submit" class="bg-[#2563eb] hover:bg-[#2563eb] px-4 py-2 rounded-xl text-xs font-bold text-white shadow"><i class="fa-solid fa-paper-plane"></i></button>
             </form>
         </div>
     </div>
@@ -448,31 +453,31 @@
     <div id="reelUploadModal" class="fixed inset-0 z-[55] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-4 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-clapperboard text-[#ff4d8d] mr-1.5"></i> Upload New Reel</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-clapperboard text-[#60a5fa] mr-1.5"></i> Upload New Reel</h3>
                 <button onclick="closeReelUploadModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="reelUploadForm" onsubmit="submitReelUpload(event)" class="space-y-3">
                 <div>
                     <label class="text-[11px] font-semibold text-slate-400 block mb-1">Select Video</label>
-                    <input type="file" id="reelVideoFileInput" accept="video/*" required onchange="previewReelVideo(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#ff4d8d] file:text-white hover:file:bg-[#ff4d8d]">
+                    <input type="file" id="reelVideoFileInput" accept="video/*" required onchange="previewReelVideo(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#2563eb] file:text-white hover:file:bg-[#2563eb]">
                     <video id="reelPreviewVideo" controls playsinline class="w-full max-h-40 rounded-xl mt-2 bg-black hidden"></video>
-                    <p class="text-[9px] text-slate-500 mt-1">Preview karke check kar lein, phir caption likh kar publish karein.</p>
+                    <p class="text-[11px] text-slate-400 mt-1">Preview karke check kar lein, phir caption likh kar publish karein.</p>
                 </div>
                 <div>
                     <label class="text-[11px] font-semibold text-slate-400 block mb-1">Caption</label>
-                    <textarea id="reelCaptionInput" rows="3" placeholder="Write a caption for your reel..." required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d] resize-none"></textarea>
+                    <textarea id="reelCaptionInput" rows="3" placeholder="Write a caption for your reel..." required class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#3b82f6] resize-none"></textarea>
                 </div>
                 <!-- FEATURE: MUSIC/SOUND LIBRARY — optional background track for the reel -->
                 <div>
                     <div class="flex items-center justify-between mb-1">
-                        <label class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-music text-[#9d7bff] mr-1"></i> Add Music (optional)</label>
-                        <button type="button" id="reelMusicClearBtn" onclick="clearReelMusicSelection()" class="hidden text-[9px] text-[#ff4d8d] font-bold">Clear ✕</button>
+                        <label class="text-[11px] font-semibold text-slate-400"><i class="fa-solid fa-music text-[#2dd4bf] mr-1"></i> Add Music (optional)</label>
+                        <button type="button" id="reelMusicClearBtn" onclick="clearReelMusicSelection()" class="hidden text-[11px] text-[#60a5fa] font-bold">Clear ✕</button>
                     </div>
                     <div id="reelMusicLibraryContainer" class="grid grid-cols-1 gap-1.5 max-h-32 overflow-y-auto pr-1"></div>
                     <audio id="reelMusicPreviewPlayer" class="hidden"></audio>
                 </div>
-                <div id="reelUploadStatus" class="text-[10px] text-[#35c7ff] hidden text-center font-bold">Uploading in background... You can safely back out.</div>
-                <button type="submit" id="reelUploadBtn" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white shadow">Publish Reel</button>
+                <div id="reelUploadStatus" class="text-[11px] text-[#38bdf8] hidden text-center font-bold">Uploading in background... You can safely back out.</div>
+                <button type="submit" id="reelUploadBtn" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white shadow">Publish Reel</button>
             </form>
         </div>
     </div>
@@ -483,9 +488,9 @@
                 <button onclick="closeProfileModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
                 <span id="modalUsernameHeader" class="text-xs font-bold text-slate-200">Profile</span>
                 <div class="flex items-center gap-1.5">
-                    <button onclick="openPageCustomize('profile')" class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-[#ff4d8d] transition" title="Customize Page"><i class="fa-solid fa-pencil text-[10px]"></i></button>
+                    <button onclick="openPageCustomize('profile')" class="w-6 h-6 flex items-center justify-center rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-[#60a5fa] transition" title="Customize Page"><i class="fa-solid fa-pencil text-[11px]"></i></button>
                 <!-- FEATURE: PROFILE FLIP — flips the card to reveal the extra features panel -->
-                <button id="profileFlipBtn" onclick="toggleProfileFlip()" title="Naye Features" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-[#ff4d8d] transition">
+                <button id="profileFlipBtn" onclick="toggleProfileFlip()" title="Naye Features" class="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-[#60a5fa] transition">
                     <i id="profileFlipBtnIcon" class="fa-solid fa-rotate text-xs"></i>
                 </button>
                 </div>
@@ -496,7 +501,7 @@
                 <div id="profileFrontFace" class="p-4 space-y-4">
                     <div class="flex items-center space-x-4 relative">
                         <div class="relative group shrink-0">
-                            <div id="modalUserAvatar" class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-2xl text-white shadow-xl overflow-hidden">U</div>
+                            <div id="modalUserAvatar" class="w-16 h-16 rounded-full bg-[#334155] flex items-center justify-center font-bold text-2xl text-white shadow-xl overflow-hidden">U</div>
                             <label id="profileAvatarEditBtn" class="hidden absolute inset-0 bg-black/60 rounded-full items-center justify-center cursor-pointer text-white text-xs opacity-0 group-hover:opacity-100 transition">
                                 <i class="fa-solid fa-pencil"></i>
                                 <input type="file" id="profileImageFileInput" accept="image/*" class="hidden" onchange="openCropperModal(this)">
@@ -505,11 +510,11 @@
                         <div class="flex-1 min-w-0">
                             <h3 id="modalUsername" class="text-sm font-bold text-slate-100 truncate flex items-center gap-1.5">
                                 <span id="modalUsernameText">Username</span>
-                                <span id="modalVerifiedBadge" class="hidden text-[#35c7ff] text-xs shrink-0" title="Verified"><i class="fa-solid fa-circle-check"></i></span>
-                                <span id="modalAdminBadge" class="hidden text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white shrink-0">Admin</span>
+                                <span id="modalVerifiedBadge" class="hidden text-[#38bdf8] text-xs shrink-0" title="Verified"><i class="fa-solid fa-circle-check"></i></span>
+                                <span id="modalAdminBadge" class="hidden text-[11px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#2563eb] text-white shrink-0">Admin</span>
                             </h3>
                             <div class="flex items-center gap-2 flex-wrap">
-                                <p class="text-[10px] text-emerald-400"><i class="fa-solid fa-circle text-[8px] mr-1"></i> Active on Nexus</p>
+                                <p class="text-[11px] text-emerald-400"><i class="fa-solid fa-circle text-[11px] mr-1"></i> Active on Nexus</p>
                             </div>
                         </div>
                     </div>
@@ -521,31 +526,31 @@
                     <div class="grid grid-cols-3 gap-2 bg-slate-900/80 border border-slate-800 rounded-2xl p-2.5 text-center text-xs">
                         <div>
                             <p id="profilePostsCount" class="font-display font-bold text-slate-200">0</p>
-                            <p class="text-[10px] text-slate-400">Posts</p>
+                            <p class="text-[11px] text-slate-400">Posts</p>
                         </div>
                         <div onclick="openFollowList('followers')" class="cursor-pointer hover:bg-slate-800/50 rounded-xl p-1 transition">
                             <p id="profileFollowersCount" class="font-display font-bold text-slate-200">0</p>
-                            <p class="text-[10px] text-slate-400">Followers</p>
+                            <p class="text-[11px] text-slate-400">Followers</p>
                         </div>
                         <div onclick="openFollowList('following')" class="cursor-pointer hover:bg-slate-800/50 rounded-xl p-1 transition">
                             <p id="profileFollowingCount" class="font-display font-bold text-slate-200">0</p>
-                            <p class="text-[10px] text-slate-400">Following</p>
+                            <p class="text-[11px] text-slate-400">Following</p>
                         </div>
                     </div>
 
                     <!-- FEATURE: MULTI-PERSONA IDENTITY — 3 independently followable "faces" per account -->
                     <div class="glass-panel rounded-2xl p-3 space-y-2">
                         <button type="button" onclick="togglePersonaPanel()" class="w-full flex items-center justify-between">
-                            <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-masks-theater text-[#9d7bff]"></i> Multi-Persona Faces</p>
+                            <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-masks-theater text-[#2dd4bf]"></i> Multi-Persona Faces</p>
                             <i id="personaPanelChevron" class="fa-solid fa-chevron-down text-slate-400 text-xs transition-transform"></i>
                         </button>
                         <div id="personaCardsContainer" class="hidden space-y-2"></div>
-                        <p id="personaFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Persona-wise follow ke liye ek chhoti si SQL setup baaki hai (neeche instructions dekho) — tone/bio abhi bhi save ho sakta hai.</p>
+                        <p id="personaFeatureNotice" class="hidden text-[11px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Persona-wise follow ke liye ek chhoti si SQL setup baaki hai (neeche instructions dekho) — tone/bio abhi bhi save ho sakta hai.</p>
                     </div>
 
 
                     <div id="profileOtherActions" class="hidden flex gap-2 pt-1">
-                        <button id="profileModalChatBtn" class="flex-1 bg-[#35c7ff] hover:bg-[#35c7ff] py-2 rounded-xl text-xs font-bold transition text-white shadow"><i class="fa-solid fa-comment mr-1"></i> Message</button>
+                        <button id="profileModalChatBtn" class="flex-1 bg-[#38bdf8] hover:bg-[#38bdf8] py-2 rounded-xl text-xs font-bold transition text-white shadow"><i class="fa-solid fa-comment mr-1"></i> Message</button>
                     </div>
 
                     <!-- FEATURE: NEXUS ADMIN VERIFICATION — only visible to the NEXUS account, on
@@ -553,18 +558,18 @@
                     <button id="profileVerifyBtn" onclick="toggleUserVerification(viewingProfileUsername)" class="hidden w-full py-2 rounded-xl text-xs font-bold transition border items-center justify-center gap-1.5"></button>
 
                     <div id="editProfileSection" class="hidden space-y-2.5 bg-slate-900/50 p-3 rounded-2xl border border-slate-800">
-                        <p class="text-[11px] font-bold text-[#ff4d8d]"><i class="fa-solid fa-pen-to-square mr-1"></i> Edit Profile Username</p>
+                        <p class="text-[11px] font-bold text-[#60a5fa]"><i class="fa-solid fa-pen-to-square mr-1"></i> Edit Profile Username</p>
                         <div class="space-y-1">
-                            <input type="text" id="editUsernameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
+                            <input type="text" id="editUsernameInput" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#3b82f6]">
                         </div>
-                        <button onclick="saveProfileChanges()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-1.5 rounded-xl text-xs shadow">Save Username</button>
+                        <button onclick="saveProfileChanges()" class="w-full bg-[#2563eb] font-bold py-1.5 rounded-xl text-xs shadow">Save Username</button>
 
 
                     </div>
 
 
                     <div class="flex border-t border-b border-slate-800 text-xs font-bold">
-                        <button onclick="switchProfileTab('posts')" id="profTabPostsBtn" class="flex-1 py-2 text-center text-[#ff4d8d] border-b-2 border-[#ff4d8d] transition"><i class="fa-solid fa-table-cells mr-1"></i> Posts</button>
+                        <button onclick="switchProfileTab('posts')" id="profTabPostsBtn" class="flex-1 py-2 text-center text-[#60a5fa] border-b-2 border-[#3b82f6] transition"><i class="fa-solid fa-table-cells mr-1"></i> Posts</button>
                         <button onclick="switchProfileTab('reels')" id="profTabReelsBtn" class="flex-1 py-2 text-center text-slate-400 border-b-2 border-transparent transition"><i class="fa-solid fa-clapperboard mr-1"></i> Reels</button>
                         <button onclick="switchProfileTab('twits')" id="profTabTwitsBtn" class="flex-1 py-2 text-center text-slate-400 border-b-2 border-transparent transition"><i class="fa-solid fa-feather-pointed mr-1"></i> Twits</button>
                         <!-- FEATURE: PROFILE GROUPS/CHANNELS TAB -->
@@ -573,8 +578,8 @@
 
                     <!-- FEATURE: FADING MEMORIES WALL — old posts fade like real photos, never deleted -->
                     <div id="memoryFadeRow" class="flex items-center justify-between px-0.5">
-                        <p class="text-[9px] text-slate-500"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Purani posts dheere-dheere fade hoti hain — nostalgia, koi deletion nahi</p>
-                        <button onclick="toggleMemoryFadePreference()" id="memoryFadeToggleBtn" class="shrink-0 text-[9px] font-bold text-slate-400 hover:text-white bg-slate-800 px-2 py-1 rounded-lg transition">Fading: On</button>
+                        <p class="text-[11px] text-slate-400"><i class="fa-solid fa-clock-rotate-left mr-1"></i> Purani posts dheere-dheere fade hoti hain — nostalgia, koi deletion nahi</p>
+                        <button onclick="toggleMemoryFadePreference()" id="memoryFadeToggleBtn" class="shrink-0 text-[11px] font-bold text-slate-400 hover:text-white bg-slate-800 px-2 py-1 rounded-lg transition">Fading: On</button>
                     </div>
                     <div id="profileGridContainer" class="grid grid-cols-3 gap-1 pb-10"></div>
                     <!-- FEATURE: PROFILE GROUPS/CHANNELS TAB — list of groups/channels this profile is part of -->
@@ -584,8 +589,8 @@
                 <!-- FEATURE: PROFILE FLIP BACK FACE — new features live here -->
                 <div id="profileBackFace" class="hidden p-4 space-y-4">
                     <div class="flex items-center justify-between">
-                        <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-sparkles text-[#ff4d8d]"></i> New Features</p>
-                        <button onclick="toggleProfileFlip()" class="text-[10px] font-bold text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition"><i class="fa-solid fa-rotate-left mr-1"></i> Flip Back</button>
+                        <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-sparkles text-[#60a5fa]"></i> New Features</p>
+                        <button onclick="toggleProfileFlip()" class="text-[11px] font-bold text-slate-400 hover:text-white bg-slate-800 px-2.5 py-1 rounded-lg transition"><i class="fa-solid fa-rotate-left mr-1"></i> Flip Back</button>
                     </div>
 
 
@@ -593,31 +598,38 @@
 
                     <!-- FEATURE: PRESENCE CONSTELLATION — mutuals as ambient stars in a night sky,
                          brightness driven by how much you two actually interact. No notifications. -->
-                    <button onclick="openConstellationModal(viewingProfileUsername)" class="w-full flex items-center gap-2.5 text-left bg-gradient-to-r from-[#35c7ff]/15 via-[#9d7bff]/5 to-transparent border border-[#35c7ff]/30 rounded-2xl p-3 hover:border-[#35c7ff]/60 transition">
-                        <div class="w-9 h-9 rounded-xl bg-[#35c7ff]/20 text-[#35c7ff] flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-star"></i></div>
+                    <button onclick="openConstellationModal(viewingProfileUsername)" class="w-full flex items-center gap-2.5 text-left bg-[#2563eb]/15 via-[#14b8a6]/5 to-transparent border border-[#38bdf8]/30 rounded-2xl p-3 hover:border-[#38bdf8]/60 transition">
+                        <div class="w-9 h-9 rounded-xl bg-[#38bdf8]/20 text-[#38bdf8] flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-star"></i></div>
                         <div class="flex-1 min-w-0">
                             <p class="text-[11px] font-bold text-slate-200">Presence Constellation</p>
-                            <p class="text-[9px] text-slate-500">Mutuals raat ke aasmaan mein — jitna interact karo utna bright</p>
+                            <p class="text-[11px] text-slate-400">Mutuals raat ke aasmaan mein — jitna interact karo utna bright</p>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
+                        <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                     </button>
 
                     <!-- FEATURE: HANDSHAKE CONNECT — only makes sense for your OWN device/profile -->
-                    <button id="handshakeEntryBtn" onclick="openHandshakeModal()" class="hidden w-full items-center gap-2.5 text-left bg-gradient-to-r from-[#ff4d8d]/15 via-[#9d7bff]/5 to-transparent border border-[#ff4d8d]/30 rounded-2xl p-3 hover:border-[#ff4d8d]/60 transition">
-                        <div class="w-9 h-9 rounded-xl bg-[#ff4d8d]/20 text-[#ff4d8d] flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-handshake-simple"></i></div>
+                    <button id="handshakeEntryBtn" onclick="openHandshakeModal()" class="hidden w-full items-center gap-2.5 text-left bg-[#2563eb]/15 via-[#14b8a6]/5 to-transparent border border-[#3b82f6]/30 rounded-2xl p-3 hover:border-[#3b82f6]/60 transition">
+                        <div class="w-9 h-9 rounded-xl bg-[#2563eb]/20 text-[#60a5fa] flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-handshake-simple"></i></div>
                         <div class="flex-1 min-w-0">
                             <p class="text-[11px] font-bold text-slate-200">Handshake Connect</p>
-                            <p class="text-[9px] text-slate-500">Paas mein koi Nexus khole to instant profile-swap + AI icebreaker</p>
+                            <p class="text-[11px] text-slate-400">Paas mein koi Nexus khole to instant profile-swap + AI icebreaker</p>
                         </div>
-                        <i class="fa-solid fa-chevron-right text-slate-500 text-xs"></i>
+                        <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                     </button>
+
+                    <div id="legalLinksCard" class="glass-panel rounded-2xl p-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-slate-400">
+                        <a href="privacy.html" target="_blank" rel="noopener" class="hover:text-slate-200 underline-offset-2 hover:underline">Privacy Policy</a>
+                        <a href="terms.html" target="_blank" rel="noopener" class="hover:text-slate-200 underline-offset-2 hover:underline">Terms &amp; Conditions</a>
+                        <a href="data-deletion.html" target="_blank" rel="noopener" class="hover:text-slate-200 underline-offset-2 hover:underline">Delete my data</a>
+                        <a href="#" data-cookie-settings class="hover:text-slate-200 underline-offset-2 hover:underline">Cookie settings</a>
+                    </div>
 
                     <!-- FEATURE: PRIVACY & AWAY TOGGLES — moved here from the front face -->
                     <div id="privacyTogglesCard" class="hidden glass-panel rounded-2xl p-3 space-y-2">
                         <div class="flex items-center justify-between">
                             <div>
                                 <p class="text-[11px] font-bold text-slate-200"><i class="fa-solid fa-lock mr-1 text-slate-400"></i> Private Account</p>
-                                <p class="text-[9px] text-slate-500">Naye followers ko pehle approve karna hoga</p>
+                                <p class="text-[11px] text-slate-400">Naye followers ko pehle approve karna hoga</p>
                             </div>
                             <button onclick="togglePrivateAccount()" id="privateAccountToggleBtn" class="w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0">
                                 <span id="privateAccountToggleDot" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -627,7 +639,7 @@
                         <div class="flex items-center justify-between pt-2 border-t border-slate-800">
                             <div>
                                 <p class="text-[11px] font-bold text-slate-200"><i class="fa-solid fa-ghost mr-1 text-slate-400"></i> Ghost Mode</p>
-                                <p class="text-[9px] text-slate-500">Read receipts aur post/story views off — chupke se browse karo</p>
+                                <p class="text-[11px] text-slate-400">Read receipts aur post/story views off — chupke se browse karo</p>
                             </div>
                             <button onclick="toggleGhostMode()" id="ghostModeToggleBtn" class="w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0">
                                 <span id="ghostModeToggleDot" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
@@ -641,8 +653,8 @@
                                     <span id="awayModeToggleDot" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
                                 </button>
                             </div>
-                            <input type="text" id="awayMessageInput" maxlength="80" onblur="saveAwayMessage()" placeholder="Away note (e.g. Exams chal rahe hain 📚)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-                            <p id="awayModeFeatureNotice" class="hidden text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Away Mode ke liye ek chhoti si SQL setup baaki hai.</p>
+                            <input type="text" id="awayMessageInput" maxlength="80" onblur="saveAwayMessage()" placeholder="Away note (e.g. Exams chal rahe hain 📚)" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+                            <p id="awayModeFeatureNotice" class="hidden text-[11px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Away Mode ke liye ek chhoti si SQL setup baaki hai.</p>
                         </div>
                     </div>
 
@@ -689,46 +701,46 @@
 
     <!-- FEATURE: TWO-FACTOR AUTH SETUP/MANAGE -->
     <div id="twoFactorSetupModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-5">
-        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#9d7bff]/30">
+        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#14b8a6]/30">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#9d7bff]"></i> Two-Factor Authentication</p>
+                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#2dd4bf]"></i> Two-Factor Authentication</p>
                 <button onclick="closeTwoFactorSetupModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-[10px] text-slate-500">4-6 digit PIN set karo — login ke waqt password ke baad ye bhi maangi jayegi.</p>
-            <input type="password" inputmode="numeric" id="tfaNewPin" maxlength="6" placeholder="New 2FA PIN" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-            <input type="password" inputmode="numeric" id="tfaNewPinConfirm" maxlength="6" placeholder="Confirm PIN" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-            <p id="tfaSetupError" class="text-[10px] text-red-400 hidden"></p>
-            <button onclick="saveTwoFactorPin()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white transition">Save PIN</button>
+            <p class="text-[11px] text-slate-400">4-6 digit PIN set karo — login ke waqt password ke baad ye bhi maangi jayegi.</p>
+            <input type="password" inputmode="numeric" id="tfaNewPin" maxlength="6" placeholder="New 2FA PIN" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+            <input type="password" inputmode="numeric" id="tfaNewPinConfirm" maxlength="6" placeholder="Confirm PIN" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+            <p id="tfaSetupError" class="text-[11px] text-red-400 hidden"></p>
+            <button onclick="saveTwoFactorPin()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Save PIN</button>
         </div>
     </div>
 
     <!-- FEATURE: CHANGE PASSWORD -->
     <div id="changePasswordModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-5">
-        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#35c7ff]/30">
+        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#38bdf8]/30">
             <div class="flex items-center justify-between">
-                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-key text-[#35c7ff]"></i> Change Password</p>
+                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-key text-[#38bdf8]"></i> Change Password</p>
                 <button onclick="closeChangePasswordModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="password" id="cpCurrentPassword" placeholder="Current password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#35c7ff]">
-            <input type="password" id="cpNewPassword" minlength="4" placeholder="New password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#35c7ff]">
-            <input type="password" id="cpNewPasswordConfirm" minlength="4" placeholder="Confirm new password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#35c7ff]">
-            <p id="cpError" class="text-[10px] text-red-400 hidden"></p>
-            <button onclick="submitChangePassword()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#35c7ff] font-bold py-2.5 rounded-xl text-xs text-white transition">Update Password</button>
+            <input type="password" id="cpCurrentPassword" placeholder="Current password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
+            <input type="password" id="cpNewPassword" minlength="4" placeholder="New password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
+            <input type="password" id="cpNewPasswordConfirm" minlength="4" placeholder="Confirm new password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
+            <p id="cpError" class="text-[11px] text-red-400 hidden"></p>
+            <button onclick="submitChangePassword()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Update Password</button>
         </div>
     </div>
 
     <!-- FEATURE: ADMIN PIN MODAL — replaces the ugly native window.prompt() used when
          NEXUS/admin grants or removes someone's blue tick. -->
     <div id="adminPinModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-5">
-        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#35c7ff]/30">
+        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#38bdf8]/30">
             <div class="flex items-center justify-between">
-                <p id="adminPinModalTitle" class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#35c7ff]"></i> Grant Blue Tick</p>
+                <p id="adminPinModalTitle" class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#38bdf8]"></i> Grant Blue Tick</p>
                 <button onclick="closeAdminPinModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p id="adminPinModalSubtext" class="text-[10px] text-slate-400 leading-relaxed"></p>
-            <input type="password" id="adminPinModalInput" inputmode="numeric" placeholder="Enter admin PIN" onkeydown="if(event.key==='Enter') submitAdminPinModal();" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 tracking-widest text-center focus:outline-none focus:border-[#35c7ff]">
-            <p id="adminPinModalError" class="text-[10px] text-red-400 hidden"></p>
-            <button id="adminPinModalActionBtn" onclick="submitAdminPinModal()" class="w-full bg-gradient-to-r from-[#35c7ff] to-[#9d7bff] font-bold py-2.5 rounded-xl text-xs text-white transition">Grant Badge</button>
+            <p id="adminPinModalSubtext" class="text-[11px] text-slate-400 leading-relaxed"></p>
+            <input type="password" id="adminPinModalInput" inputmode="numeric" placeholder="Enter admin PIN" onkeydown="if(event.key==='Enter') submitAdminPinModal();" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 tracking-widest text-center focus:outline-none focus:border-[#38bdf8]">
+            <p id="adminPinModalError" class="text-[11px] text-red-400 hidden"></p>
+            <button id="adminPinModalActionBtn" onclick="submitAdminPinModal()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Grant Badge</button>
         </div>
     </div>
 
@@ -739,17 +751,17 @@
                 <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-circle-question text-slate-300"></i> Security Question</p>
                 <button onclick="closeSecurityQuestionSetupModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-[10px] text-slate-500">Ye password reset ke kaam aayega agar tum apna password bhool jao.</p>
-            <select id="sqSetupQuestion" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
+            <p class="text-[11px] text-slate-400">Ye password reset ke kaam aayega agar tum apna password bhool jao.</p>
+            <select id="sqSetupQuestion" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
                 <option value="">Choose a question...</option>
                 <option value="Your childhood nickname?">Your childhood nickname?</option>
                 <option value="Your favorite teacher's name?">Your favorite teacher's name?</option>
                 <option value="Your first pet's name?">Your first pet's name?</option>
                 <option value="Your birth city?">Your birth city?</option>
             </select>
-            <input type="text" id="sqSetupAnswer" placeholder="Your answer..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#9d7bff]">
-            <p id="sqSetupError" class="text-[10px] text-red-400 hidden"></p>
-            <button onclick="saveSecurityQuestion()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white transition">Save</button>
+            <input type="text" id="sqSetupAnswer" placeholder="Your answer..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#14b8a6]">
+            <p id="sqSetupError" class="text-[11px] text-red-400 hidden"></p>
+            <button onclick="saveSecurityQuestion()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Save</button>
         </div>
     </div>
             </div>
@@ -765,37 +777,37 @@
                 <span class="text-xs font-bold text-slate-200">My Activity</span>
             </div>
             <div class="flex-1 overflow-y-auto p-4 space-y-2.5">
-                <button onclick="openActivityList('likes')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-[#ff4d8d]/40 border border-transparent transition text-left">
-                    <div class="w-9 h-9 rounded-xl bg-[#ff4d8d]/15 text-[#ff4d8d] flex items-center justify-center shrink-0"><i class="fa-solid fa-heart"></i></div>
+                <button onclick="openActivityList('likes')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-[#3b82f6]/40 border border-transparent transition text-left">
+                    <div class="w-9 h-9 rounded-xl bg-[#2563eb]/15 text-[#60a5fa] flex items-center justify-center shrink-0"><i class="fa-solid fa-heart"></i></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-slate-200">Likes</p>
-                        <p class="text-[10px] text-slate-500">Posts &amp; reels tumne like kiye</p>
+                        <p class="text-[11px] text-slate-400">Posts &amp; reels tumne like kiye</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                 </button>
-                <button onclick="openActivityList('comments')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-[#35c7ff]/40 border border-transparent transition text-left">
-                    <div class="w-9 h-9 rounded-xl bg-[#35c7ff]/15 text-[#35c7ff] flex items-center justify-center shrink-0"><i class="fa-solid fa-comment"></i></div>
+                <button onclick="openActivityList('comments')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-[#38bdf8]/40 border border-transparent transition text-left">
+                    <div class="w-9 h-9 rounded-xl bg-[#38bdf8]/15 text-[#38bdf8] flex items-center justify-center shrink-0"><i class="fa-solid fa-comment"></i></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-slate-200">Comments</p>
-                        <p class="text-[10px] text-slate-500">Posts &amp; reels jinpe comment kiya</p>
+                        <p class="text-[11px] text-slate-400">Posts &amp; reels jinpe comment kiya</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                 </button>
                 <button onclick="openActivityList('saved')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-amber-400/40 border border-transparent transition text-left">
                     <div class="w-9 h-9 rounded-xl bg-amber-400/15 text-amber-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-bookmark"></i></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-slate-200">Save</p>
-                        <p class="text-[10px] text-slate-500">Saved posts &amp; reels</p>
+                        <p class="text-[11px] text-slate-400">Saved posts &amp; reels</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                 </button>
-                <button onclick="openActivityList('search')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-[#9d7bff]/40 border border-transparent transition text-left">
-                    <div class="w-9 h-9 rounded-xl bg-[#9d7bff]/15 text-[#9d7bff] flex items-center justify-center shrink-0"><i class="fa-solid fa-magnifying-glass"></i></div>
+                <button onclick="openActivityList('search')" class="w-full flex items-center gap-3 glass-panel rounded-2xl p-3.5 hover:border-[#14b8a6]/40 border border-transparent transition text-left">
+                    <div class="w-9 h-9 rounded-xl bg-[#0f766e]/15 text-[#2dd4bf] flex items-center justify-center shrink-0"><i class="fa-solid fa-magnifying-glass"></i></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-xs font-bold text-slate-200">Search History</p>
-                        <p class="text-[10px] text-slate-500">Tumne jo bhi search kiya</p>
+                        <p class="text-[11px] text-slate-400">Tumne jo bhi search kiya</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                 </button>
             </div>
         </div>
@@ -808,7 +820,7 @@
             <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0 gap-3">
                 <button onclick="closeActivityListModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-arrow-left mr-1"></i> Back</button>
                 <span id="activityListTitle" class="text-xs font-bold text-slate-200">Activity</span>
-                <button id="activityListClearBtn" onclick="clearActivityList()" class="hidden text-[10px] font-bold text-red-400 hover:text-red-300 bg-slate-800 px-2.5 py-1.5 rounded-xl transition">Clear</button>
+                <button id="activityListClearBtn" onclick="clearActivityList()" class="hidden text-[11px] font-bold text-red-400 hover:text-red-300 bg-slate-800 px-2.5 py-1.5 rounded-xl transition">Clear</button>
                 <span id="activityListSpacer" class="w-[62px]"></span>
             </div>
             <div id="activityListBody" class="flex-1 overflow-y-auto p-3"></div>
@@ -828,7 +840,7 @@
             </div>
             <div class="flex gap-2 pt-2">
                 <button onclick="cancelCropper()" class="flex-1 bg-slate-800 hover:bg-slate-700 py-2 rounded-xl text-xs font-bold text-slate-300">Cancel</button>
-                <button onclick="cropAndUploadImage()" id="cropAndUploadBtn" class="flex-1 bg-[#ff4d8d] hover:bg-[#ff4d8d] py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50">Save Photo</button>
+                <button onclick="cropAndUploadImage()" id="cropAndUploadBtn" class="flex-1 bg-[#2563eb] hover:bg-[#2563eb] py-2 rounded-xl text-xs font-bold text-white disabled:opacity-50">Save Photo</button>
             </div>
         </div>
     </div>
@@ -837,13 +849,13 @@
     <div id="storyUploadModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-4 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-circle-plus text-[#ff4d8d] mr-1.5"></i> Add to Your Story</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-circle-plus text-[#60a5fa] mr-1.5"></i> Add to Your Story</h3>
                 <button onclick="closeStoryUploadModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <form id="storyUploadForm" onsubmit="submitStoryUpload(event)" class="space-y-3">
                 <div>
                     <label class="text-[11px] font-semibold text-slate-400 block mb-1">Select Photo or Video</label>
-                    <input type="file" id="storyFileInput" accept="image/*,video/*" required onchange="previewStoryMedia(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#ff4d8d] file:text-white hover:file:bg-[#ff4d8d]">
+                    <input type="file" id="storyFileInput" accept="image/*,video/*" required onchange="previewStoryMedia(this)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2 text-xs text-slate-300 file:mr-4 file:py-1 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-bold file:bg-[#2563eb] file:text-white hover:file:bg-[#2563eb]">
                     <div id="storyPreviewWrap" class="mt-2 hidden">
                         <img id="storyPreviewImg" class="w-full max-h-52 object-contain rounded-xl bg-black hidden">
                         <video id="storyPreviewVideo" muted controls class="w-full max-h-52 object-contain rounded-xl bg-black hidden"></video>
@@ -851,13 +863,13 @@
                 </div>
                 <div>
                     <label class="text-[11px] font-semibold text-slate-400 block mb-1">Caption (optional)</label>
-                    <input type="text" id="storyCaptionInput" placeholder="Say something..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
+                    <input type="text" id="storyCaptionInput" placeholder="Say something..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#3b82f6]">
                 </div>
 
 
-                <div id="storyUploadStatus" class="text-[10px] text-[#35c7ff] hidden text-center font-bold">Uploading story...</div>
-                <p class="text-[9px] text-slate-500 text-center">Story automatically disappears after 24 hours.</p>
-                <button type="submit" id="storyUploadBtn" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white shadow">Share Story</button>
+                <div id="storyUploadStatus" class="text-[11px] text-[#38bdf8] hidden text-center font-bold">Uploading story...</div>
+                <p class="text-[11px] text-slate-400 text-center">Story automatically disappears after 24 hours.</p>
+                <button type="submit" id="storyUploadBtn" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white shadow">Share Story</button>
             </form>
         </div>
     </div>
@@ -868,9 +880,9 @@
             <div id="storyProgressBarsContainer" class="absolute top-2 left-2 right-2 z-30 flex gap-1"></div>
             <div class="absolute top-6 left-2 right-2 z-30 flex items-center justify-between px-1">
                 <div class="flex items-center space-x-2">
-                    <div id="storyViewerAvatar" class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden shadow">U</div>
+                    <div id="storyViewerAvatar" class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden shadow">U</div>
                     <span id="storyViewerUsername" class="text-xs font-bold text-white shadow">username</span>
-                    <span id="storyViewerTime" class="text-[10px] text-slate-300">now</span>
+                    <span id="storyViewerTime" class="text-[11px] text-slate-300">now</span>
                 </div>
                 <div class="flex items-center gap-2">
                     <button id="storyDeleteBtn" onclick="deleteCurrentStory()" class="hidden text-white bg-black/40 w-7 h-7 rounded-full text-xs"><i class="fa-solid fa-trash"></i></button>
@@ -886,8 +898,8 @@
             <div id="storyReplyBar" class="absolute bottom-3 left-3 right-3 z-40 hidden items-center gap-2">
                 <input type="text" id="storyReplyInput" placeholder="Reply to story..."
                     onfocus="pauseStoryTimer()" onblur="resumeStoryTimer()" onkeydown="if(event.key==='Enter'){event.preventDefault();sendStoryReply();}"
-                    class="flex-1 bg-black/50 border border-white/30 rounded-full px-3.5 py-2 text-xs text-white placeholder-white/60 focus:outline-none focus:border-[#ff4d8d] backdrop-blur-sm">
-                <button onclick="sendStoryReply()" class="w-8 h-8 shrink-0 rounded-full bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white flex items-center justify-center transition"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                    class="flex-1 bg-black/50 border border-white/30 rounded-full px-3.5 py-2 text-xs text-white placeholder-white/60 focus:outline-none focus:border-[#3b82f6] backdrop-blur-sm">
+                <button onclick="sendStoryReply()" class="w-8 h-8 shrink-0 rounded-full bg-[#2563eb] hover:bg-[#2563eb] text-white flex items-center justify-center transition"><i class="fa-solid fa-paper-plane text-xs"></i></button>
             </div>
         </div>
     </div>
@@ -902,7 +914,7 @@
             <input type="text" id="trueDeleteConfirmInput" oninput="checkTrueDeleteInput()" placeholder="Type DELETE" class="w-full bg-slate-950 border border-red-500/30 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-red-500 uppercase">
             <div class="flex gap-2">
                 <button onclick="closeTrueDeleteModal()" class="flex-1 bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs text-slate-300 transition">Cancel</button>
-                <button id="trueDeleteConfirmBtn" onclick="executeTrueDelete()" disabled class="flex-1 bg-red-600 disabled:bg-slate-800 disabled:text-slate-500 disabled:cursor-not-allowed font-bold py-2.5 rounded-xl text-xs text-white transition">Delete Forever</button>
+                <button id="trueDeleteConfirmBtn" onclick="executeTrueDelete()" disabled class="flex-1 bg-red-600 disabled:bg-slate-800 disabled:text-slate-400 disabled:cursor-not-allowed font-bold py-2.5 rounded-xl text-xs text-white transition">Delete Forever</button>
             </div>
         </div>
     </div>
@@ -918,7 +930,7 @@
         </div>
         <div class="flex-1 relative overflow-hidden">
             <canvas id="nexusUniverseCanvas" class="w-full h-full block" style="touch-action:none;"></canvas>
-            <p class="absolute bottom-3 inset-x-0 text-center text-[9px] text-slate-500">Drag se rotate karo, scroll se zoom</p>
+            <p class="absolute bottom-3 inset-x-0 text-center text-[11px] text-slate-400">Drag se rotate karo, scroll se zoom</p>
         </div>
     </div>
 
@@ -933,18 +945,18 @@
             <button onclick="closeConstellationModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
         <div id="constellationSky" class="flex-1 relative overflow-hidden constellation-sky">
-            <div id="constellationLoading" class="absolute inset-0 flex items-center justify-center text-[10px] text-slate-500">
+            <div id="constellationLoading" class="absolute inset-0 flex items-center justify-center text-[11px] text-slate-400">
                 <i class="fa-solid fa-circle-notch fa-spin mr-2"></i> Aasmaan taiyar ho raha hai...
             </div>
             <div id="constellationStarsLayer" class="absolute inset-0"></div>
             <div id="constellationEmptyState" class="hidden absolute inset-0 flex flex-col items-center justify-center text-center px-8 space-y-2">
                 <i class="fa-solid fa-star text-slate-700 text-2xl"></i>
                 <p class="text-xs font-bold text-slate-300">Aasmaan abhi khaali hai</p>
-                <p class="text-[10px] text-slate-500">Mutual follows ke saath yeh sky dhire dhire bharegi.</p>
+                <p class="text-[11px] text-slate-400">Mutual follows ke saath yeh sky dhire dhire bharegi.</p>
             </div>
         </div>
         <div class="p-3 border-t border-slate-800 bg-slate-900/90 shrink-0 text-center">
-            <p class="text-[9px] text-slate-500">Bright star = zyada recent baat-cheet. Dim star = thoda time ho gaya.</p>
+            <p class="text-[11px] text-slate-400">Bright star = zyada recent baat-cheet. Dim star = thoda time ho gaya.</p>
         </div>
     </div>
 
@@ -956,7 +968,7 @@
          web platform allows, so the realtime lobby is what actually carries the handshake. -->
     <div id="handshakeModal" class="fixed inset-0 z-[210] bg-black hidden flex-col">
         <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
-            <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-handshake-simple text-[#ff4d8d] mr-1.5"></i> Handshake Connect</span>
+            <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-handshake-simple text-[#60a5fa] mr-1.5"></i> Handshake Connect</span>
             <button onclick="closeHandshakeModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 px-3 py-1.5 rounded-xl"><i class="fa-solid fa-xmark"></i></button>
         </div>
 
@@ -964,12 +976,12 @@
             <!-- Step 1: idle -->
             <div id="handshakeIdleView" class="space-y-4">
                 <div class="glass-panel rounded-2xl p-4 text-center space-y-2">
-                    <i class="fa-solid fa-tower-broadcast text-[#ff4d8d] text-lg"></i>
+                    <i class="fa-solid fa-tower-broadcast text-[#60a5fa] text-lg"></i>
                     <p class="text-xs font-bold text-slate-200">Dono phone paas laao aur dono "Start Handshake" dabao</p>
-                    <p class="text-[10px] text-slate-500">Hum ek chhota nearby-check (Bluetooth) karte hain, phir turant profile-swap + ek AI icebreaker line generate karte hain.</p>
+                    <p class="text-[11px] text-slate-400">Hum ek chhota nearby-check (Bluetooth) karte hain, phir turant profile-swap + ek AI icebreaker line generate karte hain.</p>
                 </div>
-                <button onclick="startHandshakeSearch()" class="w-full bg-gradient-to-r from-[#ff4d8d] to-[#9d7bff] font-bold py-3 rounded-xl text-sm text-white shadow"><i class="fa-solid fa-hand-sparkles mr-1.5"></i> Start Handshake</button>
-                <p id="handshakeBluetoothNote" class="text-[9px] text-center text-slate-600"></p>
+                <button onclick="startHandshakeSearch()" class="w-full bg-[#2563eb] font-bold py-3 rounded-xl text-sm text-white shadow"><i class="fa-solid fa-hand-sparkles mr-1.5"></i> Start Handshake</button>
+                <p id="handshakeBluetoothNote" class="text-[11px] text-center text-slate-400"></p>
             </div>
 
             <!-- Step 2: searching -->
@@ -977,35 +989,35 @@
                 <div class="relative w-28 h-28 flex items-center justify-center shrink-0">
                     <div class="handshake-ring w-full h-full"></div>
                     <div class="handshake-ring handshake-ring-delay w-full h-full"></div>
-                    <div class="w-16 h-16 rounded-full bg-gradient-to-tr from-[#ff4d8d] to-[#9d7bff] flex items-center justify-center text-white text-xl shadow-lg shrink-0">
+                    <div class="w-16 h-16 rounded-full bg-[#334155] flex items-center justify-center text-white text-xl shadow-lg shrink-0">
                         <i class="fa-solid fa-handshake-simple"></i>
                     </div>
                 </div>
                 <div class="text-center space-y-1">
                     <p id="handshakeStatusText" class="text-xs font-bold text-slate-200">Nearby Nexus users dhoond rahe hain...</p>
-                    <p id="handshakeBluetoothStatus" class="text-[9px] text-slate-500"></p>
+                    <p id="handshakeBluetoothStatus" class="text-[11px] text-slate-400"></p>
                 </div>
-                <button onclick="cancelHandshakeSearch()" class="text-[10px] font-bold text-slate-400 hover:text-white bg-slate-800 px-4 py-2 rounded-xl transition">Cancel</button>
+                <button onclick="cancelHandshakeSearch()" class="text-[11px] font-bold text-slate-400 hover:text-white bg-slate-800 px-4 py-2 rounded-xl transition">Cancel</button>
             </div>
 
             <!-- Step 3: matched -->
             <div id="handshakeMatchedView" class="hidden flex-col space-y-4">
                 <div class="handshake-match-card glass-panel rounded-2xl p-4 text-center space-y-3">
-                    <div class="w-16 h-16 mx-auto rounded-full overflow-hidden bg-slate-800 flex items-center justify-center text-xl font-bold text-slate-300 border-2 border-[#ff4d8d]" id="handshakeMatchedAvatar"></div>
+                    <div class="w-16 h-16 mx-auto rounded-full overflow-hidden bg-slate-800 flex items-center justify-center text-xl font-bold text-slate-300 border-2 border-[#3b82f6]" id="handshakeMatchedAvatar"></div>
                     <div>
                         <p class="text-sm font-bold text-slate-100"><i class="fa-solid fa-bolt text-amber-400 mr-1"></i> Connected with <span id="handshakeMatchedName">—</span></p>
-                        <p class="text-[10px] text-slate-500">Profile turant swap ho gayi ✨</p>
+                        <p class="text-[11px] text-slate-400">Profile turant swap ho gayi ✨</p>
                     </div>
                 </div>
                 <div class="glass-panel rounded-2xl p-3 space-y-2">
-                    <p class="text-[10px] font-bold text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-[#9d7bff]"></i> AI Icebreaker</p>
+                    <p class="text-[11px] font-bold text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-wand-magic-sparkles text-[#2dd4bf]"></i> AI Icebreaker</p>
                     <p id="handshakeIcebreakerText" class="text-xs text-slate-200 leading-relaxed">Generate ho raha hai...</p>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <button onclick="regenerateHandshakeIcebreaker()" class="bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs text-slate-200 transition"><i class="fa-solid fa-rotate mr-1"></i> Another one</button>
-                    <button onclick="useHandshakeIcebreaker()" class="bg-gradient-to-r from-[#ff4d8d] to-[#9d7bff] font-bold py-2.5 rounded-xl text-xs text-white shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i> Send & Chat</button>
+                    <button onclick="useHandshakeIcebreaker()" class="bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i> Send & Chat</button>
                 </div>
-                <button onclick="resetHandshakeModal()" class="w-full text-[10px] font-bold text-slate-500 hover:text-slate-300 py-1">Done</button>
+                <button onclick="resetHandshakeModal()" class="w-full text-[11px] font-bold text-slate-400 hover:text-slate-300 py-1">Done</button>
             </div>
         </div>
     </div>
@@ -1015,25 +1027,25 @@
     <div id="accountSwitcherModal" class="fixed inset-0 z-[145] bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-people-arrows text-[#ff4d8d] mr-1.5"></i> Switch Account</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-people-arrows text-[#60a5fa] mr-1.5"></i> Switch Account</h3>
                 <button onclick="closeAccountSwitcher()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
 
             <!-- VIEW 1: pick which saved account to switch to -->
             <div id="accountSwitcherListView" class="space-y-3">
                 <div id="accountSwitcherList" class="space-y-1.5 max-h-64 overflow-y-auto"></div>
-                <button onclick="openAddAccountAuthScreen()" class="w-full bg-slate-900 border border-dashed border-slate-700 hover:border-[#ff4d8d] text-slate-300 hover:text-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
+                <button onclick="openAddAccountAuthScreen()" class="w-full bg-slate-900 border border-dashed border-slate-700 hover:border-[#3b82f6] text-slate-300 hover:text-[#60a5fa] font-bold py-2.5 rounded-xl text-xs transition flex items-center justify-center gap-1.5">
                     <i class="fa-solid fa-plus"></i> Add Another Account
                 </button>
             </div>
 
             <!-- VIEW 2: confirm identity (password, + PIN if 2FA is on) before actually switching -->
             <div id="accountSwitcherVerifyView" class="hidden space-y-3">
-                <button type="button" onclick="cancelAccountSwitchVerify()" class="text-[10px] text-slate-400 hover:text-white flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
+                <button type="button" onclick="cancelAccountSwitchVerify()" class="text-[11px] text-slate-400 hover:text-white flex items-center gap-1"><i class="fa-solid fa-arrow-left"></i> Back</button>
                 <div class="flex items-center gap-2.5 bg-slate-900 border border-slate-800 rounded-2xl p-3">
-                    <div id="switchVerifyAvatar" class="w-10 h-10 shrink-0 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-sm text-white overflow-hidden"></div>
+                    <div id="switchVerifyAvatar" class="w-10 h-10 shrink-0 rounded-full bg-[#334155] flex items-center justify-center text-sm text-white overflow-hidden"></div>
                     <div class="min-w-0">
-                        <p class="text-[10px] text-slate-500">Switching to</p>
+                        <p class="text-[11px] text-slate-400">Switching to</p>
                         <p id="switchVerifyUsername" class="text-xs font-bold text-slate-200 truncate"></p>
                     </div>
                 </div>
@@ -1042,24 +1054,24 @@
                     <div class="space-y-1">
                         <label class="text-[11px] font-semibold text-slate-400 px-1">Password</label>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500"><i class="fa-solid fa-lock text-xs"></i></span>
+                            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400"><i class="fa-solid fa-lock text-xs"></i></span>
                             <input type="password" id="switchVerifyPassword" required placeholder="Enter password"
-                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-[#ff4d8d] text-slate-200">
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-9 pr-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
                         </div>
                     </div>
-                    <p id="switchVerifyPasswordError" class="text-[10px] text-red-400 px-1 hidden">Galat password!</p>
-                    <button type="submit" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-[#ff4d8d]/20 fast-transition active:scale-[0.98]">Next</button>
+                    <p id="switchVerifyPasswordError" class="text-[11px] text-red-400 px-1 hidden">Galat password!</p>
+                    <button type="submit" class="w-full bg-[#2563eb] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-sm fast-transition active:scale-[0.98]">Next</button>
                 </form>
 
                 <form id="switchVerifyPinForm" class="space-y-2.5 hidden">
                     <div class="text-center space-y-1">
-                        <i class="fa-solid fa-shield-halved text-[#9d7bff] text-lg"></i>
-                        <p class="text-[10px] text-slate-500">Password sahi hai — ab 2FA PIN daalo</p>
+                        <i class="fa-solid fa-shield-halved text-[#2dd4bf] text-lg"></i>
+                        <p class="text-[11px] text-slate-400">Password sahi hai — ab 2FA PIN daalo</p>
                     </div>
                     <input type="password" inputmode="numeric" id="switchVerifyPin" required maxlength="6" placeholder="Enter 2FA PIN"
-                        class="w-full text-center tracking-[6px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#9d7bff] text-slate-200">
-                    <p id="switchVerifyPinError" class="text-[10px] text-red-400 px-1 hidden text-center">Galat PIN!</p>
-                    <button type="submit" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-lg shadow-[#ff4d8d]/20 fast-transition active:scale-[0.98]"><i class="fa-solid fa-people-arrows mr-1"></i> Switch Account</button>
+                        class="w-full text-center tracking-[6px] bg-slate-950 border border-slate-800 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#14b8a6] text-slate-200">
+                    <p id="switchVerifyPinError" class="text-[11px] text-red-400 px-1 hidden text-center">Galat PIN!</p>
+                    <button type="submit" class="w-full bg-[#2563eb] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-sm fast-transition active:scale-[0.98]"><i class="fa-solid fa-people-arrows mr-1"></i> Switch Account</button>
                 </form>
             </div>
         </div>
@@ -1069,32 +1081,32 @@
     <div id="createGroupModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-users-rectangle text-[#ff4d8d] mr-1.5"></i> Create Group</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-users-rectangle text-[#60a5fa] mr-1.5"></i> Create Group</h3>
                 <button onclick="closeCreateGroupModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <input type="text" id="newGroupNameInput" placeholder="Group name..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#ff4d8d]">
+            <input type="text" id="newGroupNameInput" placeholder="Group name..." class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#3b82f6]">
             <!-- FEATURE: CHANNELS -->
             <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-950 border border-slate-800 text-[11px] text-slate-300 cursor-pointer">
-                <input type="checkbox" id="newGroupIsChannelCheckbox" class="accent-[#ff4d8d]">
-                <span><i class="fa-solid fa-bullhorn text-[#ff4d8d] mr-1"></i> Make this a Channel (broadcast-only — only you can post)</span>
+                <input type="checkbox" id="newGroupIsChannelCheckbox" class="accent-[#3b82f6]">
+                <span><i class="fa-solid fa-bullhorn text-[#60a5fa] mr-1"></i> Make this a Channel (broadcast-only — only you can post)</span>
             </label>
             <!-- FEATURE: PUBLIC/PRIVATE GROUPS & CHANNELS -->
             <div>
-                <p class="text-[10px] font-bold text-slate-400 px-1 mb-1.5">Privacy</p>
+                <p class="text-[11px] font-bold text-slate-400 px-1 mb-1.5">Privacy</p>
                 <div class="flex gap-2">
                     <button type="button" onclick="setNewGroupPrivacy(false)" id="newGroupPublicBtn" class="flex-1 py-2 rounded-xl text-[11px] font-bold border transition"><i class="fa-solid fa-globe mr-1"></i> Public</button>
                     <button type="button" onclick="setNewGroupPrivacy(true)" id="newGroupPrivateBtn" class="flex-1 py-2 rounded-xl text-[11px] font-bold border transition"><i class="fa-solid fa-lock mr-1"></i> Private</button>
                 </div>
-                <p class="text-[9px] text-slate-500 px-1 mt-1.5">Public: koi bhi bina request ke turant join kar sakta hai. Private: join karne ke liye pehle request bhejni hogi, jise admin accept karega.</p>
+                <p class="text-[11px] text-slate-400 px-1 mt-1.5">Public: koi bhi bina request ke turant join kar sakta hai. Private: join karne ke liye pehle request bhejni hogi, jise admin accept karega.</p>
             </div>
-            <p class="text-[10px] font-bold text-slate-400 px-1">Select Members</p>
+            <p class="text-[11px] font-bold text-slate-400 px-1">Select Members</p>
             <!-- FEATURE: GROUP MEMBER SEARCH -->
             <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2">
-                <i class="fa-solid fa-search text-slate-500 text-[10px]"></i>
+                <i class="fa-solid fa-search text-slate-400 text-[11px]"></i>
                 <input type="text" id="newGroupMemberSearchInput" oninput="filterNewGroupMembers(this.value)" placeholder="Search users to add..." class="flex-1 bg-transparent text-xs focus:outline-none text-slate-200 placeholder-slate-500">
             </div>
             <div id="newGroupMembersContainer" class="max-h-48 overflow-y-auto space-y-1.5 pr-1"></div>
-            <button onclick="submitCreateGroup()" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white shadow">Create Group</button>
+            <button onclick="submitCreateGroup()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white shadow">Create Group</button>
         </div>
     </div>
 
@@ -1102,12 +1114,12 @@
     <div id="groupInfoModal" class="fixed inset-0 z-50 bg-black/85 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl max-h-[85vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2 shrink-0">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-circle-info text-[#ff4d8d] mr-1.5"></i> Group Info</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-circle-info text-[#60a5fa] mr-1.5"></i> Group Info</h3>
                 <button onclick="closeGroupInfoModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div class="text-center space-y-1 shrink-0">
                 <div class="relative group w-14 h-14 mx-auto">
-                    <div id="groupInfoAvatar" class="w-14 h-14 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-lg font-bold text-white shadow overflow-hidden"><i class="fa-solid fa-users"></i></div>
+                    <div id="groupInfoAvatar" class="w-14 h-14 rounded-full bg-[#334155] flex items-center justify-center text-lg font-bold text-white shadow overflow-hidden"><i class="fa-solid fa-users"></i></div>
                     <!-- FEATURE: GROUP DP — admin-only, shown/hidden by openGroupInfoModal() -->
                     <label id="groupAvatarEditBtn" class="hidden absolute inset-0 bg-black/60 rounded-full items-center justify-center cursor-pointer text-white text-xs opacity-0 group-hover:opacity-100 transition">
                         <i class="fa-solid fa-pencil"></i>
@@ -1115,26 +1127,26 @@
                     </label>
                 </div>
                 <p id="groupInfoName" class="text-sm font-bold text-slate-200"></p>
-                <p id="groupInfoMemberCount" class="text-[10px] text-slate-500"></p>
+                <p id="groupInfoMemberCount" class="text-[11px] text-slate-400"></p>
             </div>
             <!-- FEATURE: PUBLIC/PRIVATE GROUPS & CHANNELS — admin-only toggle -->
             <div id="groupPrivacyToggleRow" class="hidden items-center justify-between bg-slate-900/60 rounded-xl p-2.5 shrink-0">
-                <span class="text-[10px] font-bold text-slate-300"><i class="fa-solid fa-lock mr-1 text-amber-400"></i> Private Group/Channel</span>
+                <span class="text-[11px] font-bold text-slate-300"><i class="fa-solid fa-lock mr-1 text-amber-400"></i> Private Group/Channel</span>
                 <button id="groupPrivacyToggleBtn" onclick="toggleGroupPrivacy()" class="w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0">
                     <span id="groupPrivacyToggleDot" class="absolute top-0.5 left-0.5 w-4 h-4 rounded-full bg-white transition-transform"></span>
                 </button>
             </div>
-            <p class="text-[10px] font-bold text-slate-400 px-1 shrink-0">Members</p>
+            <p class="text-[11px] font-bold text-slate-400 px-1 shrink-0">Members</p>
             <div id="groupInfoMembersContainer" class="flex-1 overflow-y-auto space-y-1.5 pr-1 min-h-0"></div>
             <!-- FEATURE: GROUP MEMBER SEARCH — add existing members, admin-only -->
             <button id="toggleAddMembersBtn" onclick="toggleAddMembersSection()" class="hidden w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2 rounded-xl text-xs items-center justify-center gap-1.5 shrink-0 flex"><i class="fa-solid fa-user-plus"></i> Add Members</button>
             <div id="groupAddMembersSection" class="hidden space-y-1.5 shrink-0">
                 <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2">
-                    <i class="fa-solid fa-search text-slate-500 text-[10px]"></i>
+                    <i class="fa-solid fa-search text-slate-400 text-[11px]"></i>
                     <input type="text" id="groupAddMemberSearchInput" oninput="filterAddGroupMembers(this.value)" placeholder="Search users..." class="flex-1 bg-transparent text-xs focus:outline-none text-slate-200 placeholder-slate-500">
                 </div>
                 <div id="groupAddMembersContainer" class="max-h-32 overflow-y-auto space-y-1 pr-1"></div>
-                <button onclick="submitAddGroupMembers()" class="w-full bg-[#35c7ff] hover:bg-[#35c7ff] font-bold py-2 rounded-xl text-[11px] text-white shadow">Add Selected</button>
+                <button onclick="submitAddGroupMembers()" class="w-full bg-[#38bdf8] hover:bg-[#38bdf8] font-bold py-2 rounded-xl text-[11px] text-white shadow">Add Selected</button>
             </div>
             <div class="pt-2 border-t border-slate-800 space-y-2 shrink-0">
                 <button onclick="leaveCurrentGroup()" class="w-full bg-slate-800 hover:bg-slate-700 text-orange-400 font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-1.5"><i class="fa-solid fa-right-from-bracket"></i> Leave Group</button>
@@ -1147,7 +1159,7 @@
     <div id="groupJoinRequestsModal" class="fixed inset-0 z-[55] bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-sm rounded-3xl p-5 space-y-3 border border-slate-700 shadow-2xl max-h-[80vh] flex flex-col">
             <div class="flex justify-between items-center border-b border-slate-800 pb-2 shrink-0">
-                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-user-clock text-[#ff4d8d] mr-1.5"></i> Join Requests</h3>
+                <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-user-clock text-[#60a5fa] mr-1.5"></i> Join Requests</h3>
                 <button onclick="closeGroupJoinRequestsModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
             <div id="groupJoinRequestsContainer" class="flex-1 overflow-y-auto space-y-2 min-h-0"></div>
@@ -1161,14 +1173,14 @@
                 <h3 class="text-xs font-bold text-slate-200"><i class="fa-solid fa-trash text-red-400 mr-1.5"></i> Delete Chat</h3>
                 <button onclick="closeDeleteChatModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
             </div>
-            <p class="text-[10px] text-slate-500 px-1">Choose how you want to delete this chat with <span id="deleteChatModalUsername" class="font-bold text-slate-300"></span>.</p>
+            <p class="text-[11px] text-slate-400 px-1">Choose how you want to delete this chat with <span id="deleteChatModalUsername" class="font-bold text-slate-300"></span>.</p>
             <button onclick="confirmDeleteChatForMe()" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-200 font-bold py-2.5 rounded-xl text-xs flex flex-col items-center gap-0.5 transition">
                 <span><i class="fa-solid fa-user mr-1.5"></i>Delete for Me</span>
-                <span class="text-[9px] font-normal text-slate-500">Sirf aapki screen se hatega, dusre ko dikhta rahega</span>
+                <span class="text-[11px] font-normal text-slate-400">Sirf aapki screen se hatega, dusre ko dikhta rahega</span>
             </button>
             <button onclick="confirmDeleteChatForEveryone()" class="w-full bg-red-600/20 border border-red-600/40 hover:bg-red-600/30 text-red-400 font-bold py-2.5 rounded-xl text-xs flex flex-col items-center gap-0.5 transition">
                 <span><i class="fa-solid fa-users mr-1.5"></i>Delete for Everyone</span>
-                <span class="text-[9px] font-normal text-red-400/70">Dono taraf se hamesha ke liye delete</span>
+                <span class="text-[11px] font-normal text-red-400/70">Dono taraf se hamesha ke liye delete</span>
             </button>
         </div>
     </div>
@@ -1176,10 +1188,10 @@
     <!-- Incoming Group Call Modal -->
     <div id="incomingGroupCallModal" class="fixed inset-0 z-[110] bg-black/80 backdrop-blur-md hidden flex items-center justify-center p-4">
         <div class="glass-panel w-full max-w-xs rounded-3xl p-6 text-center space-y-4 border border-slate-700 shadow-2xl animate-pulse">
-            <div class="w-20 h-20 mx-auto rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-2xl font-bold text-white shadow-lg"><i class="fa-solid fa-users"></i></div>
+            <div class="w-20 h-20 mx-auto rounded-full bg-[#334155] flex items-center justify-center text-2xl font-bold text-white shadow-lg"><i class="fa-solid fa-users"></i></div>
             <div class="space-y-1">
                 <h3 id="incomingGroupCallName" class="text-sm font-bold text-white">Group Call</h3>
-                <p id="incomingGroupCallLabel" class="text-xs text-[#35c7ff]">Incoming group audio call</p>
+                <p id="incomingGroupCallLabel" class="text-xs text-[#38bdf8]">Incoming group audio call</p>
             </div>
             <div class="flex gap-3 pt-2">
                 <button onclick="rejectGroupCall()" class="flex-1 bg-red-600 hover:bg-red-500 py-2.5 rounded-xl text-xs font-bold text-white shadow flex items-center justify-center gap-1.5"><i class="fa-solid fa-phone-slash"></i> Decline</button>
@@ -1206,10 +1218,10 @@
         <header id="mainNavbar" class="glass-panel shrink-0 border-b border-slate-800/80 z-40">
             <div class="w-full max-w-xl mx-auto px-3 h-12 flex justify-between items-center">
                 <div class="flex items-center space-x-1.5">
-                    <div class="w-7 h-7 bg-gradient-to-tr from-[#ff4d8d] via-[#9d7bff] to-[#35c7ff] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow">
+                    <div class="w-7 h-7 bg-[#334155] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow">
                         <i class="fa-solid fa-layer-group"></i>
                     </div>
-                    <span class="font-display text-xs font-bold tracking-tight bg-gradient-to-r from-[#ff4d8d] via-[#9d7bff] to-[#35c7ff] bg-clip-text text-transparent">Nexus</span>
+                    <span class="font-display text-xs font-bold tracking-tight text-slate-100">Nexus</span>
                 </div>
 
                 <nav class="flex space-x-0.5 bg-slate-900/90 p-0.5 rounded-lg border border-slate-800 overflow-x-auto max-w-[180px] sm:max-w-none no-scrollbar">
@@ -1222,21 +1234,21 @@
                 </nav>
 
                 <div class="flex items-center space-x-1.5">
-                    <span id="ghostModeNavIndicator" class="hidden text-[#9d7bff] text-xs px-1" title="Ghost Mode is ON"><i class="fa-solid fa-ghost"></i></span>
+                    <span id="ghostModeNavIndicator" class="hidden text-[#2dd4bf] text-xs px-1" title="Ghost Mode is ON"><i class="fa-solid fa-ghost"></i></span>
                     <!-- FEATURE: PAGE CUSTOMIZATION — single pencil icon, customizes whichever page/tab is currently open -->
-                    <button onclick="openPageCustomizeForCurrentPage()" class="p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Customize Page"><i class="fa-solid fa-pencil"></i></button>
+                    <button onclick="openPageCustomizeForCurrentPage()" class="p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Customize Page"><i class="fa-solid fa-pencil"></i></button>
                     <!-- FEATURE: NOTIFICATIONS -->
-                    <button id="notificationsBellBtn" onclick="openNotificationsModal()" class="relative p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Notifications">
+                    <button id="notificationsBellBtn" onclick="openNotificationsModal()" class="relative p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Notifications">
                         <i class="fa-solid fa-bell"></i>
-                        <span id="notificationsBadge" class="hidden absolute -top-1 -right-1 bg-[#ff4d8d] text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                        <span id="notificationsBadge" class="hidden absolute -top-1 -right-1 bg-[#2563eb] text-white text-[11px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
                     </button>
-                    <button id="followRequestsBellBtn" onclick="openFollowRequestsModal()" class="relative hidden p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Follow Requests">
+                    <button id="followRequestsBellBtn" onclick="openFollowRequestsModal()" class="relative hidden p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Follow Requests">
                         <i class="fa-solid fa-user-clock"></i>
-                        <span id="followRequestsBadge" class="hidden absolute -top-1 -right-1 bg-[#ff4d8d] text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                        <span id="followRequestsBadge" class="hidden absolute -top-1 -right-1 bg-[#2563eb] text-white text-[11px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
                     </button>
-                    <button onclick="toggleTheme()" id="themeToggleBtn" class="p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Toggle theme"><i class="fa-solid fa-moon" id="themeToggleIcon"></i></button>
-                    <span id="displayUsername" onclick="openProfile(currentUser)" class="text-[11px] font-bold px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 truncate max-w-[80px] cursor-pointer hover:text-[#ff4d8d] transition" title="Tap to open your profile">User</span>
-                    <button onclick="openAccountSwitcher()" class="p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-900" title="Switch Account"><i class="fa-solid fa-people-arrows"></i></button>
+                    <button onclick="toggleTheme()" id="themeToggleBtn" class="p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Toggle theme"><i class="fa-solid fa-moon" id="themeToggleIcon"></i></button>
+                    <span id="displayUsername" onclick="openProfile(currentUser)" class="text-[11px] font-bold px-2 py-1 bg-slate-900 border border-slate-800 rounded-lg text-slate-300 truncate max-w-[80px] cursor-pointer hover:text-[#60a5fa] transition" title="Tap to open your profile">User</span>
+                    <button onclick="openAccountSwitcher()" class="p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-900" title="Switch Account"><i class="fa-solid fa-people-arrows"></i></button>
                     <button onclick="logout()" class="p-1.5 text-slate-400 hover:text-red-400 transition text-xs rounded-lg hover:bg-slate-900" title="Logout"><i class="fa-solid fa-power-off"></i></button>
                 </div>
             </div>
@@ -1252,7 +1264,7 @@
 
                 <div class="layout-block space-y-2" data-block-id="search">
                     <div class="glass-panel rounded-2xl p-2.5 shadow-lg flex items-center space-x-2 shrink-0">
-                        <i class="fa-solid fa-search text-[#ff4d8d] text-xs pl-1"></i>
+                        <i class="fa-solid fa-search text-[#60a5fa] text-xs pl-1"></i>
                         <input type="text" id="globalUserSearch" oninput="handleGlobalSearch(this.value)" placeholder="Search user ID across app..." 
                             class="w-full bg-transparent text-xs focus:outline-none text-slate-200 placeholder-slate-500">
                     </div>
@@ -1261,24 +1273,24 @@
 
                 <div class="layout-block" data-block-id="postComposer">
                 <div class="glass-panel rounded-2xl p-3 shadow-lg space-y-2.5 w-full shrink-0">
-                    <h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-pen-nib text-[#ff4d8d]"></i> <span data-i18n="btn_post">Create Post</span>
+                    <h2 class="text-[11px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-pen-nib text-[#60a5fa]"></i> <span data-i18n="btn_post">Create Post</span>
                     </h2>
                     <form id="postForm" class="space-y-2">
                         <div id="postInputGrid" class="grid grid-cols-2 gap-2">
-                            <label id="imageUploadWrapper" class="cursor-pointer bg-slate-900 border border-slate-800 hover:border-[#ff4d8d] rounded-xl px-2 py-1.5 text-xs flex items-center justify-center gap-1.5 text-slate-300 truncate transition col-span-2">
-                                <i class="fa-solid fa-image text-[#ff4d8d]"></i>
+                            <label id="imageUploadWrapper" class="cursor-pointer bg-slate-900 border border-slate-800 hover:border-[#3b82f6] rounded-xl px-2 py-1.5 text-xs flex items-center justify-center gap-1.5 text-slate-300 truncate transition col-span-2">
+                                <i class="fa-solid fa-image text-[#60a5fa]"></i>
                                 <span id="fileChosenLabel" class="truncate">Select Photo(s)</span>
                                 <input type="file" id="postImageFile" accept="image/*" multiple class="hidden" onchange="handleFileSelect(this)">
                             </label>
                         </div>
                         <textarea id="postContentInput" rows="2" placeholder="Broadcast thought..." required
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs focus:outline-none focus:border-[#ff4d8d] resize-none text-slate-200"></textarea>
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs focus:outline-none focus:border-[#3b82f6] resize-none text-slate-200"></textarea>
                         
-                        <div id="uploadStatusText" class="text-[10px] text-[#35c7ff] hidden">Uploading media to storage...</div>
+                        <div id="uploadStatusText" class="text-[11px] text-[#38bdf8] hidden">Uploading media to storage...</div>
 
                         <div class="flex justify-end">
-                            <button type="submit" id="publishBtn" class="bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] hover:opacity-90 font-bold px-3.5 py-1.5 rounded-xl text-xs shadow transition">Publish</button>
+                            <button type="submit" id="publishBtn" class="bg-[#2563eb] hover:opacity-90 font-bold px-3.5 py-1.5 rounded-xl text-xs shadow transition">Publish</button>
                         </div>
                     </form>
                 </div>
@@ -1287,17 +1299,17 @@
                 <!-- FEATURE: TWIT COMPOSER — fully separate from the Post composer above: its own
                      compact single-line format, own accent color, no image upload, char counter. -->
                 <div class="layout-block" data-block-id="twitComposer">
-                <div class="bg-slate-950 border border-[#35c7ff]/30 rounded-2xl p-3 shadow-lg space-y-2 w-full shrink-0">
-                    <h2 class="text-[10px] font-bold tracking-wide text-[#35c7ff] flex items-center gap-1.5">
+                <div class="bg-slate-950 border border-[#38bdf8]/30 rounded-2xl p-3 shadow-lg space-y-2 w-full shrink-0">
+                    <h2 class="text-[11px] font-bold tracking-wide text-[#38bdf8] flex items-center gap-1.5">
                         <i class="fa-solid fa-feather-pointed"></i> Create Twit
                     </h2>
                     <form id="twitForm" class="space-y-1.5">
                         <textarea id="twitContentInput" rows="2" maxlength="280" placeholder="What's happening?" required
                             oninput="updateTwitCharCount()"
-                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs focus:outline-none focus:border-[#35c7ff] resize-none text-slate-200"></textarea>
+                            class="w-full bg-slate-900 border border-slate-800 rounded-xl p-2 text-xs focus:outline-none focus:border-[#38bdf8] resize-none text-slate-200"></textarea>
                         <div class="flex items-center justify-between">
-                            <span id="twitCharCount" class="text-[9px] text-slate-500">280</span>
-                            <button type="submit" class="bg-[#35c7ff] hover:opacity-90 font-bold px-3.5 py-1.5 rounded-full text-xs text-slate-950 shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i>Twit</button>
+                            <span id="twitCharCount" class="text-[11px] text-slate-400">280</span>
+                            <button type="submit" class="bg-[#38bdf8] hover:opacity-90 font-bold px-3.5 py-1.5 rounded-full text-xs text-slate-950 shadow transition"><i class="fa-solid fa-paper-plane mr-1"></i>Twit</button>
                         </div>
                     </form>
                 </div>
@@ -1316,18 +1328,18 @@
                 <div id="chatUsersView" class="flex-1 flex flex-col h-full overflow-hidden">
                     <div class="p-3 border-b border-slate-800 bg-slate-900/60 shrink-0 space-y-2">
                         <div class="flex justify-between items-center text-xs font-bold text-slate-300">
-                            <span><i class="fa-solid fa-users text-[#ff4d8d] mr-1.5"></i> Active Users</span>
+                            <span><i class="fa-solid fa-users text-[#60a5fa] mr-1.5"></i> Active Users</span>
                             <div class="flex items-center gap-1.5">
-                                <button id="messageRequestsBellBtn" onclick="openMessageRequestsModal()" class="relative hidden text-[9px] font-bold text-[#35c7ff] bg-[#35c7ff]/10 border border-[#35c7ff]/30 px-2 py-1 rounded-full hover:bg-[#35c7ff]/20 transition" title="Message Requests"><i class="fa-solid fa-envelope mr-1"></i>Requests
-                                    <span id="messageRequestsBadge" class="hidden absolute -top-1.5 -right-1.5 bg-[#ff4d8d] text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                                <button id="messageRequestsBellBtn" onclick="openMessageRequestsModal()" class="relative hidden text-[11px] font-bold text-[#38bdf8] bg-[#38bdf8]/10 border border-[#38bdf8]/30 px-2 py-1 rounded-full hover:bg-[#38bdf8]/20 transition" title="Message Requests"><i class="fa-solid fa-envelope mr-1"></i>Requests
+                                    <span id="messageRequestsBadge" class="hidden absolute -top-1.5 -right-1.5 bg-[#2563eb] text-white text-[11px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
                                 </button>
-                                <span id="userCountBadge" class="px-2 py-0.5 rounded-full bg-slate-800 text-[10px] text-slate-400">0</span>
+                                <span id="userCountBadge" class="px-2 py-0.5 rounded-full bg-slate-800 text-[11px] text-slate-400">0</span>
                             </div>
                         </div>
                         <div class="relative">
-                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-500"><i class="fa-solid fa-search text-xs"></i></span>
+                            <span class="absolute inset-y-0 left-0 pl-2.5 flex items-center text-slate-400"><i class="fa-solid fa-search text-xs"></i></span>
                             <input type="text" id="chatSearchInput" oninput="filterChatUsers(this.value)" placeholder="Search user to chat..." 
-                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-[#35c7ff] text-slate-200">
+                                class="w-full bg-slate-950 border border-slate-800 rounded-xl pl-8 pr-3 py-1.5 text-xs focus:outline-none focus:border-[#38bdf8] text-slate-200">
                         </div>
                     </div>
                     <div id="usersListContainer" class="flex-1 overflow-y-auto divide-y divide-slate-800/50"></div>
@@ -1338,8 +1350,8 @@
                         <div class="flex items-center space-x-2 min-w-0">
                             <button onclick="closeChatRoom()" class="text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-800 text-xs transition shrink-0"><i class="fa-solid fa-arrow-left"></i> Back</button>
                             <div class="min-w-0">
-                                <span id="chatWithTitle" class="text-slate-200 font-bold text-xs cursor-pointer hover:text-[#ff4d8d] transition block truncate">Chat</span>
-                                <span id="chatStatusText" class="text-[9px] font-semibold text-slate-500 flex items-center gap-1">
+                                <span id="chatWithTitle" class="text-slate-200 font-bold text-xs cursor-pointer hover:text-[#60a5fa] transition block truncate">Chat</span>
+                                <span id="chatStatusText" class="text-[11px] font-semibold text-slate-400 flex items-center gap-1">
                                     <span class="w-1.5 h-1.5 rounded-full bg-slate-600" id="chatStatusDot"></span>
                                     <span id="chatStatusLabel">Offline</span>
                                 </span>
@@ -1348,7 +1360,7 @@
                         <div class="flex items-center gap-1.5 shrink-0">
                             <button onclick="toggleDisappearingMode()" id="disappearingToggleBtn" title="Disappearing Messages (24h)" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition shadow"><i class="fa-solid fa-fire text-xs" id="disappearingIcon"></i></button>
                             <button onclick="startRealCall(activeChatUser, 'audio')" title="Audio Call" class="w-8 h-8 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center transition shadow"><i class="fa-solid fa-phone text-xs"></i></button>
-                            <button onclick="startRealCall(activeChatUser, 'video')" title="Video Call" class="w-8 h-8 rounded-full bg-[#9d7bff] hover:bg-[#9d7bff] text-white flex items-center justify-center transition shadow"><i class="fa-solid fa-video text-xs"></i></button>
+                            <button onclick="startRealCall(activeChatUser, 'video')" title="Video Call" class="w-8 h-8 rounded-full bg-[#0f766e] hover:bg-[#0f766e] text-white flex items-center justify-center transition shadow"><i class="fa-solid fa-video text-xs"></i></button>
                             <div class="relative">
                                 <button onclick="toggleChatOptionsMenu(event)" id="chatOptionsBtn" title="More options" class="w-8 h-8 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-400 flex items-center justify-center transition shadow"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
                                 <div id="chatOptionsMenu" class="hidden absolute right-0 top-9 w-40 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl z-30 overflow-hidden">
@@ -1359,7 +1371,7 @@
                     </div>
 
                     <!-- Real-Time Typing Indicator Bar -->
-                    <div id="typingIndicatorBar" class="hidden px-3 py-1 text-[10px] text-emerald-400 bg-slate-900/60 border-b border-slate-800 items-center gap-1.5 shrink-0 z-20">
+                    <div id="typingIndicatorBar" class="hidden px-3 py-1 text-[11px] text-emerald-400 bg-slate-900/60 border-b border-slate-800 items-center gap-1.5 shrink-0 z-20">
                         <span id="typingIndicatorText">typing</span>
                         <span class="flex gap-0.5 items-end">
                             <span class="w-1 h-1 bg-emerald-400 rounded-full animate-bounce" style="animation-delay:0ms"></span>
@@ -1369,7 +1381,7 @@
                     </div>
 
                     <!-- FEATURE: PINNED MESSAGES IN CHAT -->
-                    <div id="dmPinnedBanner" onclick="cyclePinnedMessage('dm')" class="hidden items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-300 text-[10px] cursor-pointer shrink-0 z-20">
+                    <div id="dmPinnedBanner" onclick="cyclePinnedMessage('dm')" class="hidden items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-300 text-[11px] cursor-pointer shrink-0 z-20">
                         <i class="fa-solid fa-thumbtack shrink-0"></i>
                         <span id="dmPinnedBannerText" class="truncate flex-1"></span>
                         <button onclick="event.stopPropagation(); unpinCurrentBannerMessage('dm')" class="shrink-0 text-yellow-400/70 hover:text-red-400" title="Unpin"><i class="fa-solid fa-xmark"></i></button>
@@ -1379,9 +1391,9 @@
 
                     <!-- Reply Preview Bar: shows when replying to a message (swipe a message to trigger) -->
                     <div id="replyPreviewBar" class="hidden px-3 py-2 bg-slate-900 border-t border-slate-800 items-center justify-between gap-2 shrink-0 z-20">
-                        <div class="flex-1 min-w-0 border-l-2 border-[#ff4d8d] pl-2">
-                            <p class="text-[10px] font-bold text-[#ff4d8d]">Replying to <span id="replyPreviewSender"></span></p>
-                            <p class="text-[10px] text-slate-400 truncate" id="replyPreviewText"></p>
+                        <div class="flex-1 min-w-0 border-l-2 border-[#3b82f6] pl-2">
+                            <p class="text-[11px] font-bold text-[#60a5fa]">Replying to <span id="replyPreviewSender"></span></p>
+                            <p class="text-[11px] text-slate-400 truncate" id="replyPreviewText"></p>
                         </div>
                         <button type="button" onclick="cancelReply()" class="text-slate-400 hover:text-white text-xs bg-slate-800 w-6 h-6 rounded-full flex items-center justify-center shrink-0"><i class="fa-solid fa-xmark"></i></button>
                     </div>
@@ -1390,16 +1402,16 @@
                     <!-- FEATURE: MESSAGE REQUESTS — shown instead of the chat form when THIS chat
                          is a pending request the other person sent me; I must Accept/Decline first -->
                     <div id="chatIncomingRequestBar" class="hidden px-3 py-2.5 bg-slate-900 border-t border-slate-800 items-center justify-between gap-2 shrink-0 z-20">
-                        <span class="text-[10px] text-slate-400 flex-1">Message request — reply karne se pehle accept karo.</span>
+                        <span class="text-[11px] text-slate-400 flex-1">Message request — reply karne se pehle accept karo.</span>
                         <div class="flex gap-1.5 shrink-0">
-                            <button onclick="acceptMessageRequestFromChat()" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
-                            <button onclick="declineMessageRequestFromChat()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Delete</button>
+                            <button onclick="acceptMessageRequestFromChat()" class="bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
+                            <button onclick="declineMessageRequestFromChat()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Delete</button>
                         </div>
                     </div>
 
                     <!-- FEATURE: MESSAGE REQUESTS — small notice shown above the form when I've
                          sent a request to a private account and I'm waiting on them to accept it -->
-                    <div id="chatOutgoingRequestBar" class="hidden px-3 py-1.5 bg-slate-900 border-t border-slate-800 items-center gap-1.5 shrink-0 z-20 text-[10px] text-slate-500">
+                    <div id="chatOutgoingRequestBar" class="hidden px-3 py-1.5 bg-slate-900 border-t border-slate-800 items-center gap-1.5 shrink-0 z-20 text-[11px] text-slate-400">
                         <i class="fa-solid fa-clock"></i>
                         <span id="chatOutgoingRequestText">Message request bhej diya hai.</span>
                     </div>
@@ -1411,16 +1423,16 @@
                             <input type="file" id="chatMediaFileInput" accept="image/*,video/*" class="hidden" onchange="handleChatMediaSelect(this)">
                         </label>
                         <input type="text" id="chatInputText" placeholder="Type message..." autocomplete="off" 
-                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#35c7ff] text-slate-200">
+                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#38bdf8] text-slate-200">
                         <button type="button" onclick="toggleVoiceRecording()" id="voiceRecordBtn" class="bg-slate-800 hover:bg-slate-700 text-slate-300 p-2 rounded-xl text-xs transition shadow" title="Record voice note"><i class="fa-solid fa-microphone" id="voiceRecordIcon"></i></button>
-                        <button type="submit" class="bg-[#35c7ff] hover:bg-[#35c7ff] px-3.5 py-2 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
+                        <button type="submit" class="bg-[#38bdf8] hover:bg-[#38bdf8] px-3.5 py-2 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
                     </form>
                 </div>
             </section>
 
             <section id="section-reels" class="hidden relative flex-1 flex flex-col overflow-hidden">
                 <div class="absolute top-2 right-3 z-30">
-                    <button onclick="openReelUploadModal()" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white w-9 h-9 rounded-full shadow-lg flex items-center justify-center font-bold transition active:scale-95" title="Upload Reel">
+                    <button onclick="openReelUploadModal()" class="bg-[#2563eb] hover:bg-[#2563eb] text-white w-9 h-9 rounded-full shadow-lg flex items-center justify-center font-bold transition active:scale-95" title="Upload Reel">
                         <i class="fa-solid fa-plus text-xs"></i>
                     </button>
                 </div>
@@ -1429,13 +1441,13 @@
 
             <section id="section-calls" class="hidden relative flex-1 flex flex-col h-full overflow-hidden p-2 space-y-3">
                 <div class="glass-panel rounded-2xl p-1 shadow-lg flex items-center gap-1 shrink-0">
-                    <button id="callSubTabNewBtn" onclick="switchCallSubTab('new')" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition bg-[#ff4d8d] text-white shadow"><i class="fa-solid fa-phone mr-1"></i> New Call</button>
+                    <button id="callSubTabNewBtn" onclick="switchCallSubTab('new')" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition bg-[#2563eb] text-white shadow"><i class="fa-solid fa-phone mr-1"></i> New Call</button>
                     <button id="callSubTabHistoryBtn" onclick="switchCallSubTab('history')" class="flex-1 py-1.5 rounded-xl text-[11px] font-bold transition text-slate-400 hover:text-slate-200"><i class="fa-solid fa-clock-rotate-left mr-1"></i> History</button>
                 </div>
 
                 <div id="callNewSubView" class="flex-1 flex flex-col overflow-hidden space-y-3">
                     <div class="glass-panel rounded-2xl p-3 shadow-lg flex items-center space-x-2 shrink-0">
-                        <i class="fa-solid fa-search text-[#35c7ff] text-xs pl-1"></i>
+                        <i class="fa-solid fa-search text-[#38bdf8] text-xs pl-1"></i>
                         <input type="text" id="callUserSearchInput" oninput="filterCallUsers(this.value)" placeholder="Search user ID for live calling..." 
                             class="w-full bg-transparent text-xs focus:outline-none text-slate-200 placeholder-slate-500">
                     </div>
@@ -1451,20 +1463,20 @@
             <section id="section-groups" class="hidden relative flex-1 glass-panel rounded-2xl overflow-hidden shadow-2xl flex flex-col h-full min-h-0">
                 <div id="groupsListView" class="flex-1 flex flex-col h-full overflow-hidden">
                     <div class="p-3 border-b border-slate-800 bg-slate-900/60 shrink-0 flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-300"><i class="fa-solid fa-users-rectangle text-[#ff4d8d] mr-1.5"></i> Your Groups</span>
+                        <span class="text-xs font-bold text-slate-300"><i class="fa-solid fa-users-rectangle text-[#60a5fa] mr-1.5"></i> Your Groups</span>
                         <div class="flex items-center gap-1.5">
                             <!-- FEATURE: PUBLIC/PRIVATE GROUPS & CHANNELS — join requests bell -->
-                            <button id="groupJoinRequestsBellBtn" onclick="openGroupJoinRequestsModal()" class="relative hidden p-1.5 text-slate-400 hover:text-[#ff4d8d] transition text-xs rounded-lg hover:bg-slate-800" title="Group Join Requests">
+                            <button id="groupJoinRequestsBellBtn" onclick="openGroupJoinRequestsModal()" class="relative hidden p-1.5 text-slate-400 hover:text-[#60a5fa] transition text-xs rounded-lg hover:bg-slate-800" title="Group Join Requests">
                                 <i class="fa-solid fa-user-clock"></i>
-                                <span id="groupJoinRequestsBadge" class="hidden absolute -top-1 -right-1 bg-[#ff4d8d] text-white text-[8px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
+                                <span id="groupJoinRequestsBadge" class="hidden absolute -top-1 -right-1 bg-[#2563eb] text-white text-[11px] font-display font-bold rounded-full w-3.5 h-3.5 flex items-center justify-center">0</span>
                             </button>
-                            <button onclick="openCreateGroupModal()" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow"><i class="fa-solid fa-plus mr-1"></i> New</button>
+                            <button onclick="openCreateGroupModal()" class="bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold px-3 py-1.5 rounded-xl shadow"><i class="fa-solid fa-plus mr-1"></i> New</button>
                         </div>
                     </div>
                     <!-- FEATURE: GROUP NAME SEARCH -->
                     <div class="px-3 py-2 border-b border-slate-800 bg-slate-900/40 shrink-0">
                         <div class="flex items-center gap-2 bg-slate-950 border border-slate-800 rounded-xl px-2.5 py-2">
-                            <i class="fa-solid fa-search text-slate-500 text-[10px]"></i>
+                            <i class="fa-solid fa-search text-slate-400 text-[11px]"></i>
                             <input type="text" id="groupsListSearchInput" oninput="filterGroupsList(this.value)" placeholder="Search your groups & channels..." class="flex-1 bg-transparent text-xs focus:outline-none text-slate-200 placeholder-slate-500">
                         </div>
                     </div>
@@ -1476,10 +1488,10 @@
                         <div class="flex items-center space-x-2 min-w-0">
                             <button onclick="closeGroupRoom()" class="text-slate-400 hover:text-white px-2 py-1 rounded-lg bg-slate-800 text-xs transition shrink-0"><i class="fa-solid fa-arrow-left"></i> Back</button>
                             <div class="flex items-center gap-2 min-w-0 cursor-pointer" onclick="openGroupInfoModal(activeGroupId)">
-                                <div id="groupRoomAvatar" class="w-7 h-7 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-white shadow overflow-hidden shrink-0"><i class="fa-solid fa-users text-[10px]"></i></div>
+                                <div id="groupRoomAvatar" class="w-7 h-7 rounded-full bg-[#334155] flex items-center justify-center text-white shadow overflow-hidden shrink-0"><i class="fa-solid fa-users text-[11px]"></i></div>
                                 <div class="min-w-0">
-                                    <span id="groupRoomTitle" class="text-slate-200 font-bold text-xs block truncate hover:text-[#ff4d8d] transition">Group</span>
-                                    <span id="groupRoomMemberCount" class="text-[9px] font-semibold text-slate-500">0 members</span>
+                                    <span id="groupRoomTitle" class="text-slate-200 font-bold text-xs block truncate hover:text-[#60a5fa] transition">Group</span>
+                                    <span id="groupRoomMemberCount" class="text-[11px] font-semibold text-slate-400">0 members</span>
                                 </div>
                             </div>
                         </div>
@@ -1489,7 +1501,7 @@
                         </div>
                     </div>
                     <!-- FEATURE: PINNED MESSAGES IN CHAT -->
-                    <div id="groupPinnedBanner" onclick="cyclePinnedMessage('group')" class="hidden items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-300 text-[10px] cursor-pointer shrink-0 z-20">
+                    <div id="groupPinnedBanner" onclick="cyclePinnedMessage('group')" class="hidden items-center gap-2 px-3 py-1.5 bg-yellow-500/10 border-b border-yellow-500/30 text-yellow-300 text-[11px] cursor-pointer shrink-0 z-20">
                         <i class="fa-solid fa-thumbtack shrink-0"></i>
                         <span id="groupPinnedBannerText" class="truncate flex-1"></span>
                         <button onclick="event.stopPropagation(); unpinCurrentBannerMessage('group')" class="shrink-0 text-yellow-400/70 hover:text-red-400" title="Unpin"><i class="fa-solid fa-xmark"></i></button>
@@ -1497,7 +1509,7 @@
 
                     <div id="groupMessagesBox" class="flex-1 px-3 py-3 overflow-y-auto space-y-2.5 flex flex-col min-h-0"></div>
                     <!-- FEATURE: CHANNELS — shown instead of the input form for non-admin subscribers of a broadcast-only channel -->
-                    <div id="channelReadOnlyNotice" class="hidden p-3 bg-slate-900 border-t border-slate-800 text-center text-[10px] text-slate-500 shrink-0 z-20">
+                    <div id="channelReadOnlyNotice" class="hidden p-3 bg-slate-900 border-t border-slate-800 text-center text-[11px] text-slate-400 shrink-0 z-20">
                         <i class="fa-solid fa-lock mr-1"></i> Only the channel admin can post here.
                     </div>
                     <form id="groupMessageForm" onsubmit="submitGroupMessage(event)" class="p-2 bg-slate-900 border-t border-slate-800 flex items-center gap-1.5 shrink-0 z-20">
@@ -1506,8 +1518,8 @@
                             <input type="file" id="groupMediaFileInput" accept="image/*,video/*" class="hidden" onchange="handleGroupMediaSelect(this)">
                         </label>
                         <input type="text" id="groupMessageInput" placeholder="Message group..." autocomplete="off" 
-                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#35c7ff] text-slate-200">
-                        <button type="submit" class="bg-[#35c7ff] hover:bg-[#35c7ff] px-3.5 py-2 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
+                            class="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-[#38bdf8] text-slate-200">
+                        <button type="submit" class="bg-[#38bdf8] hover:bg-[#38bdf8] px-3.5 py-2 rounded-xl text-xs font-bold transition shadow"><i class="fa-solid fa-paper-plane"></i></button>
                     </form>
                 </div>
             </section>
@@ -1515,23 +1527,23 @@
             <!-- EXPLORE TAB -->
             <section id="section-explore" class="hidden relative flex-1 overflow-y-auto space-y-3 pb-16">
                 <div id="suggestedUsersSection" class="glass-panel rounded-2xl p-3 shadow-lg space-y-2.5 hidden">
-                    <h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-user-plus text-[#ff4d8d]"></i> Suggested For You
+                    <h2 class="text-[11px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus text-[#60a5fa]"></i> Suggested For You
                     </h2>
                     <div id="suggestedUsersContainer" class="flex gap-2.5 overflow-x-auto no-scrollbar pb-1"></div>
                 </div>
                 <div class="glass-panel rounded-2xl p-3 shadow-lg space-y-2.5">
-                    <h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
-                        <i class="fa-solid fa-hashtag text-[#ff4d8d]"></i> Trending Hashtags
+                    <h2 class="text-[11px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
+                        <i class="fa-solid fa-hashtag text-[#60a5fa]"></i> Trending Hashtags
                     </h2>
                     <div id="trendingHashtagsContainer" class="flex flex-wrap gap-1.5"></div>
                 </div>
                 <div class="glass-panel rounded-2xl p-3 shadow-lg space-y-2.5">
                     <div class="flex items-center justify-between">
-                        <h2 class="text-[10px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
-                            <i class="fa-solid fa-fire text-[#ff4d8d]"></i> <span id="exploreHeading">Top Posts</span>
+                        <h2 class="text-[11px] font-bold tracking-wide text-slate-400 flex items-center gap-1.5">
+                            <i class="fa-solid fa-fire text-[#60a5fa]"></i> <span id="exploreHeading">Top Posts</span>
                         </h2>
-                        <button id="clearExploreFilterBtn" onclick="clearExploreFilter()" class="hidden text-[10px] text-[#ff4d8d] font-bold">Clear filter ✕</button>
+                        <button id="clearExploreFilterBtn" onclick="clearExploreFilter()" class="hidden text-[11px] text-[#60a5fa] font-bold">Clear filter ✕</button>
                     </div>
                     <div id="exploreGridContainer" class="grid grid-cols-2 gap-2"></div>
                 </div>
@@ -1541,7 +1553,9 @@
     </div>
 
     <script src="supabase-config.js"></script>
+    <script src="consent.js"></script>
     <script src="drive-storage.js"></script>
+    <script src="text-motion.js"></script>
     <script src="app.js"></script>
 </body>
 </html>

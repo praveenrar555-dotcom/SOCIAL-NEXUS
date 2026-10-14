@@ -1,13 +1,13 @@
 {
   "name": "SocialNexus",
   "short_name": "Nexus",
-  "description": "One feed. Three styles. Real-time omni-social app.",
+  "description": "Posts, reels, stories, chat and calls in one app.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#050509",
-  "theme_color": "#050509",
+  "background_color": "#0b0d10",
+  "theme_color": "#0b0d10",
   "icons": [
     {
       "src": "icons/icon-192.png",

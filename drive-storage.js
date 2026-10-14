@@ -38,7 +38,12 @@
     function hasValidToken() { return !!accessToken && Date.now() < tokenExpiresAt - 30000; }
     function wasConnected() { return lsGet(LS_CONNECTED) === '1'; }
 
-    function loadGis() {
+    async function loadGis() {
+        // The Google sign-in script is optional: it only loads if the user agreed in the consent banner.
+        if (window.NexusConsent && !NexusConsent.has('google')) {
+            const ok = await NexusConsent.ask('google');
+            if (!ok) throw new Error('Google sign-in was not allowed in your cookie settings');
+        }
         return new Promise((resolve, reject) => {
             if (window.google && google.accounts && google.accounts.oauth2) return resolve();
             const existing = document.getElementById('gisScript');

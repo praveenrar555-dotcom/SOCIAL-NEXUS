@@ -116,9 +116,9 @@
         // (Post-persona, Twit-persona, Channel-persona), each with its own tone + bio.
         // Reuses the existing post "platform" field (Instagram/Twitter/Telegram) as the persona map.
         const PERSONAS = [
-            { key: 'post', label: 'Post-Persona', emoji: '📸', platform: 'Instagram', color: '#ff4d8d' },
-            { key: 'twit', label: 'Twit-Persona', emoji: '🐦', platform: 'Twitter', color: '#35c7ff' },
-            { key: 'channel', label: 'Channel-Persona', emoji: '📢', platform: 'Telegram', color: '#9d7bff' }
+            { key: 'post', label: 'Post-Persona', emoji: '📸', platform: 'Instagram', color: '#3b82f6' },
+            { key: 'twit', label: 'Twit-Persona', emoji: '🐦', platform: 'Twitter', color: '#38bdf8' },
+            { key: 'channel', label: 'Channel-Persona', emoji: '📢', platform: 'Telegram', color: '#14b8a6' }
         ];
         const PERSONA_TONE_PRESETS = ['Chill 😎', 'Funny 😂', 'Professional 💼', 'Aesthetic ✨', 'Motivational 🔥', 'Savage 😈', 'Wholesome 🌸'];
         function personaForKey(key) { return PERSONAS.find(p => p.key === key) || PERSONAS[0]; }
@@ -307,12 +307,12 @@
                 if (tab === 'signup') {
                     signupForm.classList.remove('hidden');
                     loginForm.classList.add('hidden');
-                    signupBtn.className = 'flex-1 py-1.5 rounded-lg transition bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white';
+                    signupBtn.className = 'flex-1 py-1.5 rounded-lg transition bg-[#2563eb] text-white';
                     loginBtn.className = 'flex-1 py-1.5 rounded-lg transition text-slate-400';
                 } else {
                     loginForm.classList.remove('hidden');
                     signupForm.classList.add('hidden');
-                    loginBtn.className = 'flex-1 py-1.5 rounded-lg transition bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white';
+                    loginBtn.className = 'flex-1 py-1.5 rounded-lg transition bg-[#2563eb] text-white';
                     signupBtn.className = 'flex-1 py-1.5 rounded-lg transition text-slate-400';
                 }
             }
@@ -676,7 +676,7 @@
             if (!input || !label) return;
             const remaining = 280 - input.value.length;
             label.innerText = remaining;
-            label.className = remaining <= 20 ? 'text-[9px] text-red-400 font-bold' : 'text-[9px] text-slate-500';
+            label.className = remaining <= 20 ? 'text-[11px] text-red-400 font-bold' : 'text-[11px] text-slate-400';
         }
         window.updateTwitCharCount = updateTwitCharCount;
 
@@ -896,16 +896,16 @@
             const container = document.getElementById('inAppNotificationContainer');
             if (container) {
                 const banner = document.createElement('div');
-                banner.className = "pointer-events-auto w-full max-w-sm glass-panel bg-slate-900/95 border border-[#ff4d8d]/40 rounded-2xl p-3 shadow-2xl flex items-center space-x-3 animate-slide-down cursor-pointer";
+                banner.className = "pointer-events-auto w-full max-w-sm glass-panel bg-slate-900/95 border border-[#3b82f6]/40 rounded-2xl p-3 shadow-2xl flex items-center space-x-3 animate-slide-down cursor-pointer";
                 const av = globalProfilesCache[senderId];
                 banner.innerHTML = `
-                    <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-xs text-white shrink-0 overflow-hidden shadow">
+                    <div class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white shrink-0 overflow-hidden shadow">
                         ${av ? `<img src="${av}" class="w-full h-full object-cover">` : senderId.charAt(0).toUpperCase()}
                     </div>
                     <div class="flex-1 min-w-0">
                         <div class="flex justify-between items-center">
                             <h4 class="text-xs font-bold text-white truncate">${senderId}</h4>
-                            <span class="text-[9px] text-[#ff4d8d] font-semibold">Just now</span>
+                            <span class="text-[11px] text-[#60a5fa] font-semibold">Just now</span>
                         </div>
                         <p class="text-[11px] text-slate-300 truncate">${messageText}</p>
                     </div>
@@ -942,14 +942,14 @@
             const container = document.getElementById('inAppNotificationContainer');
             if (!container) return;
             const banner = document.createElement('div');
-            banner.className = "pointer-events-auto w-full max-w-sm glass-panel bg-slate-900/95 border border-[#9d7bff]/40 rounded-2xl p-2.5 shadow-2xl animate-slide-down text-xs text-slate-200";
-            banner.innerHTML = `<p class="font-bold text-[#ff4d8d]">${title}</p><p class="text-slate-300 mt-0.5">${body}</p>`;
+            banner.className = "pointer-events-auto w-full max-w-sm glass-panel bg-slate-900/95 border border-[#14b8a6]/40 rounded-2xl p-2.5 shadow-2xl animate-slide-down text-xs text-slate-200";
+            banner.innerHTML = `<p class="font-bold text-[#60a5fa]">${title}</p><p class="text-slate-300 mt-0.5">${body}</p>`;
             container.appendChild(banner);
             setTimeout(() => { if (banner.parentNode) banner.remove(); }, 4000);
         }
 
         // Sundar in-app alert banner — replaces ugly native alert() popups everywhere in the app.
-        // type: 'error' (red) | 'success' (green) | 'info' (purple, default) | 'warning' (amber)
+        // type: 'error' (red) | 'success' (green) | 'info' (blue, default) | 'warning' (amber)
         function showAlertBanner(message, type = 'error') {
             const container = document.getElementById('inAppNotificationContainer');
             if (!container) { console.warn('showAlertBanner: container missing, message was:', message); return; }
@@ -957,7 +957,7 @@
             const styles = {
                 error: { border: 'border-red-500/40', icon: 'fa-circle-exclamation', iconColor: 'text-red-400' },
                 success: { border: 'border-emerald-500/40', icon: 'fa-circle-check', iconColor: 'text-emerald-400' },
-                info: { border: 'border-[#9d7bff]/40', icon: 'fa-circle-info', iconColor: 'text-[#9d7bff]' },
+                info: { border: 'border-[#14b8a6]/40', icon: 'fa-circle-info', iconColor: 'text-[#2dd4bf]' },
                 warning: { border: 'border-amber-500/40', icon: 'fa-triangle-exclamation', iconColor: 'text-amber-400' },
             };
             const s = styles[type] || styles.error;
@@ -967,7 +967,7 @@
             banner.innerHTML = `
                 <i class="fa-solid ${s.icon} ${s.iconColor} text-sm mt-0.5 shrink-0"></i>
                 <p class="flex-1 leading-snug">${message}</p>
-                <button class="text-slate-500 hover:text-white shrink-0 -mt-0.5" aria-label="Dismiss"><i class="fa-solid fa-xmark text-xs"></i></button>
+                <button class="text-slate-400 hover:text-white shrink-0 -mt-0.5" aria-label="Dismiss"><i class="fa-solid fa-xmark text-xs"></i></button>
             `;
             banner.querySelector('button').onclick = () => banner.remove();
             container.appendChild(banner);
@@ -1416,7 +1416,7 @@
         // username label in the app so verified users are recognizable everywhere.
         function verifiedBadgeHtml(username) {
             return isUserVerified(username)
-                ? `<i class="fa-solid fa-circle-check text-[#35c7ff]" title="Verified"></i>`
+                ? `<i class="fa-solid fa-circle-check text-[#38bdf8]" title="Verified"></i>`
                 : '';
         }
 
@@ -1424,7 +1424,7 @@
         // chat list, chat header) so the app's owner account is always clearly labeled.
         function adminBadgeHtml(username) {
             return username === NEXUS_ADMIN_USERNAME
-                ? `<span class="text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white shrink-0">Admin</span>`
+                ? `<span class="text-[11px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-full bg-[#2563eb] text-white shrink-0">Admin</span>`
                 : '';
         }
 
@@ -1458,7 +1458,7 @@
             actionBtn.innerText = currentlyVerified ? 'Remove Badge' : 'Grant Badge';
             actionBtn.className = currentlyVerified
                 ? "w-full bg-gradient-to-r from-red-500 to-orange-500 font-bold py-2.5 rounded-xl text-xs text-white transition"
-                : "w-full bg-gradient-to-r from-[#35c7ff] to-[#9d7bff] font-bold py-2.5 rounded-xl text-xs text-white transition";
+                : "w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition";
             input.value = '';
             errEl.classList.add('hidden');
             errEl.innerText = '';
@@ -1683,7 +1683,7 @@
             const pending = globalMessageRequestsCache.filter(r => r.target === currentUser && r.status === 'pending');
 
             if (pending.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">Koi pending message request nahi hai.</p>`;
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">Koi pending message request nahi hai.</p>`;
                 return;
             }
 
@@ -1692,12 +1692,12 @@
                 return `
                     <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl p-2.5">
                         <div class="flex items-center space-x-2 min-w-0 cursor-pointer" onclick="closeMessageRequestsModal(); selectChatUser('${r.requester}', true)">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : r.requester.charAt(0).toUpperCase()}</div>
+                            <div class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : r.requester.charAt(0).toUpperCase()}</div>
                             <span class="text-xs font-bold text-slate-200 truncate">${r.requester}</span>
                         </div>
                         <div class="flex gap-1.5 shrink-0">
-                            <button onclick="approveMessageRequest('${r.id}')" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
-                            <button onclick="declineMessageRequest('${r.id}', '${r.requester}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Decline</button>
+                            <button onclick="approveMessageRequest('${r.id}')" class="bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
+                            <button onclick="declineMessageRequest('${r.id}', '${r.requester}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Decline</button>
                         </div>
                     </div>
                 `;
@@ -1801,24 +1801,24 @@
             const container = document.getElementById('accountSwitcherList');
             const accounts = getSavedAccounts();
             if (accounts.length === 0) {
-                container.innerHTML = `<div class="text-center text-[11px] text-slate-500 py-4">No saved accounts yet.</div>`;
+                container.innerHTML = `<div class="text-center text-[11px] text-slate-400 py-4">No saved accounts yet.</div>`;
                 return;
             }
             container.innerHTML = accounts.map(u => {
                 const isActive = u === currentUser;
                 const avatar = globalProfilesCache ? globalProfilesCache[u] : null;
                 return `
-                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl ${isActive ? 'bg-[#ff4d8d]/15 border border-[#ff4d8d]/40' : 'bg-slate-900 border border-slate-800 hover:border-[#9d7bff]/50'} transition">
+                    <div class="flex items-center justify-between gap-2 p-2.5 rounded-xl ${isActive ? 'bg-[#2563eb]/15 border border-[#3b82f6]/40' : 'bg-slate-900 border border-slate-800 hover:border-[#14b8a6]/50'} transition">
                         <div onclick="switchToAccount('${u}')" class="flex items-center gap-2.5 flex-1 min-w-0 cursor-pointer">
-                            <div class="w-9 h-9 shrink-0 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden">
+                            <div class="w-9 h-9 shrink-0 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden">
                                 ${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}
                             </div>
                             <div class="min-w-0">
                                 <p class="text-xs font-bold text-slate-200 truncate">${u}</p>
-                                ${isActive ? '<p class="text-[9px] font-bold text-[#ff4d8d]">Active now</p>' : '<p class="text-[9px] text-slate-500"><i class="fa-solid fa-lock mr-1"></i>Tap to switch</p>'}
+                                ${isActive ? '<p class="text-[11px] font-bold text-[#60a5fa]">Active now</p>' : '<p class="text-[11px] text-slate-400"><i class="fa-solid fa-lock mr-1"></i>Tap to switch</p>'}
                             </div>
                         </div>
-                        ${!isActive ? `<button onclick="removeSavedAccount('${u}')" class="text-slate-500 hover:text-red-400 text-xs shrink-0 p-1.5" title="Remove from list"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                        ${!isActive ? `<button onclick="removeSavedAccount('${u}')" class="text-slate-400 hover:text-red-400 text-xs shrink-0 p-1.5" title="Remove from list"><i class="fa-solid fa-xmark"></i></button>` : ''}
                     </div>
                 `;
             }).join('');
@@ -1966,7 +1966,7 @@
             });
 
             document.getElementById('section-' + tab).classList.remove('hidden');
-            document.getElementById('tab-' + tab).className = "px-2 py-1 rounded-md text-[11px] font-bold fast-transition bg-gradient-to-r from-[#ff4d8d] to-[#9d7bff] text-white shadow shrink-0";
+            document.getElementById('tab-' + tab).className = "px-2 py-1 rounded-md text-[11px] font-bold fast-transition bg-[#2563eb] text-white shadow shrink-0";
             applyPageAccentFromStorage(tab); // FEATURE: PAGE CUSTOMIZATION
             
             if(tab === 'chat') {
@@ -2089,7 +2089,7 @@
             document.getElementById('userCountBadge').innerText = usersArray.length;
 
             if (usersArray.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No users found.</div>`;
+                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No users found.</div>`;
                 return;
             }
 
@@ -2099,31 +2099,31 @@
                 // FEATURE: MESSAGE REQUESTS — surface pending request state right in the chat list
                 let reqLabel = '';
                 if (isPendingIncomingRequest(username)) {
-                    reqLabel = `<p class="text-[9px] font-bold text-[#ff4d8d]"><i class="fa-solid fa-envelope mr-1"></i>Message request</p>`;
+                    reqLabel = `<p class="text-[11px] font-bold text-[#60a5fa]"><i class="fa-solid fa-envelope mr-1"></i>Message request</p>`;
                 } else if (isPendingOutgoingRequest(username)) {
-                    reqLabel = `<p class="text-[9px] text-slate-500 italic"><i class="fa-solid fa-clock mr-1"></i>Requested</p>`;
+                    reqLabel = `<p class="text-[11px] text-slate-400 italic"><i class="fa-solid fa-clock mr-1"></i>Requested</p>`;
                 }
                 // FEATURE: UNREAD MESSAGE COUNT — small pill next to the sender's name showing
                 // how many unread messages they've sent, e.g. "username [3]". Bold white text
                 // for anyone with unread messages so the row stands out, like Instagram/WhatsApp.
                 const unreadCount = unreadCountsBySender[username] || 0;
                 const unreadBadgeHtml = unreadCount > 0
-                    ? `<span class="ml-1 shrink-0 bg-[#ff4d8d] text-white text-[9px] font-bold rounded-full px-1.5 py-0.5 leading-none">${unreadCount > 99 ? '99+' : unreadCount}</span>`
+                    ? `<span class="ml-1 shrink-0 bg-[#2563eb] text-white text-[11px] font-bold rounded-full px-1.5 py-0.5 leading-none">${unreadCount > 99 ? '99+' : unreadCount}</span>`
                     : '';
 
                 const item = document.createElement('div');
                 item.className = `p-3 flex items-center space-x-3 cursor-pointer hover:bg-slate-800/60 fast-transition`;
                 item.innerHTML = `
-                    <div onclick="event.stopPropagation(); handleUserClick('${username}')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden relative">
+                    <div onclick="event.stopPropagation(); handleUserClick('${username}')" class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden relative">
                         ${avatarUrl ? `<img src="${avatarUrl}" class="w-full h-full object-cover">` : username.charAt(0).toUpperCase()}
                         ${isOnline ? `<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>` : ''}
                     </div>
                     <div class="flex-1 min-w-0" onclick="selectChatUser('${username}', true)">
                         <p class="text-xs font-bold ${unreadCount > 0 ? 'text-white' : 'text-slate-200'} truncate flex items-center gap-1">${username} ${verifiedBadgeHtml(username)} ${adminBadgeHtml(username)} ${unreadBadgeHtml}</p>
-                        ${reqLabel || `<p class="text-[10px] ${isOnline ? 'text-emerald-400' : 'text-slate-500'} flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-slate-600'} inline-block"></span> ${isOnline ? 'Online' : 'Offline'}</p>`}
+                        ${reqLabel || `<p class="text-[11px] ${isOnline ? 'text-emerald-400' : 'text-slate-400'} flex items-center gap-1"><span class="w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-emerald-400' : 'bg-slate-600'} inline-block"></span> ${isOnline ? 'Online' : 'Offline'}</p>`}
                     </div>
-                    <button onclick="event.stopPropagation(); openDeleteChatModal('${username}')" title="Delete Chat" class="text-slate-600 hover:text-red-400 p-1.5 shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
-                    <i class="fa-solid fa-chevron-right text-xs text-slate-600"></i>
+                    <button onclick="event.stopPropagation(); openDeleteChatModal('${username}')" title="Delete Chat" class="text-slate-400 hover:text-red-400 p-1.5 shrink-0"><i class="fa-solid fa-trash text-xs"></i></button>
+                    <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
                 `;
                 item.onclick = () => selectChatUser(username, true);
                 container.appendChild(item);
@@ -2172,7 +2172,7 @@
             const users = [...new Set(allPossible)].filter(u => u && u !== currentUser && u.toLowerCase().includes(filter.toLowerCase()));
 
             if(users.length === 0) {
-                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No users found for calls.</div>`;
+                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No users found for calls.</div>`;
                 return;
             }
 
@@ -2181,12 +2181,12 @@
                 return `
                     <div class="glass-panel rounded-2xl p-3 flex items-center justify-between text-xs">
                         <div class="flex items-center space-x-2.5 cursor-pointer" onclick="openProfile('${u}')">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden shadow">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
+                            <div class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden shadow">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
                             <span class="font-bold text-slate-200">${u}</span>
                         </div>
                         <div class="flex gap-1.5">
                             <button onclick="startRealCall('${u}', 'audio')" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 shadow"><i class="fa-solid fa-phone"></i> Audio</button>
-                            <button onclick="startRealCall('${u}', 'video')" class="bg-[#9d7bff] hover:bg-[#9d7bff] text-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 shadow"><i class="fa-solid fa-video"></i> Video</button>
+                            <button onclick="startRealCall('${u}', 'video')" class="bg-[#0f766e] hover:bg-[#0f766e] text-white px-3 py-1.5 rounded-xl font-bold transition flex items-center gap-1 shadow"><i class="fa-solid fa-video"></i> Video</button>
                         </div>
                     </div>
                 `;
@@ -2200,7 +2200,7 @@
             const newView = document.getElementById('callNewSubView');
             const historyView = document.getElementById('callHistorySubView');
 
-            const activeClass = "flex-1 py-1.5 rounded-xl text-[11px] font-bold transition bg-[#ff4d8d] text-white shadow";
+            const activeClass = "flex-1 py-1.5 rounded-xl text-[11px] font-bold transition bg-[#2563eb] text-white shadow";
             const inactiveClass = "flex-1 py-1.5 rounded-xl text-[11px] font-bold transition text-slate-400 hover:text-slate-200";
 
             if (tab === 'history') {
@@ -2221,7 +2221,7 @@
         async function loadCallHistory() {
             const container = document.getElementById('callHistoryContainer');
             if (!container) return;
-            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">Loading call history...</div>`;
+            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Loading call history...</div>`;
 
             try {
                 const { data: callLogs, error } = await supabaseClient
@@ -2233,7 +2233,7 @@
                     .limit(50);
 
                 if (error || !callLogs || callLogs.length === 0) {
-                    container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">No call history yet.</div>`;
+                    container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">No call history yet.</div>`;
                     return;
                 }
 
@@ -2248,25 +2248,25 @@
                     return `
                         <div class="glass-panel rounded-2xl p-3 flex items-center justify-between text-xs">
                             <div class="flex items-center space-x-2.5 cursor-pointer" onclick="openProfile('${otherUser}')">
-                                <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden shadow">${av ? `<img src="${av}" class="w-full h-full object-cover">` : (otherUser ? otherUser.charAt(0).toUpperCase() : '?')}</div>
+                                <div class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden shadow">${av ? `<img src="${av}" class="w-full h-full object-cover">` : (otherUser ? otherUser.charAt(0).toUpperCase() : '?')}</div>
                                 <div>
                                     <p class="font-bold text-slate-200">${otherUser}</p>
-                                    <p class="text-[10px] ${isOutgoing ? 'text-[#35c7ff]' : 'text-emerald-400'} flex items-center gap-1">
+                                    <p class="text-[11px] ${isOutgoing ? 'text-[#38bdf8]' : 'text-emerald-400'} flex items-center gap-1">
                                         <i class="fa-solid ${isOutgoing ? 'fa-arrow-up-right' : 'fa-arrow-down-left'}"></i>
                                         ${isOutgoing ? 'Outgoing' : 'Incoming'} · <i class="fa-solid ${typeIcon}"></i> ${log.call_type === 'video' ? 'Video' : 'Audio'}
                                     </p>
                                 </div>
                             </div>
                             <div class="flex flex-col items-end gap-1.5">
-                                <span class="text-[10px] text-slate-500">${timeLabel}</span>
-                                <button onclick="startRealCall('${otherUser}', '${log.call_type}')" class="bg-slate-800 hover:bg-slate-700 text-white w-7 h-7 rounded-full flex items-center justify-center transition"><i class="fa-solid ${typeIcon} text-[10px]"></i></button>
+                                <span class="text-[11px] text-slate-400">${timeLabel}</span>
+                                <button onclick="startRealCall('${otherUser}', '${log.call_type}')" class="bg-slate-800 hover:bg-slate-700 text-white w-7 h-7 rounded-full flex items-center justify-center transition"><i class="fa-solid ${typeIcon} text-[11px]"></i></button>
                             </div>
                         </div>
                     `;
                 }).join('');
             } catch (e) {
                 console.error(e);
-                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-500">Could not load call history.</div>`;
+                container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400">Could not load call history.</div>`;
             }
         }
 
@@ -2676,7 +2676,7 @@
             const postMatches = globalPostsCache.filter(p => p.content && p.content.toLowerCase().includes(q) && !isBlockedWith(p.username) && !isPrivateAndNotFollowing(p.username)).slice(0, 8);
 
             if (userMatches.length === 0 && hashtagMatches.length === 0 && postMatches.length === 0) {
-                dropdown.innerHTML = `<div class="p-3 text-xs text-slate-500 text-center">No results found</div>`;
+                dropdown.innerHTML = `<div class="p-3 text-xs text-slate-400 text-center">No results found</div>`;
                 dropdown.classList.remove('hidden');
                 return;
             }
@@ -2684,12 +2684,12 @@
             let html = '';
 
             if (userMatches.length > 0) {
-                html += `<div class="px-2.5 pt-2 pb-1 text-[9px] font-bold tracking-wide text-slate-500">Users</div>`;
+                html += `<div class="px-2.5 pt-2 pb-1 text-[11px] font-bold tracking-wide text-slate-400">Users</div>`;
                 userMatches.forEach(u => {
                     const av = globalProfilesCache[u];
                     html += `
                         <div onclick="handleUserClick('${u}'); ${closeDropdown}" class="p-2.5 flex items-center space-x-2.5 cursor-pointer hover:bg-slate-800/80 text-xs font-bold text-slate-200">
-                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-[10px] text-white overflow-hidden">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
+                            <div class="w-6 h-6 rounded-full bg-[#334155] flex items-center justify-center text-[11px] text-white overflow-hidden">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
                             <span class="flex items-center gap-1">${u} ${verifiedBadgeHtml(u)} ${adminBadgeHtml(u)} ${u === currentUser ? '(You)' : ''}</span>
                         </div>
                     `;
@@ -2697,24 +2697,24 @@
             }
 
             if (hashtagMatches.length > 0) {
-                html += `<div class="px-2.5 pt-2 pb-1 text-[9px] font-bold tracking-wide text-slate-500 border-t border-slate-800">Hashtags</div>`;
+                html += `<div class="px-2.5 pt-2 pb-1 text-[11px] font-bold tracking-wide text-slate-400 border-t border-slate-800">Hashtags</div>`;
                 hashtagMatches.slice(0, 8).forEach(tag => {
                     const count = globalPostsCache.filter(p => extractHashtags(p.content).includes(tag)).length;
                     html += `
-                        <div onclick="jumpToExploreHashtag('${tag}'); ${closeDropdown}" class="p-2.5 flex items-center space-x-2.5 cursor-pointer hover:bg-slate-800/80 text-xs font-bold text-[#35c7ff]">
-                            <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[10px]"><i class="fa-solid fa-hashtag"></i></div>
-                            <span>${tag} <span class="text-slate-500 font-normal">· ${count} post${count === 1 ? '' : 's'}</span></span>
+                        <div onclick="jumpToExploreHashtag('${tag}'); ${closeDropdown}" class="p-2.5 flex items-center space-x-2.5 cursor-pointer hover:bg-slate-800/80 text-xs font-bold text-[#38bdf8]">
+                            <div class="w-6 h-6 rounded-full bg-slate-800 flex items-center justify-center text-[11px]"><i class="fa-solid fa-hashtag"></i></div>
+                            <span>${tag} <span class="text-slate-400 font-normal">· ${count} post${count === 1 ? '' : 's'}</span></span>
                         </div>
                     `;
                 });
             }
 
             if (postMatches.length > 0) {
-                html += `<div class="px-2.5 pt-2 pb-1 text-[9px] font-bold tracking-wide text-slate-500 border-t border-slate-800">Posts</div>`;
+                html += `<div class="px-2.5 pt-2 pb-1 text-[11px] font-bold tracking-wide text-slate-400 border-t border-slate-800">Posts</div>`;
                 postMatches.forEach(p => {
                     html += `
                         <div onclick="openPostDetailModal('${p.id}'); ${closeDropdown}" class="p-2.5 flex items-center space-x-2.5 cursor-pointer hover:bg-slate-800/80 text-xs text-slate-300">
-                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-[10px] text-white overflow-hidden shrink-0">${globalProfilesCache[p.username] ? `<img src="${globalProfilesCache[p.username]}" class="w-full h-full object-cover">` : p.username.charAt(0).toUpperCase()}</div>
+                            <div class="w-6 h-6 rounded-full bg-[#334155] flex items-center justify-center text-[11px] text-white overflow-hidden shrink-0">${globalProfilesCache[p.username] ? `<img src="${globalProfilesCache[p.username]}" class="w-full h-full object-cover">` : p.username.charAt(0).toUpperCase()}</div>
                             <span class="truncate"><span class="font-bold text-slate-200">${p.username}:</span> ${p.content}</span>
                         </div>
                     `;
@@ -2851,7 +2851,7 @@
                     verifyBtn.classList.remove('hidden');
                     verifyBtn.classList.add('flex');
                     const verified = isUserVerified(username);
-                    verifyBtn.className = `w-full py-2 rounded-xl text-xs font-bold transition border flex items-center justify-center gap-1.5 ${verified ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-[#35c7ff]/10 border-[#35c7ff]/40 text-[#35c7ff] hover:bg-[#35c7ff]/20'}`;
+                    verifyBtn.className = `w-full py-2 rounded-xl text-xs font-bold transition border flex items-center justify-center gap-1.5 ${verified ? 'bg-slate-800 border-slate-700 text-slate-300 hover:bg-slate-700' : 'bg-[#38bdf8]/10 border-[#38bdf8]/40 text-[#38bdf8] hover:bg-[#38bdf8]/20'}`;
                     verifyBtn.innerHTML = verified
                         ? `<i class="fa-solid fa-circle-xmark"></i> Remove Blue Tick`
                         : `<i class="fa-solid fa-circle-check"></i> Give Blue Tick`;
@@ -2924,7 +2924,7 @@
                 profileFlipped = !profileFlipped;
                 front.classList.toggle('hidden', profileFlipped);
                 back.classList.toggle('hidden', !profileFlipped);
-                if (icon) icon.className = profileFlipped ? 'fa-solid fa-rotate-left text-xs text-[#ff4d8d]' : 'fa-solid fa-rotate text-xs';
+                if (icon) icon.className = profileFlipped ? 'fa-solid fa-rotate-left text-xs text-[#60a5fa]' : 'fa-solid fa-rotate text-xs';
                 if (profileFlipped) renderNewFeaturesPanel(viewingProfileUsername, viewingProfileUsername === currentUser);
 
                 card.style.transform = 'rotateY(-90deg)';
@@ -2972,9 +2972,9 @@
                     <div class="w-8 h-8 rounded-xl bg-red-500/15 text-red-400 flex items-center justify-center shrink-0"><i class="fa-solid fa-user-slash"></i></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-[11px] font-bold text-slate-300">Blocked Users${count ? ` (${count})` : ''}</p>
-                        <p class="text-[9px] text-slate-500">Manage jinhe tumne block kiya hai</p>
+                        <p class="text-[11px] text-slate-400">Manage jinhe tumne block kiya hai</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                 </button>
             `;
         }
@@ -3004,12 +3004,12 @@
             if (!isMe) { wrap.innerHTML = ''; return; }
             wrap.innerHTML = `
                 <button onclick="openMyActivityModal()" class="w-full flex items-center gap-2.5 text-left">
-                    <div class="w-8 h-8 rounded-xl bg-[#9d7bff]/15 text-[#9d7bff] flex items-center justify-center shrink-0"><i class="fa-solid fa-clock-rotate-left"></i></div>
+                    <div class="w-8 h-8 rounded-xl bg-[#0f766e]/15 text-[#2dd4bf] flex items-center justify-center shrink-0"><i class="fa-solid fa-clock-rotate-left"></i></div>
                     <div class="flex-1 min-w-0">
                         <p class="text-[11px] font-bold text-slate-300">My Activity</p>
-                        <p class="text-[9px] text-slate-500">Likes, comments, saves &amp; search history</p>
+                        <p class="text-[11px] text-slate-400">Likes, comments, saves &amp; search history</p>
                     </div>
-                    <i class="fa-solid fa-chevron-right text-slate-600 text-xs"></i>
+                    <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                 </button>
             `;
         }
@@ -3045,7 +3045,7 @@
             const showClear = mode === 'search';
             clearBtn.classList.toggle('hidden', !showClear);
             spacer.classList.toggle('hidden', showClear);
-            document.getElementById('activityListBody').innerHTML = `<div class="text-center text-xs text-slate-500 py-14"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading...</div>`;
+            document.getElementById('activityListBody').innerHTML = `<div class="text-center text-xs text-slate-400 py-14"><i class="fa-solid fa-spinner fa-spin mr-1"></i> Loading...</div>`;
             document.getElementById('activityListModal').classList.remove('hidden');
             renderActivityList(mode);
         }
@@ -3062,12 +3062,12 @@
                 return `
                     <div onclick="openPostDetailModal('${post.id}')" class="aspect-square bg-slate-900 border border-slate-800/80 rounded-sm overflow-hidden relative cursor-pointer group">
                         ${isVideo ?
-                            `<video src="${post.image_url}" class="w-full h-full object-cover"></video><div class="absolute top-1.5 right-1.5 bg-black/60 px-1.5 py-0.5 rounded text-[9px] text-white"><i class="fa-solid fa-clapperboard"></i></div>` :
+                            `<video src="${post.image_url}" class="w-full h-full object-cover"></video><div class="absolute top-1.5 right-1.5 bg-black/60 px-1.5 py-0.5 rounded text-[11px] text-white"><i class="fa-solid fa-clapperboard"></i></div>` :
                             post.image_url ?
                                 `<img src="${post.image_url}" class="w-full h-full object-cover">` :
-                                `<div class="w-full h-full p-2 flex items-center justify-center text-[10px] text-slate-300 text-center bg-slate-950">${(post.content || '').substring(0, 40)}...</div>`
+                                `<div class="w-full h-full p-2 flex items-center justify-center text-[11px] text-slate-300 text-center bg-slate-950">${(post.content || '').substring(0, 40)}...</div>`
                         }
-                        <div class="absolute top-1.5 left-1.5 text-[9px] text-slate-300 bg-black/50 px-1.5 py-0.5 rounded-full truncate max-w-[90%]">@${post.username}</div>
+                        <div class="absolute top-1.5 left-1.5 text-[11px] text-slate-300 bg-black/50 px-1.5 py-0.5 rounded-full truncate max-w-[90%]">@${post.username}</div>
                         <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition flex items-center justify-center space-x-3 text-white text-xs font-bold">
                             <span><i class="fa-solid fa-heart mr-1"></i>${globalLikesCache.filter(l => l.post_id === post.id).length}</span>
                             <span><i class="fa-solid fa-comment mr-1"></i>${globalCommentsCache.filter(c => c.post_id === post.id).length}</span>
@@ -3091,12 +3091,12 @@
                 const posts = uniqueIds.map(id => globalPostsCache.find(p => String(p.id) === id)).filter(Boolean);
 
                 if (mode === 'saved' && !savedPostsFeatureAvailable) {
-                    body.innerHTML = `<p class="text-[10px] text-amber-400 text-center py-10"><i class="fa-solid fa-triangle-exclamation mr-1"></i>saved_posts table setup baaki hai Supabase me.</p>`;
+                    body.innerHTML = `<p class="text-[11px] text-amber-400 text-center py-10"><i class="fa-solid fa-triangle-exclamation mr-1"></i>saved_posts table setup baaki hai Supabase me.</p>`;
                     return;
                 }
 
                 body.innerHTML = posts.length === 0
-                    ? `<p class="text-center text-xs text-slate-500 py-14">${meta.empty}</p>`
+                    ? `<p class="text-center text-xs text-slate-400 py-14">${meta.empty}</p>`
                     : buildActivityPostsGridHtml(posts);
                 return;
             }
@@ -3117,22 +3117,22 @@
                 } catch (err) {
                     console.error("renderActivityList(search) failed (search_history table setup baaki hai?):", err);
                     searchHistoryFeatureAvailable = false;
-                    body.innerHTML = `<p class="text-[10px] text-amber-400 text-center py-10"><i class="fa-solid fa-triangle-exclamation mr-1"></i>search_history table setup baaki hai Supabase me.</p>`;
+                    body.innerHTML = `<p class="text-[11px] text-amber-400 text-center py-10"><i class="fa-solid fa-triangle-exclamation mr-1"></i>search_history table setup baaki hai Supabase me.</p>`;
                     return;
                 }
 
                 if (searchHistoryCache.length === 0) {
-                    body.innerHTML = `<p class="text-center text-xs text-slate-500 py-14">${meta.empty}</p>`;
+                    body.innerHTML = `<p class="text-center text-xs text-slate-400 py-14">${meta.empty}</p>`;
                     return;
                 }
 
                 body.innerHTML = `<div class="space-y-1.5">${searchHistoryCache.map(row => `
                     <div class="flex items-center justify-between bg-slate-950/60 rounded-xl px-3 py-2.5 gap-2">
                         <div onclick="reRunSearchFromHistory('${row.query.replace(/'/g, "\\'")}')" class="flex items-center gap-2.5 min-w-0 cursor-pointer flex-1">
-                            <i class="fa-solid fa-clock-rotate-left text-slate-500 text-xs shrink-0"></i>
+                            <i class="fa-solid fa-clock-rotate-left text-slate-400 text-xs shrink-0"></i>
                             <span class="text-xs text-slate-200 truncate">${row.query}</span>
                         </div>
-                        <button onclick="deleteSearchHistoryItem('${row.id}')" class="shrink-0 text-slate-500 hover:text-red-400 text-xs transition px-1"><i class="fa-solid fa-xmark"></i></button>
+                        <button onclick="deleteSearchHistoryItem('${row.id}')" class="shrink-0 text-slate-400 hover:text-red-400 text-xs transition px-1"><i class="fa-solid fa-xmark"></i></button>
                     </div>
                 `).join('')}</div>`;
                 return;
@@ -3146,12 +3146,12 @@
                     blocked = data || [];
                 } catch (err) {
                     console.error("renderActivityList(blocked) failed:", err);
-                    body.innerHTML = `<p class="text-[10px] text-amber-400 text-center py-10"><i class="fa-solid fa-triangle-exclamation mr-1"></i>blocked_users table/RLS check karo Supabase me.</p>`;
+                    body.innerHTML = `<p class="text-[11px] text-amber-400 text-center py-10"><i class="fa-solid fa-triangle-exclamation mr-1"></i>blocked_users table/RLS check karo Supabase me.</p>`;
                     return;
                 }
 
                 if (blocked.length === 0) {
-                    body.innerHTML = `<p class="text-center text-xs text-slate-500 py-14">${meta.empty}</p>`;
+                    body.innerHTML = `<p class="text-center text-xs text-slate-400 py-14">${meta.empty}</p>`;
                     return;
                 }
 
@@ -3161,10 +3161,10 @@
                     return `
                         <div class="flex items-center justify-between bg-slate-950/60 rounded-xl px-2.5 py-2 gap-2">
                             <div class="flex items-center gap-2 min-w-0 cursor-pointer" onclick="openProfile('${u}')">
-                                <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-[10px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
+                                <div class="w-7 h-7 rounded-full bg-[#334155] flex items-center justify-center text-[11px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
                                 <span class="text-[11px] font-bold text-slate-200 truncate">${u}</span>
                             </div>
-                            <button onclick="unblockUserFromCard('${u}')" class="shrink-0 bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[9px] font-bold px-2.5 py-1.5 rounded-lg transition"><i class="fa-solid fa-lock-open mr-1"></i>Unblock</button>
+                            <button onclick="unblockUserFromCard('${u}')" class="shrink-0 bg-slate-800 hover:bg-emerald-600 text-emerald-400 hover:text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition"><i class="fa-solid fa-lock-open mr-1"></i>Unblock</button>
                         </div>
                     `;
                 }).join('')}</div>`;
@@ -3221,13 +3221,13 @@
             if (!wrap) return;
             if (!isMe) { wrap.innerHTML = ''; return; }
 
-            wrap.innerHTML = `<p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#9d7bff]"></i> Account Security</p><p class="text-[9px] text-slate-500">Loading...</p>`;
+            wrap.innerHTML = `<p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#2dd4bf]"></i> Account Security</p><p class="text-[11px] text-slate-400">Loading...</p>`;
 
             const { data: profile, error } = await supabaseClient.from('profiles').select('two_factor_enabled, security_question').eq('username', currentUser).maybeSingle();
             if (error) {
                 wrap.innerHTML = `
-                    <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#9d7bff]"></i> Account Security</p>
-                    <p class="text-[9px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>2FA / Password reset ke liye ek chhoti si SQL setup baaki hai — upar comment me diye gaye ALTER TABLE statements Supabase me run karo.</p>
+                    <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#2dd4bf]"></i> Account Security</p>
+                    <p class="text-[11px] text-amber-400"><i class="fa-solid fa-triangle-exclamation mr-1"></i>2FA / Password reset ke liye ek chhoti si SQL setup baaki hai — upar comment me diye gaye ALTER TABLE statements Supabase me run karo.</p>
                 `;
                 return;
             }
@@ -3237,14 +3237,14 @@
             const hasSecurityQ = !!(profile && profile.security_question);
 
             wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#9d7bff]"></i> Account Security</p>
+                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-shield-halved text-[#2dd4bf]"></i> Account Security</p>
                 <div class="flex items-center justify-between bg-slate-950/60 rounded-xl px-2.5 py-2">
-                    <span class="text-[10px] text-slate-300">Two-Factor Authentication</span>
-                    <span class="text-[9px] font-bold px-2 py-0.5 rounded-full ${twoFaOn ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}">${twoFaOn ? 'ON' : 'OFF'}</span>
+                    <span class="text-[11px] text-slate-300">Two-Factor Authentication</span>
+                    <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${twoFaOn ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30' : 'bg-red-500/15 text-red-400 border border-red-500/30'}">${twoFaOn ? 'ON' : 'OFF'}</span>
                 </div>
-                <button onclick="openTwoFactorSetupModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#9d7bff] transition"><i class="fa-solid fa-shield-halved mr-1"></i> ${twoFaOn ? 'Change 2FA PIN' : 'Set Up 2FA'}</button>
-                <button onclick="openChangePasswordModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#35c7ff] transition"><i class="fa-solid fa-key mr-1"></i> Change Password</button>
-                ${!hasSecurityQ ? `<button onclick="openSecurityQuestionSetupModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-slate-300 transition"><i class="fa-solid fa-circle-question mr-1"></i> Set Security Question (for password reset)</button>` : `<p class="text-[9px] text-slate-500 px-1"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>Security question set — password reset ready.</p>`}
+                <button onclick="openTwoFactorSetupModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#2dd4bf] transition"><i class="fa-solid fa-shield-halved mr-1"></i> ${twoFaOn ? 'Change 2FA PIN' : 'Set Up 2FA'}</button>
+                <button onclick="openChangePasswordModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#38bdf8] transition"><i class="fa-solid fa-key mr-1"></i> Change Password</button>
+                ${!hasSecurityQ ? `<button onclick="openSecurityQuestionSetupModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-slate-300 transition"><i class="fa-solid fa-circle-question mr-1"></i> Set Security Question (for password reset)</button>` : `<p class="text-[11px] text-slate-400 px-1"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>Security question set — password reset ready.</p>`}
             `;
         }
 
@@ -3466,9 +3466,9 @@
             if (!wrap) return;
             if (!isMe) { wrap.innerHTML = ''; return; }
             wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-file-export text-[#35c7ff]"></i> Data Export</p>
-                <p class="text-[9px] text-slate-500">Apna saara data (posts, messages, stories, follows, comments) ek JSON file me download karo — True Delete se pehle ek achhi habit.</p>
-                <button id="dataExportBtn" onclick="exportMyData()" class="w-full bg-slate-800 hover:bg-slate-700 border border-[#35c7ff]/30 font-bold py-2 rounded-xl text-xs text-[#35c7ff] transition"><i class="fa-solid fa-download mr-1"></i> Download My Data</button>
+                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-file-export text-[#38bdf8]"></i> Data Export</p>
+                <p class="text-[11px] text-slate-400">Apna saara data (posts, messages, stories, follows, comments) ek JSON file me download karo — True Delete se pehle ek achhi habit.</p>
+                <button id="dataExportBtn" onclick="exportMyData()" class="w-full bg-slate-800 hover:bg-slate-700 border border-[#38bdf8]/30 font-bold py-2 rounded-xl text-xs text-[#38bdf8] transition"><i class="fa-solid fa-download mr-1"></i> Download My Data</button>
             `;
         }
 
@@ -3563,7 +3563,7 @@
             users = users.slice(0, 30);
 
             if (users.length === 0) {
-                wrap.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-3">Koi user nahi mila.</p>`;
+                wrap.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-3">Koi user nahi mila.</p>`;
                 return;
             }
 
@@ -3571,9 +3571,9 @@
                 const av = globalProfilesCache[u];
                 return `
                     <div class="flex items-center gap-2 p-1.5 rounded-xl hover:bg-slate-900/60 transition">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-[10px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
+                        <div class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-[11px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
                         <span class="flex-1 text-xs font-bold text-slate-200 truncate">${u}</span>
-                        <button onclick="shareToUserDM('${u}')" class="text-[10px] font-bold bg-[#35c7ff] hover:opacity-90 text-white px-3 py-1.5 rounded-lg transition">Send</button>
+                        <button onclick="shareToUserDM('${u}')" class="text-[11px] font-bold bg-[#38bdf8] hover:opacity-90 text-white px-3 py-1.5 rounded-lg transition">Send</button>
                     </div>
                 `;
             }).join('');
@@ -3595,12 +3595,12 @@
             const tspans = lines.map((l, i) => `<tspan x="40" dy="${i === 0 ? 0 : 26}">${l}</tspan>`).join('');
             const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="800">
                 <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stop-color="#9d7bff"/><stop offset="100%" stop-color="#ff4d8d"/>
+                    <stop offset="0%" stop-color="#14b8a6"/><stop offset="100%" stop-color="#3b82f6"/>
                 </linearGradient></defs>
                 <rect width="600" height="800" fill="#0f0f1a"/>
                 <rect width="600" height="800" fill="url(#g)" opacity="0.12"/>
                 <text x="40" y="360" fill="#f1f1f4" font-family="sans-serif" font-size="24" font-weight="bold">${tspans}</text>
-                <text x="40" y="750" fill="#ff4d8d" font-family="sans-serif" font-size="18" font-weight="bold">@${username}</text>
+                <text x="40" y="750" fill="#3b82f6" font-family="sans-serif" font-size="18" font-weight="bold">@${username}</text>
             </svg>`;
             return 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svg)));
         }
@@ -3691,7 +3691,7 @@
             if (!isMe) { wrap.innerHTML = ''; return; }
             wrap.innerHTML = `
                 <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-trash-can text-red-400"></i> True Delete</p>
-                <p class="text-[9px] text-slate-500">Koi 30-din wapasi nahi, koi hidden backup nahi — sirf ek genuine confirmation, phir sab kuch turant gone.</p>
+                <p class="text-[11px] text-slate-400">Koi 30-din grace period nahi — confirm karte hi tumhara data turant delete ho jata hai. Detail: Privacy Policy.</p>
                 <button onclick="openTrueDeleteModal()" class="w-full bg-slate-800 hover:bg-red-500/20 border border-red-500/30 font-bold py-2 rounded-xl text-xs text-red-400 transition"><i class="fa-solid fa-trash-can mr-1"></i> Delete My Account</button>
             `;
         }
@@ -3950,9 +3950,9 @@
                 if (raw) cachedAt = JSON.parse(raw).cached_at;
             } catch (e) {}
             wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-wifi text-[#35c7ff]"></i> Offline Mode</p>
-                <p class="text-[9px] text-slate-500">Internet jaane par ek banner dikhega aur pichla fetch kiya hua feed cache se dikhta rahega. Likes/comments/posts jaise actions us waqt paused rehte hain.</p>
-                <p class="text-[9px] text-slate-400">Status: <span class="${navigator.onLine ? 'text-emerald-400' : 'text-amber-400'} font-bold">${navigator.onLine ? 'Online' : 'Offline'}</span>${cachedAt ? ` · Last cached: ${new Date(cachedAt).toLocaleTimeString()}` : ''}</p>
+                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-wifi text-[#38bdf8]"></i> Offline Mode</p>
+                <p class="text-[11px] text-slate-400">Internet jaane par ek banner dikhega aur pichla fetch kiya hua feed cache se dikhta rahega. Likes/comments/posts jaise actions us waqt paused rehte hain.</p>
+                <p class="text-[11px] text-slate-400">Status: <span class="${navigator.onLine ? 'text-emerald-400' : 'text-amber-400'} font-bold">${navigator.onLine ? 'Online' : 'Offline'}</span>${cachedAt ? ` · Last cached: ${new Date(cachedAt).toLocaleTimeString()}` : ''}</p>
             `;
         }
         window.renderOfflineModeCard = renderOfflineModeCard;
@@ -3997,9 +3997,9 @@
                 <div class="flex items-center justify-between">
                     <div>
                         <p class="text-[11px] font-bold text-slate-200"><i class="fa-solid fa-camera mr-1 text-slate-400"></i> Screenshot Alert</p>
-                        <p class="text-[9px] text-slate-500">Best-effort: browsers screenshots ko reliably detect nahi kar sakte, ye sirf desktop PrintScreen key aur ek chhoti heuristic pakadta hai.</p>
+                        <p class="text-[11px] text-slate-400">Best-effort: browsers screenshots ko reliably detect nahi kar sakte, ye sirf desktop PrintScreen key aur ek chhoti heuristic pakadta hai.</p>
                     </div>
-                    <button onclick="toggleScreenshotAlert()" id="screenshotAlertToggleBtn" class="w-10 h-5 rounded-full ${screenshotAlertEnabled ? 'bg-[#ff4d8d]' : 'bg-slate-700'} relative transition shrink-0">
+                    <button onclick="toggleScreenshotAlert()" id="screenshotAlertToggleBtn" class="w-10 h-5 rounded-full ${screenshotAlertEnabled ? 'bg-[#2563eb]' : 'bg-slate-700'} relative transition shrink-0">
                         <span class="absolute top-0.5 ${screenshotAlertEnabled ? 'left-5' : 'left-0.5'} w-4 h-4 rounded-full bg-white transition-transform"></span>
                     </button>
                 </div>
@@ -4053,10 +4053,10 @@
             const current = getSavedLanguage();
             const opts = [['hinglish', 'Hinglish'], ['en', 'English'], ['hi', 'हिंदी']];
             wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-language text-[#35c7ff]"></i> App Language</p>
-                <p class="text-[9px] text-slate-500">Nav bar aur core buttons ki language badlo (poora app abhi is dictionary ke scope me nahi hai).</p>
+                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-language text-[#38bdf8]"></i> App Language</p>
+                <p class="text-[11px] text-slate-400">Nav bar aur core buttons ki language badlo (poora app abhi is dictionary ke scope me nahi hai).</p>
                 <div class="flex gap-1.5">
-                    ${opts.map(([code, label]) => `<button onclick="setLanguage('${code}')" class="flex-1 text-[10px] font-bold py-1.5 rounded-xl border transition ${current === code ? 'bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white border-transparent' : 'bg-slate-900 border-slate-800 text-slate-400'}">${label}</button>`).join('')}
+                    ${opts.map(([code, label]) => `<button onclick="setLanguage('${code}')" class="flex-1 text-[11px] font-bold py-1.5 rounded-xl border transition ${current === code ? 'bg-[#2563eb] text-white border-transparent' : 'bg-slate-900 border-slate-800 text-slate-400'}">${label}</button>`).join('')}
                 </div>
             `;
         }
@@ -4119,7 +4119,7 @@
             wrap.innerHTML = `
                 <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-bell text-amber-400"></i> Notification Sound</p>
                 <div class="grid grid-cols-2 gap-1.5">
-                    ${opts.map(([code, label]) => `<button onclick="setNotifSound('${code}')" class="text-[10px] font-bold py-1.5 rounded-xl border transition ${current === code ? 'bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white border-transparent' : 'bg-slate-900 border-slate-800 text-slate-400'}">${label}</button>`).join('')}
+                    ${opts.map(([code, label]) => `<button onclick="setNotifSound('${code}')" class="text-[11px] font-bold py-1.5 rounded-xl border transition ${current === code ? 'bg-[#2563eb] text-white border-transparent' : 'bg-slate-900 border-slate-800 text-slate-400'}">${label}</button>`).join('')}
                 </div>
             `;
         }
@@ -4136,9 +4136,9 @@
             if (!wrap) return;
             if (!username) { wrap.innerHTML = ''; return; }
             wrap.innerHTML = `
-                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-meteor text-[#9d7bff]"></i> ${isMe ? 'Your' : username + "'s"} Nexus Universe</p>
-                <p class="text-[9px] text-slate-500">Connections se banti ek generative 3D galaxy — har follower/following ek star, tumhare posts comets ki tarah.</p>
-                <button onclick="openNexusUniverseModal('${username}')" class="w-full bg-gradient-to-r from-[#9d7bff] to-[#35c7ff] font-bold py-2 rounded-xl text-xs text-white shadow"><i class="fa-solid fa-meteor mr-1"></i> Open Universe</button>
+                <p class="text-[11px] font-bold text-slate-300 flex items-center gap-1.5"><i class="fa-solid fa-meteor text-[#2dd4bf]"></i> ${isMe ? 'Your' : username + "'s"} Nexus Universe</p>
+                <p class="text-[11px] text-slate-400">Connections se banti ek generative 3D galaxy — har follower/following ek star, tumhare posts comets ki tarah.</p>
+                <button onclick="openNexusUniverseModal('${username}')" class="w-full bg-[#2563eb] font-bold py-2 rounded-xl text-xs text-white shadow"><i class="fa-solid fa-meteor mr-1"></i> Open Universe</button>
             `;
         }
 
@@ -4271,13 +4271,13 @@
             const center = project(0, 0, 0);
             const grad = ctx.createRadialGradient(center.sx, center.sy, 0, center.sx, center.sy, 22 * center.scale);
             grad.addColorStop(0, 'rgba(255,255,255,0.95)');
-            grad.addColorStop(0.4, 'rgba(157,123,255,0.5)');
-            grad.addColorStop(1, 'rgba(157,123,255,0)');
+            grad.addColorStop(0.4, 'rgba(20,184,166,0.5)');
+            grad.addColorStop(1, 'rgba(20,184,166,0)');
             ctx.fillStyle = grad;
             ctx.beginPath(); ctx.arc(center.sx, center.sy, 22 * center.scale, 0, Math.PI * 2); ctx.fill();
 
             // Comets (own posts) — small dim trail dots
-            ctx.fillStyle = 'rgba(53,199,255,0.55)';
+            ctx.fillStyle = 'rgba(56,189,248,0.55)';
             data.comets.forEach(c => {
                 const p = project(c.x, c.y, c.z);
                 ctx.beginPath(); ctx.arc(p.sx, p.sy, Math.max(0.6, 1.2 * p.scale), 0, Math.PI * 2); ctx.fill();
@@ -4287,14 +4287,14 @@
             const projected = data.stars.map(s => ({ s, p: project(s.x, s.y, s.z) })).sort((a, b) => b.p.z2 - a.p.z2);
 
             projected.forEach(({ s, p }) => {
-                ctx.strokeStyle = s.isMutual ? 'rgba(255,77,141,0.25)' : 'rgba(148,163,184,0.12)';
+                ctx.strokeStyle = s.isMutual ? 'rgba(59,130,246,0.25)' : 'rgba(148,163,184,0.12)';
                 ctx.lineWidth = 0.6;
                 ctx.beginPath(); ctx.moveTo(center.sx, center.sy); ctx.lineTo(p.sx, p.sy); ctx.stroke();
             });
 
             projected.forEach(({ s, p }) => {
                 const r = Math.max(0.8, s.size * p.scale);
-                const color = s.isMutual ? '255,77,141' : '53,199,255';
+                const color = s.isMutual ? '59,130,246' : '56,189,248';
                 const g = ctx.createRadialGradient(p.sx, p.sy, 0, p.sx, p.sy, r * 3);
                 g.addColorStop(0, `rgba(${color},${0.55 + s.closeness * 0.35})`);
                 g.addColorStop(1, `rgba(${color},0)`);
@@ -4653,32 +4653,32 @@
                         <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5" style="border-left:3px solid ${p.color}">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-xs font-bold text-slate-200">${p.emoji} ${p.label}</span>
-                                <span class="text-[9px] text-slate-500 shrink-0">${faceFollowerCount} following this face</span>
+                                <span class="text-[11px] text-slate-400 shrink-0">${faceFollowerCount} following this face</span>
                             </div>
-                            <select id="personaToneInput-${p.key}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[10px] text-slate-200 focus:outline-none focus:border-[#9d7bff]">
+                            <select id="personaToneInput-${p.key}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-[#14b8a6]">
                                 <option value="">Tone (select one)...</option>
                                 ${toneOptions}
                             </select>
-                            <textarea id="personaBioInput-${p.key}" rows="2" maxlength="150" placeholder="${p.label} bio..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[10px] text-slate-200 focus:outline-none focus:border-[#9d7bff] resize-none">${bio}</textarea>
-                            <button onclick="savePersonaProfile('${p.key}')" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-1.5 rounded-lg text-[10px] text-slate-200 transition">Save ${p.label}</button>
+                            <textarea id="personaBioInput-${p.key}" rows="2" maxlength="150" placeholder="${p.label} bio..." class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1.5 text-[11px] text-slate-200 focus:outline-none focus:border-[#14b8a6] resize-none">${bio}</textarea>
+                            <button onclick="savePersonaProfile('${p.key}')" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-1.5 rounded-lg text-[11px] text-slate-200 transition">Save ${p.label}</button>
                         </div>
                     `;
                 }
 
                 const isFollowingPersona = globalFollowsCache.some(f => f.follower === currentUser && f.following === username && f.persona === p.key);
                 const hasPendingRequest = globalFollowRequestsCache.some(r => r.requester === currentUser && r.target === username && r.persona === p.key);
-                let btnLabel = 'Follow', btnClass = 'bg-[#ff4d8d] border-[#ff4d8d] text-white';
+                let btnLabel = 'Follow', btnClass = 'bg-[#2563eb] border-[#3b82f6] text-white';
                 if (isFollowingPersona) { btnLabel = 'Following'; btnClass = 'bg-slate-800 border-slate-700 text-slate-300'; }
-                else if (hasPendingRequest) { btnLabel = 'Requested'; btnClass = 'bg-slate-800 border-slate-700 text-slate-500'; }
+                else if (hasPendingRequest) { btnLabel = 'Requested'; btnClass = 'bg-slate-800 border-slate-700 text-slate-400'; }
 
                 if (locked) {
                     return `
                         <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5" style="border-left:3px solid ${p.color}">
                             <div class="flex items-center justify-between gap-2">
                                 <span class="text-xs font-bold text-slate-200">${p.emoji} ${p.label}</span>
-                                <button ${hasPendingRequest ? 'disabled' : `onclick="togglePersonaFollow('${username}','${p.key}')"`} class="shrink-0 text-[10px] px-2.5 py-1 rounded-lg border font-bold transition ${btnClass}">${btnLabel}</button>
+                                <button ${hasPendingRequest ? 'disabled' : `onclick="togglePersonaFollow('${username}','${p.key}')"`} class="shrink-0 text-[11px] px-2.5 py-1 rounded-lg border font-bold transition ${btnClass}">${btnLabel}</button>
                             </div>
-                            <p class="text-[9px] text-slate-500 italic"><i class="fa-solid fa-lock mr-1"></i>Follow to see bio</p>
+                            <p class="text-[11px] text-slate-400 italic"><i class="fa-solid fa-lock mr-1"></i>Follow to see bio</p>
                         </div>
                     `;
                 }
@@ -4688,12 +4688,12 @@
                         <div class="flex items-center justify-between gap-2">
                             <div class="min-w-0 truncate">
                                 <span class="text-xs font-bold text-slate-200">${p.emoji} ${p.label}</span>
-                                ${tone ? `<span class="ml-1.5 text-[9px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">${tone}</span>` : ''}
+                                ${tone ? `<span class="ml-1.5 text-[11px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">${tone}</span>` : ''}
                             </div>
-                            <button ${hasPendingRequest ? 'disabled' : `onclick="togglePersonaFollow('${username}','${p.key}')"`} class="shrink-0 text-[10px] px-2.5 py-1 rounded-lg border font-bold transition ${btnClass}">${btnLabel}</button>
+                            <button ${hasPendingRequest ? 'disabled' : `onclick="togglePersonaFollow('${username}','${p.key}')"`} class="shrink-0 text-[11px] px-2.5 py-1 rounded-lg border font-bold transition ${btnClass}">${btnLabel}</button>
                         </div>
-                        <p class="text-[10px] text-slate-400">${bio ? bio.replace(/</g, '&lt;') : `<span class="text-slate-600 italic">No bio for this face yet.</span>`}</p>
-                        <p class="text-[9px] text-slate-500">${faceFollowerCount} following this face</p>
+                        <p class="text-[11px] text-slate-400">${bio ? bio.replace(/</g, '&lt;') : `<span class="text-slate-400 italic">No bio for this face yet.</span>`}</p>
+                        <p class="text-[11px] text-slate-400">${faceFollowerCount} following this face</p>
                     </div>
                 `;
             }).join('');
@@ -4783,7 +4783,7 @@
             const btn = document.getElementById('closeFriendToggleBtn');
             if (!closeFriendsFeatureAvailable) {
                 btn.innerHTML = `<i class="fa-solid fa-star"></i> Close Friends setup pending`;
-                btn.className = "w-full flex items-center justify-center gap-1.5 text-[11px] font-bold py-1.5 rounded-xl border border-slate-800 text-slate-500 cursor-not-allowed";
+                btn.className = "w-full flex items-center justify-center gap-1.5 text-[11px] font-bold py-1.5 rounded-xl border border-slate-800 text-slate-400 cursor-not-allowed";
                 btn.onclick = null;
                 return;
             }
@@ -4823,12 +4823,12 @@
             const twitsBtn = document.getElementById('profTabTwitsBtn');
             const groupsBtn = document.getElementById('profTabGroupsBtn'); // FEATURE: PROFILE GROUPS/CHANNELS TAB
             const inactive = "flex-1 py-2 text-center text-slate-400 border-b-2 border-transparent transition";
-            const active = "flex-1 py-2 text-center text-[#ff4d8d] border-b-2 border-[#ff4d8d] transition";
+            const active = "flex-1 py-2 text-center text-[#60a5fa] border-b-2 border-[#3b82f6] transition";
 
             postsBtn.className = tab === 'posts' ? active : inactive;
             reelsBtn.className = tab === 'reels' ? active : inactive;
-            if (twitsBtn) twitsBtn.className = tab === 'twits' ? "flex-1 py-2 text-center text-[#35c7ff] border-b-2 border-[#35c7ff] transition" : inactive;
-            if (groupsBtn) groupsBtn.className = tab === 'groups' ? "flex-1 py-2 text-center text-[#9d7bff] border-b-2 border-[#9d7bff] transition" : inactive;
+            if (twitsBtn) twitsBtn.className = tab === 'twits' ? "flex-1 py-2 text-center text-[#38bdf8] border-b-2 border-[#38bdf8] transition" : inactive;
+            if (groupsBtn) groupsBtn.className = tab === 'groups' ? "flex-1 py-2 text-center text-[#2dd4bf] border-b-2 border-[#14b8a6] transition" : inactive;
             refreshProfileTabView();
         }
 
@@ -4886,10 +4886,10 @@
             // FEATURE: PRIVATE ACCOUNT ENFORCEMENT — non-followers see a lock, not the grid
             if (isPrivateAndNotFollowing(viewingProfileUsername)) {
                 container.innerHTML = `
-                    <div class="col-span-3 text-center py-14 text-slate-500">
+                    <div class="col-span-3 text-center py-14 text-slate-400">
                         <i class="fa-solid fa-lock text-2xl mb-2"></i>
                         <p class="text-xs font-bold text-slate-300">This Account is Private</p>
-                        <p class="text-[10px] mt-1">Follow ${viewingProfileUsername} to see their posts and reels.</p>
+                        <p class="text-[11px] mt-1">Follow ${viewingProfileUsername} to see their posts and reels.</p>
                     </div>
                 `;
                 return;
@@ -4905,7 +4905,7 @@
             }).sort((a, b) => (b.pinned ? 1 : 0) - (a.pinned ? 1 : 0));
 
             if (userPosts.length === 0) {
-                container.innerHTML = `<div class="col-span-3 text-center py-10 text-xs text-slate-500">No ${profileActiveTab} found.</div>`;
+                container.innerHTML = `<div class="col-span-3 text-center py-10 text-xs text-slate-400">No ${profileActiveTab} found.</div>`;
                 return;
             }
 
@@ -4914,13 +4914,13 @@
                 const { cls: fadeCls, tag: fadeTag } = getMemoryFadeClass(post);
                 return `
                     <div onclick="openPostDetailModal('${post.id}')" class="aspect-square bg-slate-900 border ${post.pinned ? 'border-amber-500/50' : 'border-slate-800/80'} rounded-sm overflow-hidden relative cursor-pointer group">
-                        ${post.pinned ? `<div class="absolute top-1.5 left-1.5 z-10 text-amber-400 text-[10px] drop-shadow"><i class="fa-solid fa-thumbtack"></i></div>` : ''}
+                        ${post.pinned ? `<div class="absolute top-1.5 left-1.5 z-10 text-amber-400 text-[11px] drop-shadow"><i class="fa-solid fa-thumbtack"></i></div>` : ''}
                         <div class="absolute inset-0 ${fadeCls}">
                         ${isVideo ? 
-                            `<video src="${post.image_url}" class="w-full h-full object-cover"></video><div class="absolute top-1.5 right-1.5 bg-black/60 px-1.5 py-0.5 rounded text-[9px] text-white"><i class="fa-solid fa-clapperboard"></i></div>` :
+                            `<video src="${post.image_url}" class="w-full h-full object-cover"></video><div class="absolute top-1.5 right-1.5 bg-black/60 px-1.5 py-0.5 rounded text-[11px] text-white"><i class="fa-solid fa-clapperboard"></i></div>` :
                             post.image_url ? 
                                 `<img src="${post.image_url}" class="w-full h-full object-cover">` : 
-                                `<div class="w-full h-full p-2 flex items-center justify-center text-[10px] text-slate-300 text-center bg-slate-950">${post.content.substring(0, 40)}...</div>`
+                                `<div class="w-full h-full p-2 flex items-center justify-center text-[11px] text-slate-300 text-center bg-slate-950">${post.content.substring(0, 40)}...</div>`
                         }
                         </div>
                         ${fadeTag ? `<span class="memory-grain-tag">${fadeTag}</span>` : ''}
@@ -5066,7 +5066,7 @@
             const users = Array.from(grouped.keys());
 
             if(users.length === 0) {
-                container.innerHTML = `<p class="text-xs text-slate-500 text-center py-4">No users found.</p>`;
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No users found.</p>`;
             } else {
                 users.forEach(u => {
                     const av = globalProfilesCache[u];
@@ -5076,9 +5076,9 @@
                     div.className = "flex items-center justify-between bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs cursor-pointer hover:bg-slate-800 transition";
                     div.innerHTML = `
                         <div class="flex items-center space-x-2 w-full">
-                            <div class="w-7 h-7 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-[10px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
+                            <div class="w-7 h-7 rounded-full bg-[#334155] flex items-center justify-center font-bold text-[11px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
                             <span class="font-bold text-slate-200 truncate">${u}</span>
-                            ${personaBadges ? `<span class="text-[10px] shrink-0 ml-auto pr-1" title="Faces followed">${personaBadges}</span>` : ''}
+                            ${personaBadges ? `<span class="text-[11px] shrink-0 ml-auto pr-1" title="Faces followed">${personaBadges}</span>` : ''}
                         </div>
                     `;
                     div.onclick = () => {
@@ -5414,7 +5414,7 @@
             const isOnline = onlineUsersSet.has(activeChatUser);
             dot.className = isOnline ? "w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" : "w-1.5 h-1.5 rounded-full bg-slate-600";
             label.innerText = isOnline ? "Online" : "Offline";
-            label.className = isOnline ? "text-[9px] font-semibold text-emerald-400" : "text-[9px] font-semibold text-slate-500";
+            label.className = isOnline ? "text-[11px] font-semibold text-emerald-400" : "text-[11px] font-semibold text-slate-400";
         }
 
         // Shows the "typing..." indicator bar and auto-hides it if no new typing signal arrives
@@ -5705,13 +5705,13 @@
             const list = pendingMessages[targetUser] || [];
             return list.map(pm => `
                 <div class="flex flex-col items-end space-y-0.5">
-                    <div class="max-w-[80%] p-2.5 rounded-2xl text-xs bg-[#ff4d8d] text-white rounded-br-none space-y-1.5 relative shadow opacity-70">
+                    <div class="max-w-[80%] p-2.5 rounded-2xl text-xs bg-[#2563eb] text-white rounded-br-none space-y-1.5 relative shadow opacity-70">
                         ${pm.mediaPreviewUrl ? `<img src="${pm.mediaPreviewUrl}" class="w-full max-h-48 rounded-lg object-cover">` : ''}
                         <p class="leading-relaxed break-words">${pm.text}</p>
                     </div>
-                    <span class="text-[9px] text-slate-500 px-1 flex items-center gap-1">
+                    <span class="text-[11px] text-slate-400 px-1 flex items-center gap-1">
                         ${pm.status === 'failed'
-                            ? `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Failed — <button onclick="retryPendingMessage('${targetUser}','${pm.tempId}')" class="underline text-[#ff4d8d]">retry</button>`
+                            ? `<i class="fa-solid fa-triangle-exclamation text-red-400"></i> Failed — <button onclick="retryPendingMessage('${targetUser}','${pm.tempId}')" class="underline text-[#60a5fa]">retry</button>`
                             : `<i class="fa-solid fa-clock"></i> Sending...`}
                     </span>
                 </div>
@@ -5748,8 +5748,8 @@
             if (error || !messages || messages.length === 0) {
                 const pendingHtml = renderPendingMessagesHtml(targetUser);
                 chatBox.innerHTML = pendingHtml
-                    ? `<div class="text-center text-xs text-slate-500 my-auto">No messages yet with ${targetUser}. Say hello! 👋</div>${pendingHtml}`
-                    : `<div class="text-center text-xs text-slate-500 my-auto">No messages yet with ${targetUser}. Say hello! 👋</div>`;
+                    ? `<div class="text-center text-xs text-slate-400 my-auto">No messages yet with ${targetUser}. Say hello! 👋</div>${pendingHtml}`
+                    : `<div class="text-center text-xs text-slate-400 my-auto">No messages yet with ${targetUser}. Say hello! 👋</div>`;
                 currentChatMessagesMap = {};
                 updatePinnedBanner('dm');
                 if (pendingHtml) chatBox.scrollTop = chatBox.scrollHeight;
@@ -5780,7 +5780,7 @@
                 if (dateLabel !== lastDateLabel) {
                     htmlContent += `
                         <div class="flex justify-center my-1.5">
-                            <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[9px] font-bold px-2.5 py-1 rounded-full">${dateLabel}</span>
+                            <span class="bg-slate-900 border border-slate-800 text-slate-400 text-[11px] font-bold px-2.5 py-1 rounded-full">${dateLabel}</span>
                         </div>
                     `;
                     lastDateLabel = dateLabel;
@@ -5788,14 +5788,14 @@
 
                 // Quoted reply preview shown inside the bubble, if this message is a reply
                 const replyBlockHtml = msg.reply_to_id ? `
-                    <div class="border-l-2 ${isMe ? 'border-white/50' : 'border-[#ff4d8d]'} pl-2 ${isMe ? 'bg-white/10' : 'bg-slate-950/60'} rounded-md py-1 mb-1">
-                        <p class="text-[9px] font-bold ${isMe ? 'text-white/80' : 'text-[#ff4d8d]'}">${msg.reply_to_sender || ''}</p>
-                        <p class="text-[9px] ${isMe ? 'text-white/70' : 'text-slate-400'} truncate">${msg.reply_to_text || ''}</p>
+                    <div class="border-l-2 ${isMe ? 'border-white/50' : 'border-[#3b82f6]'} pl-2 ${isMe ? 'bg-white/10' : 'bg-slate-950/60'} rounded-md py-1 mb-1">
+                        <p class="text-[11px] font-bold ${isMe ? 'text-white/80' : 'text-[#60a5fa]'}">${msg.reply_to_sender || ''}</p>
+                        <p class="text-[11px] ${isMe ? 'text-white/70' : 'text-slate-400'} truncate">${msg.reply_to_text || ''}</p>
                     </div>
                 ` : (msg.reply_to_story_id ? `
-                    <div class="flex items-center gap-1.5 border-l-2 ${isMe ? 'border-white/50' : 'border-[#ff4d8d]'} pl-2 ${isMe ? 'bg-white/10' : 'bg-slate-950/60'} rounded-md py-1 mb-1">
+                    <div class="flex items-center gap-1.5 border-l-2 ${isMe ? 'border-white/50' : 'border-[#3b82f6]'} pl-2 ${isMe ? 'bg-white/10' : 'bg-slate-950/60'} rounded-md py-1 mb-1">
                         ${msg.reply_to_story_media ? `<img src="${msg.reply_to_story_media}" class="w-6 h-8 object-cover rounded">` : ''}
-                        <p class="text-[9px] font-bold ${isMe ? 'text-white/80' : 'text-[#ff4d8d]'}"><i class="fa-solid fa-circle-play mr-0.5"></i>Replied to ${isMe ? (msg.reply_to_story_username || 'their') + "'s" : 'your'} story</p>
+                        <p class="text-[11px] font-bold ${isMe ? 'text-white/80' : 'text-[#60a5fa]'}"><i class="fa-solid fa-circle-play mr-0.5"></i>Replied to ${isMe ? (msg.reply_to_story_username || 'their') + "'s" : 'your'} story</p>
                     </div>
                 ` : '');
 
@@ -5803,13 +5803,13 @@
                 let ticksHtml = '';
                 if (isMe) {
                     ticksHtml = msg.read_at
-                        ? `<i class="fa-solid fa-check-double text-[10px] text-[#35c7ff]" title="Read"></i>`
-                        : `<i class="fa-solid fa-check text-[10px] text-slate-500" title="Sent"></i>`;
+                        ? `<i class="fa-solid fa-check-double text-[11px] text-[#38bdf8]" title="Read"></i>`
+                        : `<i class="fa-solid fa-check text-[11px] text-slate-400" title="Sent"></i>`;
                 }
 
                 const reactionsHtml = renderReactionBadgesHtml(msg.id, 'dm');
-                const disappearBadge = msg.expires_at ? `<i class="fa-solid fa-fire text-[9px] text-orange-400" title="Disappearing message"></i>` : '';
-                const editedBadge = msg.edited_at && !msg.is_deleted ? `<span class="text-[8px] text-slate-500 italic">(edited)</span>` : '';
+                const disappearBadge = msg.expires_at ? `<i class="fa-solid fa-fire text-[11px] text-orange-400" title="Disappearing message"></i>` : '';
+                const editedBadge = msg.edited_at && !msg.is_deleted ? `<span class="text-[11px] text-slate-400 italic">(edited)</span>` : '';
 
                 // FEATURE: FADING MESSAGE — an incoming message you've opened but never replied
                 // to gradually blurs/fades over the next 24 hours. Replying makes it sharp again.
@@ -5822,12 +5822,12 @@
                 // Deleted-for-everyone: show placeholder instead of real content
                 let bodyHtml;
                 if (msg.is_deleted) {
-                    bodyHtml = `<p class="leading-relaxed italic text-slate-500 flex items-center gap-1"><i class="fa-solid fa-ban text-[10px]"></i> This message was deleted</p>`;
+                    bodyHtml = `<p class="leading-relaxed italic text-slate-400 flex items-center gap-1"><i class="fa-solid fa-ban text-[11px]"></i> This message was deleted</p>`;
                 } else if (msg.type === 'voice' && msg.audio_url) {
                     bodyHtml = `<audio src="${msg.audio_url}" controls class="max-w-[220px] h-9"></audio>`;
                 } else {
                     const fadeStyleAttr = fadeInfo ? ` style="filter:blur(${fadeInfo.blur}px); opacity:${fadeInfo.opacity}; transition: filter 1s ease, opacity 1s ease;"` : '';
-                    const fadeBadge = fadeInfo ? `<i class="fa-solid fa-water text-[8px] text-slate-500 ml-1" title="Reply karo isse pehle ki ye poori tarah fade ho jaaye"></i>` : '';
+                    const fadeBadge = fadeInfo ? `<i class="fa-solid fa-water text-[11px] text-slate-400 ml-1" title="Reply karo isse pehle ki ye poori tarah fade ho jaaye"></i>` : '';
                     bodyHtml = `
                         ${msg.media_url ? (
                             isVideoMedia ? 
@@ -5842,17 +5842,17 @@
 
                 htmlContent += `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5 msg-swipe-item" data-msg-id="${msg.id}" data-is-me="${isMe ? '1' : '0'}" style="touch-action: pan-y;">
-                        <div class="max-w-[80%] p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#ff4d8d] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'} text-xs space-y-1.5 relative group" ondblclick="${msg.is_deleted ? '' : `openReactionPicker(event, '${msg.id}', 'dm')`}">
+                        <div class="max-w-[80%] p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#2563eb] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'} text-xs space-y-1.5 relative group" ondblclick="${msg.is_deleted ? '' : `openReactionPicker(event, '${msg.id}', 'dm')`}">
                             ${replyBlockHtml}
                             ${bodyHtml}
-                            ${!msg.is_deleted ? `<button onclick="setReplyTarget('${msg.id}')" class="absolute -top-2 ${isMe ? '-left-2' : '-right-2'} bg-slate-800 text-[#35c7ff] p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="Reply"><i class="fa-solid fa-reply"></i></button>` : ''}
-                            ${!msg.is_deleted ? `<button onclick="togglePinMessage('${msg.id}', 'dm')" class="absolute -bottom-2 ${isMe ? '-right-2' : '-left-2'} ${msg.pinned_at ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-yellow-400'} p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="${msg.pinned_at ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>` : ''}
-                            ${!msg.is_deleted ? `<button onclick="openReactionPicker(event, '${msg.id}', 'dm')" class="absolute -bottom-2 ${isMe ? '-left-2' : 'left-2'} bg-slate-800 text-yellow-400 p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="React"><i class="fa-solid fa-face-smile"></i></button>` : ''}
-                            ${canModify ? `<button onclick="startEditMessage('${msg.id}')" class="absolute -top-2 ${isMe ? '-right-9' : '-right-9'} bg-slate-800 text-emerald-400 p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="Edit"><i class="fa-solid fa-pencil"></i></button>` : ''}
-                            ${isMe && !msg.is_deleted ? `<button onclick="deleteMessage('${msg.id}')" class="absolute -top-2 -right-2 bg-slate-800 text-red-400 p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="Delete for everyone"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                            ${!msg.is_deleted ? `<button onclick="setReplyTarget('${msg.id}')" class="absolute -top-2 ${isMe ? '-left-2' : '-right-2'} bg-slate-800 text-[#38bdf8] p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="Reply"><i class="fa-solid fa-reply"></i></button>` : ''}
+                            ${!msg.is_deleted ? `<button onclick="togglePinMessage('${msg.id}', 'dm')" class="absolute -bottom-2 ${isMe ? '-right-2' : '-left-2'} ${msg.pinned_at ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-yellow-400'} p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="${msg.pinned_at ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>` : ''}
+                            ${!msg.is_deleted ? `<button onclick="openReactionPicker(event, '${msg.id}', 'dm')" class="absolute -bottom-2 ${isMe ? '-left-2' : 'left-2'} bg-slate-800 text-yellow-400 p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="React"><i class="fa-solid fa-face-smile"></i></button>` : ''}
+                            ${canModify ? `<button onclick="startEditMessage('${msg.id}')" class="absolute -top-2 ${isMe ? '-right-9' : '-right-9'} bg-slate-800 text-emerald-400 p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="Edit"><i class="fa-solid fa-pencil"></i></button>` : ''}
+                            ${isMe && !msg.is_deleted ? `<button onclick="deleteMessage('${msg.id}')" class="absolute -top-2 -right-2 bg-slate-800 text-red-400 p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="Delete for everyone"><i class="fa-solid fa-xmark"></i></button>` : ''}
                         </div>
                         ${reactionsHtml}
-                        <span class="text-[9px] text-slate-500 px-1 flex items-center gap-1">${timeLabel} ${disappearBadge} ${ticksHtml}</span>
+                        <span class="text-[11px] text-slate-400 px-1 flex items-center gap-1">${timeLabel} ${disappearBadge} ${ticksHtml}</span>
                     </div>
                 `;
             });
@@ -6011,7 +6011,7 @@
             relevant.forEach(r => { counts[r.emoji] = (counts[r.emoji] || 0) + 1; });
             const badges = Object.keys(counts).map(emoji => {
                 const mine = relevant.some(r => r.emoji === emoji && r.username === currentUser);
-                return `<span onclick="quickToggleReaction('${messageId}', '${emoji}', '${source}')" class="cursor-pointer text-[10px] px-1.5 py-0.5 rounded-full border ${mine ? 'bg-[#ff4d8d]/20 border-[#ff4d8d] text-[#ff4d8d]' : 'bg-slate-800 border-slate-700 text-slate-300'}">${emoji} ${counts[emoji]}</span>`;
+                return `<span onclick="quickToggleReaction('${messageId}', '${emoji}', '${source}')" class="cursor-pointer text-[11px] px-1.5 py-0.5 rounded-full border ${mine ? 'bg-[#2563eb]/20 border-[#3b82f6] text-[#60a5fa]' : 'bg-slate-800 border-slate-700 text-slate-300'}">${emoji} ${counts[emoji]}</span>`;
             }).join(' ');
             return `<div class="flex flex-wrap gap-1 px-1">${badges}</div>`;
         }
@@ -6134,7 +6134,7 @@
                     <div id="${carouselId}" onscroll="updateCarouselDots('${carouselId}')" onclick="openPostDetailModal('${post.id}')" class="flex overflow-x-auto no-scrollbar w-full h-72 cursor-pointer" style="scroll-snap-type: x mandatory;">
                         ${slides}
                     </div>
-                    <span id="${carouselId}-counter" class="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">1/${urls.length}</span>
+                    <span id="${carouselId}-counter" class="absolute top-2 right-2 bg-black/60 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">1/${urls.length}</span>
                     <div id="${carouselId}-dots" class="absolute bottom-2 inset-x-0 flex justify-center gap-1">
                         ${urls.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}" data-dot-index="${i}"></span>`).join('')}
                     </div>
@@ -6185,10 +6185,10 @@
                 <div class="glass-panel rounded-2xl p-3 flex items-center gap-3 border-l-4" style="border-left-color:#f5a524">
                     ${thumb ? `<img src="${thumb}" class="w-12 h-12 rounded-xl object-cover shrink-0">` : `<div class="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center text-lg shrink-0">📅</div>`}
                     <div class="flex-1 min-w-0 cursor-pointer" onclick="openPostDetailModal('${memory.id}')">
-                        <p class="text-[10px] font-bold text-amber-400">On This Day — ${yearsAgo} year${yearsAgo > 1 ? 's' : ''} ago</p>
+                        <p class="text-[11px] font-bold text-amber-400">On This Day — ${yearsAgo} year${yearsAgo > 1 ? 's' : ''} ago</p>
                         <p class="text-xs text-slate-300 truncate">${(memory.content || '').replace(/</g,'&lt;')}</p>
                     </div>
-                    <button onclick="dismissOnThisDay()" class="shrink-0 text-slate-500 hover:text-white text-xs px-1"><i class="fa-solid fa-xmark"></i></button>
+                    <button onclick="dismissOnThisDay()" class="shrink-0 text-slate-400 hover:text-white text-xs px-1"><i class="fa-solid fa-xmark"></i></button>
                 </div>
             `;
         }
@@ -6214,9 +6214,9 @@
                 const postPersona = personaForKey(personaKeyForPlatform(post.platform));
                 const isFollowingPersona = post.username === currentUser || globalFollowsCache.some(f => f.follower === currentUser && f.following === post.username && f.persona === postPersona.key);
                 const isVideo = post.image_url && (post.platform === 'Reel' || post.image_url.match(/\.(mp4|mov|webm)$/i));
-                let styleAccent = '#35c7ff'; // Twit
-                if (post.platform === 'Instagram') styleAccent = '#ff4d8d'; // Post
-                else if (post.platform === 'Telegram') styleAccent = '#9d7bff'; // Channel
+                let styleAccent = '#38bdf8'; // Twit
+                if (post.platform === 'Instagram') styleAccent = '#3b82f6'; // Post
+                else if (post.platform === 'Telegram') styleAccent = '#14b8a6'; // Channel
                 else if (post.platform === 'Reel') styleAccent = '#f5a524'; // Reel
 
                 const card = document.createElement('div');
@@ -6225,33 +6225,33 @@
                 card.innerHTML = `
                     <div class="flex justify-between items-center text-xs">
                         <div class="flex items-center space-x-2">
-                            <div onclick="handleUserClick('${post.username}')" class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-[10px] text-white cursor-pointer shadow overflow-hidden">
+                            <div onclick="handleUserClick('${post.username}')" class="w-6 h-6 rounded-full bg-[#334155] flex items-center justify-center font-bold text-[11px] text-white cursor-pointer shadow overflow-hidden">
                                 ${posterAvatar ? `<img src="${posterAvatar}" class="w-full h-full object-cover">` : post.username.charAt(0).toUpperCase()}
                             </div>
-                            <span onclick="handleUserClick('${post.username}')" class="font-bold text-slate-200 cursor-pointer hover:text-[#ff4d8d] transition flex items-center gap-1">${post.username} ${verifiedBadgeHtml(post.username)} ${adminBadgeHtml(post.username)}</span>
-                            ${post.username !== currentUser ? `<button onclick="togglePersonaFollow('${post.username}','${postPersona.key}')" title="Follow just this face — not the whole account" class="ml-1 text-[10px] px-2 py-0.5 rounded-lg border ${isFollowingPersona ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-[#ff4d8d] border-[#ff4d8d] text-white font-bold'} transition">${isFollowingPersona ? `Following ${postPersona.emoji}` : `Follow ${postPersona.emoji}`}</button>` : ''}
+                            <span onclick="handleUserClick('${post.username}')" class="font-bold text-slate-200 cursor-pointer hover:text-[#60a5fa] transition flex items-center gap-1">${post.username} ${verifiedBadgeHtml(post.username)} ${adminBadgeHtml(post.username)}</span>
+                            ${post.username !== currentUser ? `<button onclick="togglePersonaFollow('${post.username}','${postPersona.key}')" title="Follow just this face — not the whole account" class="ml-1 text-[11px] px-2 py-0.5 rounded-lg border ${isFollowingPersona ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-[#2563eb] border-[#3b82f6] text-white font-bold'} transition">${isFollowingPersona ? `Following ${postPersona.emoji}` : `Follow ${postPersona.emoji}`}</button>` : ''}
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span class="text-[9px] px-2 py-0.5 rounded-full border bg-gradient-to-r from-[#9d7bff]/10 to-[#ff4d8d]/10 text-[#ff4d8d] border-[#ff4d8d]/20 flex items-center gap-1" title="${postPersona.label}">${postPersona.emoji} ${postPersona.label}</span>
-                            ${post.pinned ? `<span class="text-[9px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1" title="Pinned"><i class="fa-solid fa-thumbtack text-[8px]"></i></span>` : ''}
-                            ${post.username === currentUser ? `<button onclick="togglePinPost('${post.id}')" class="text-slate-500 hover:text-amber-400 text-xs transition" title="${post.pinned ? 'Unpin' : 'Pin to profile'}"><i class="fa-solid fa-thumbtack ${post.pinned ? 'text-amber-400' : ''}"></i></button>` : ''}
-                            ${post.username === currentUser ? `<button onclick="deletePost('${post.id}')" class="text-slate-500 hover:text-red-400 text-xs transition" title="Delete"><i class="fa-solid fa-trash"></i></button>` : ''}
+                            <span class="text-[11px] px-2 py-0.5 rounded-full border bg-[#2563eb]/10 to-[#3b82f6]/10 text-[#60a5fa] border-[#3b82f6]/20 flex items-center gap-1" title="${postPersona.label}">${postPersona.emoji} ${postPersona.label}</span>
+                            ${post.pinned ? `<span class="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1" title="Pinned"><i class="fa-solid fa-thumbtack text-[11px]"></i></span>` : ''}
+                            ${post.username === currentUser ? `<button onclick="togglePinPost('${post.id}')" class="text-slate-400 hover:text-amber-400 text-xs transition" title="${post.pinned ? 'Unpin' : 'Pin to profile'}"><i class="fa-solid fa-thumbtack ${post.pinned ? 'text-amber-400' : ''}"></i></button>` : ''}
+                            ${post.username === currentUser ? `<button onclick="deletePost('${post.id}')" class="text-slate-400 hover:text-red-400 text-xs transition" title="Delete"><i class="fa-solid fa-trash"></i></button>` : ''}
                         </div>
                     </div>
                     <p class="text-xs text-slate-300 whitespace-pre-wrap break-words">${linkifyHashtags(post.content)}</p>
                     ${buildPostMediaHtml(post, `carousel-feed-${post.id}`)}
                     
                     <div class="flex items-center space-x-4 pt-1.5 border-t border-slate-800/80 text-[11px] text-slate-400">
-                        <button onclick="toggleLike('${post.id}')" class="hover:text-[#ff4d8d] transition flex items-center gap-1">
-                            <i class="fa-solid fa-heart ${hasLiked ? 'text-[#ff4d8d]' : 'text-slate-500'}"></i> <span>${postLikes.length}</span>
+                        <button onclick="toggleLike('${post.id}')" class="hover:text-[#60a5fa] transition flex items-center gap-1">
+                            <i class="fa-solid fa-heart ${hasLiked ? 'text-[#60a5fa]' : 'text-slate-400'}"></i> <span>${postLikes.length}</span>
                         </button>
-                        <button onclick="openCommentModal('${post.id}')" class="hover:text-[#35c7ff] transition flex items-center gap-1">
-                            <i class="fa-solid fa-comment text-[#35c7ff]"></i> <span>${postComments.length}</span>
+                        <button onclick="openCommentModal('${post.id}')" class="hover:text-[#38bdf8] transition flex items-center gap-1">
+                            <i class="fa-solid fa-comment text-[#38bdf8]"></i> <span>${postComments.length}</span>
                         </button>
-                        <button onclick="openSharePostModal('${post.id}')" class="hover:text-[#9d7bff] transition flex items-center gap-1" title="Share">
-                            <i class="fa-solid fa-share-nodes text-[#9d7bff]"></i>
+                        <button onclick="openSharePostModal('${post.id}')" class="hover:text-[#2dd4bf] transition flex items-center gap-1" title="Share">
+                            <i class="fa-solid fa-share-nodes text-[#2dd4bf]"></i>
                         </button>
-                        <button onclick="toggleSavePost('${post.id}')" class="hover:text-amber-400 transition flex items-center gap-1" title="Save"><i class="fa-solid fa-bookmark ${globalSavedPostsCache.some(s => s.post_id === post.id && s.username === currentUser) ? 'text-amber-400' : 'text-slate-500'}"></i></button>
+                        <button onclick="toggleSavePost('${post.id}')" class="hover:text-amber-400 transition flex items-center gap-1" title="Save"><i class="fa-solid fa-bookmark ${globalSavedPostsCache.some(s => s.post_id === post.id && s.username === currentUser) ? 'text-amber-400' : 'text-slate-400'}"></i></button>
                         ${post.username === currentUser ? `<button onclick="openPostAnalyticsModal('${post.id}')" class="hover:text-emerald-400 transition flex items-center gap-1 ml-auto" title="Post Analytics"><i class="fa-solid fa-chart-simple text-emerald-400"></i> <span>${globalPostViewsCache.filter(v => v.post_id === post.id).length}</span></button>` : ''}
                     </div>
                 `;
@@ -6271,7 +6271,7 @@
             // PERF: the feed only holds the newest FEED_POST_WINDOW posts; this loads 60 more.
             if (globalPostsCache.length >= FEED_POST_WINDOW) {
                 const more = document.createElement('button');
-                more.className = 'w-full py-2.5 text-xs font-bold text-slate-300 glass-panel rounded-2xl hover:text-[#ff4d8d] transition';
+                more.className = 'w-full py-2.5 text-xs font-bold text-slate-300 glass-panel rounded-2xl hover:text-[#60a5fa] transition';
                 more.textContent = 'Aur posts dekho';
                 more.onclick = () => { more.disabled = true; more.textContent = 'Loading...'; loadMoreFeedPosts(); };
                 feedStream.appendChild(more);
@@ -6283,7 +6283,7 @@
             const reels = globalPostsCache.filter(p => (p.platform === 'Reel' || (p.image_url && p.image_url.match(/\.(mp4|mov|webm)$/i))) && !isBlockedWith(p.username) && !isPrivateAndNotFollowing(p.username));
 
             if (reels.length === 0) {
-                container.innerHTML = `<div class="text-center text-xs text-slate-500 py-20">No reels found. Click the top-right '+' button to upload one!</div>`;
+                container.innerHTML = `<div class="text-center text-xs text-slate-400 py-20">No reels found. Click the top-right '+' button to upload one!</div>`;
                 return;
             }
 
@@ -6300,7 +6300,7 @@
 
                         <div class="relative p-4 flex justify-between items-center z-10">
                             <div class="flex items-center space-x-2.5 cursor-pointer" onclick="handleUserClick('${reel.username}')">
-                                <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden shadow">${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : reel.username.charAt(0)}</div>
+                                <div class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden shadow">${avatar ? `<img src="${avatar}" class="w-full h-full object-cover">` : reel.username.charAt(0)}</div>
                                 <span class="text-xs font-bold text-white">${reel.username}</span>
                             </div>
                             <button onclick="event.stopPropagation(); toggleReelSound(this.closest('.reel-item').querySelector('.reel-video'))" class="reel-sound-btn w-8 h-8 rounded-full bg-black/40 flex items-center justify-center text-white text-xs shrink-0" title="${reelSoundMuted ? 'Unmute' : 'Mute'}">
@@ -6312,13 +6312,13 @@
                             <div class="space-y-1 pr-4 max-w-[260px]">
                                 <p class="text-xs font-bold text-white">@${reel.username}</p>
                                 <p class="text-xs text-slate-200 break-words">${linkifyHashtags(reel.content)}</p>
-                                ${reel.music_title ? `<p class="text-[10px] text-white/90 flex items-center gap-1"><i class="fa-solid fa-music"></i> ${reel.music_title}</p>` : ''}
+                                ${reel.music_title ? `<p class="text-[11px] text-white/90 flex items-center gap-1"><i class="fa-solid fa-music"></i> ${reel.music_title}</p>` : ''}
                             </div>
                             <div class="flex flex-col space-y-4 items-center text-white text-xs">
-                                <button onclick="toggleLike('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-heart text-xl ${hasLiked ? 'text-[#ff4d8d]' : 'text-white'}"></i><span class="text-[10px] font-bold">${postLikes.length}</span></button>
-                                <button onclick="openCommentModal('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-comment text-xl text-[#35c7ff]"></i><span class="text-[10px] font-bold">${postComments.length}</span></button>
-                                <button onclick="event.stopPropagation(); openSharePostModal('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-share-nodes text-xl text-white"></i><span class="text-[10px] font-bold">Share</span></button>
-                                <button onclick="event.stopPropagation(); toggleSavePost('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-bookmark text-xl ${globalSavedPostsCache.some(s => s.post_id === reel.id && s.username === currentUser) ? 'text-amber-400' : 'text-white'}"></i><span class="text-[10px] font-bold">Save</span></button>
+                                <button onclick="toggleLike('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-heart text-xl ${hasLiked ? 'text-[#60a5fa]' : 'text-white'}"></i><span class="text-[11px] font-bold">${postLikes.length}</span></button>
+                                <button onclick="openCommentModal('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-comment text-xl text-[#38bdf8]"></i><span class="text-[11px] font-bold">${postComments.length}</span></button>
+                                <button onclick="event.stopPropagation(); openSharePostModal('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-share-nodes text-xl text-white"></i><span class="text-[11px] font-bold">Share</span></button>
+                                <button onclick="event.stopPropagation(); toggleSavePost('${reel.id}')" class="flex flex-col items-center"><i class="fa-solid fa-bookmark text-xl ${globalSavedPostsCache.some(s => s.post_id === reel.id && s.username === currentUser) ? 'text-amber-400' : 'text-white'}"></i><span class="text-[11px] font-bold">Save</span></button>
                             </div>
                         </div>
                     </div>
@@ -6401,7 +6401,7 @@
             const wrap = document.getElementById('reelMusicLibraryContainer');
             if (!wrap) return;
             wrap.innerHTML = REEL_MUSIC_LIBRARY.map((track, i) => `
-                <button type="button" onclick="selectReelMusic(${i})" class="flex items-center justify-between text-left px-2.5 py-1.5 rounded-xl border text-[10px] font-semibold transition ${selectedReelMusic && selectedReelMusic.title === track.title ? 'bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] text-white border-transparent' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-[#9d7bff]/40'}">
+                <button type="button" onclick="selectReelMusic(${i})" class="flex items-center justify-between text-left px-2.5 py-1.5 rounded-xl border text-[11px] font-semibold transition ${selectedReelMusic && selectedReelMusic.title === track.title ? 'bg-[#2563eb] text-white border-transparent' : 'bg-slate-900 border-slate-800 text-slate-300 hover:border-[#14b8a6]/40'}">
                     <span><i class="fa-solid fa-music mr-1.5"></i>${track.title}</span>
                     <i class="fa-solid fa-play"></i>
                 </button>
@@ -6593,7 +6593,7 @@
             const topLevel = allPostComments.filter(c => !c.parent_comment_id);
 
             if (allPostComments.length === 0) {
-                listContainer.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">No comments yet. Be the first!</p>`;
+                listContainer.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">No comments yet. Be the first!</p>`;
                 return;
             }
 
@@ -6608,14 +6608,14 @@
                     <div class="bg-slate-900 border border-slate-800 p-2.5 rounded-xl text-xs ${marginClass}">
                         <div class="flex justify-between items-start">
                             <div class="flex items-center space-x-2 min-w-0">
-                                <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-[10px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : c.username.charAt(0)}</div>
-                                <div class="min-w-0"><span class="font-bold text-[#ff4d8d] cursor-pointer" onclick="handleUserClick('${c.username}')">${c.username}</span> <p class="text-slate-300 break-words">${c.text}</p></div>
+                                <div class="w-6 h-6 rounded-full bg-[#334155] flex items-center justify-center text-[11px] text-white overflow-hidden shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : c.username.charAt(0)}</div>
+                                <div class="min-w-0"><span class="font-bold text-[#60a5fa] cursor-pointer" onclick="handleUserClick('${c.username}')">${c.username}</span> <p class="text-slate-300 break-words">${c.text}</p></div>
                             </div>
-                            ${c.username === currentUser ? `<button onclick="deleteComment('${c.id}')" class="text-slate-500 hover:text-red-400 text-xs ml-2 shrink-0"><i class="fa-solid fa-xmark"></i></button>` : ''}
+                            ${c.username === currentUser ? `<button onclick="deleteComment('${c.id}')" class="text-slate-400 hover:text-red-400 text-xs ml-2 shrink-0"><i class="fa-solid fa-xmark"></i></button>` : ''}
                         </div>
-                        <div class="flex items-center gap-3 mt-1.5 pl-8 text-[10px] text-slate-500">
-                            <button onclick="toggleCommentLike('${c.id}')" class="flex items-center gap-1 hover:text-[#ff4d8d] transition ${iLikedComment ? 'text-[#ff4d8d] font-bold' : ''}"><i class="fa-solid fa-heart"></i> ${likesForComment.length > 0 ? likesForComment.length : ''} Like</button>
-                            <button onclick="setCommentReplyTarget('${c.id}', '${c.username}')" class="flex items-center gap-1 hover:text-[#35c7ff] transition"><i class="fa-solid fa-reply"></i> Reply</button>
+                        <div class="flex items-center gap-3 mt-1.5 pl-8 text-[11px] text-slate-400">
+                            <button onclick="toggleCommentLike('${c.id}')" class="flex items-center gap-1 hover:text-[#60a5fa] transition ${iLikedComment ? 'text-[#60a5fa] font-bold' : ''}"><i class="fa-solid fa-heart"></i> ${likesForComment.length > 0 ? likesForComment.length : ''} Like</button>
+                            <button onclick="setCommentReplyTarget('${c.id}', '${c.username}')" class="flex items-center gap-1 hover:text-[#38bdf8] transition"><i class="fa-solid fa-reply"></i> Reply</button>
                         </div>
                     </div>
                 `;
@@ -6724,7 +6724,7 @@
                     <div id="${detailCarouselId}" onscroll="updateCarouselDots('${detailCarouselId}')" class="flex overflow-x-auto no-scrollbar w-full max-h-[70vh]" style="scroll-snap-type: x mandatory;">
                         ${detailUrls.map(u => `<img src="${u}" class="w-full max-h-[70vh] object-contain snap-center shrink-0" style="scroll-snap-align: center;">`).join('')}
                     </div>
-                    <span id="${detailCarouselId}-counter" class="absolute top-2 right-2 bg-black/60 text-white text-[9px] font-bold px-2 py-0.5 rounded-full">1/${detailUrls.length}</span>
+                    <span id="${detailCarouselId}-counter" class="absolute top-2 right-2 bg-black/60 text-white text-[11px] font-bold px-2 py-0.5 rounded-full">1/${detailUrls.length}</span>
                     <div id="${detailCarouselId}-dots" class="absolute bottom-2 inset-x-0 flex justify-center gap-1">
                         ${detailUrls.map((_, i) => `<span class="w-1.5 h-1.5 rounded-full ${i === 0 ? 'bg-white' : 'bg-white/40'}" data-dot-index="${i}"></span>`).join('')}
                     </div>
@@ -6736,15 +6736,15 @@
                     ${detailMediaHtml}
                     <div class="w-full p-3 bg-slate-900 border-t border-slate-800 space-y-2 mt-auto">
                         <div class="flex items-center space-x-2">
-                            <div class="w-6 h-6 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-[10px] text-white overflow-hidden">${posterAvatar ? `<img src="${posterAvatar}" class="w-full h-full object-cover">` : post.username.charAt(0)}</div>
+                            <div class="w-6 h-6 rounded-full bg-[#334155] flex items-center justify-center text-[11px] text-white overflow-hidden">${posterAvatar ? `<img src="${posterAvatar}" class="w-full h-full object-cover">` : post.username.charAt(0)}</div>
                             <span class="text-xs font-bold text-slate-200">${post.username}</span>
                         </div>
                         <p class="text-xs text-slate-300 break-words">${post.content}</p>
                         <div class="flex items-center space-x-4 pt-1 border-t border-slate-800 text-slate-400 text-xs">
-                            <button onclick="toggleLike('${post.id}')" class="hover:text-[#ff4d8d] transition flex items-center gap-1"><i class="fa-solid fa-heart ${hasLiked ? 'text-[#ff4d8d]' : 'text-slate-500'}"></i> <span>${postLikes.length}</span></button>
-                            <button onclick="openCommentModal('${post.id}')" class="hover:text-[#35c7ff] transition flex items-center gap-1"><i class="fa-solid fa-comment text-[#35c7ff]"></i> <span>${postComments.length}</span></button>
-                            <button onclick="openSharePostModal('${post.id}')" class="hover:text-[#9d7bff] transition flex items-center gap-1" title="Share"><i class="fa-solid fa-share-nodes text-[#9d7bff]"></i></button>
-                            <button onclick="toggleSavePost('${post.id}')" class="hover:text-amber-400 transition flex items-center gap-1" title="Save"><i class="fa-solid fa-bookmark ${globalSavedPostsCache.some(s => s.post_id === post.id && s.username === currentUser) ? 'text-amber-400' : 'text-slate-500'}"></i></button>
+                            <button onclick="toggleLike('${post.id}')" class="hover:text-[#60a5fa] transition flex items-center gap-1"><i class="fa-solid fa-heart ${hasLiked ? 'text-[#60a5fa]' : 'text-slate-400'}"></i> <span>${postLikes.length}</span></button>
+                            <button onclick="openCommentModal('${post.id}')" class="hover:text-[#38bdf8] transition flex items-center gap-1"><i class="fa-solid fa-comment text-[#38bdf8]"></i> <span>${postComments.length}</span></button>
+                            <button onclick="openSharePostModal('${post.id}')" class="hover:text-[#2dd4bf] transition flex items-center gap-1" title="Share"><i class="fa-solid fa-share-nodes text-[#2dd4bf]"></i></button>
+                            <button onclick="toggleSavePost('${post.id}')" class="hover:text-amber-400 transition flex items-center gap-1" title="Save"><i class="fa-solid fa-bookmark ${globalSavedPostsCache.some(s => s.post_id === post.id && s.username === currentUser) ? 'text-amber-400' : 'text-slate-400'}"></i></button>
                             ${ownerControlsHtml}
                         </div>
                     </div>
@@ -6929,13 +6929,13 @@
             return matches ? matches.map(m => m.toLowerCase()) : [];
         }
 
-        // Wraps #hashtags in post/reel content with clickable pink spans that jump to Explore
+        // Wraps #hashtags in post/reel content with clickable accent-colored spans that jump to Explore
         function linkifyHashtags(content) {
             if (!content) return '';
             const escaped = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return escaped.replace(/#[a-zA-Z0-9_]+/g, (tag) => {
                 const clean = tag.toLowerCase().replace(/[^a-z0-9_#]/g, '');
-                return `<span onclick="event.stopPropagation(); jumpToExploreHashtag('${clean}')" class="text-[#ff4d8d] font-bold cursor-pointer hover:underline">${tag}</span>`;
+                return `<span onclick="event.stopPropagation(); jumpToExploreHashtag('${clean}')" class="text-[#60a5fa] font-bold cursor-pointer hover:underline">${tag}</span>`;
             });
         }
 
@@ -6958,10 +6958,10 @@
             const tagsContainer = document.getElementById('trendingHashtagsContainer');
             if (tagsContainer) {
                 if (sortedTags.length === 0) {
-                    tagsContainer.innerHTML = `<p class="text-[10px] text-slate-500">No hashtags yet. Add #tags to your posts!</p>`;
+                    tagsContainer.innerHTML = `<p class="text-[11px] text-slate-400">No hashtags yet. Add #tags to your posts!</p>`;
                 } else {
                     tagsContainer.innerHTML = sortedTags.map(tag => `
-                        <span onclick="filterExploreByHashtag('${tag}')" class="cursor-pointer text-[11px] font-bold px-2.5 py-1 rounded-full border ${activeExploreFilterTag === tag ? 'bg-[#ff4d8d] border-[#ff4d8d] text-white' : 'bg-slate-900 border-slate-800 text-[#ff4d8d] hover:border-[#ff4d8d]'}">${tag} <span class="text-slate-500 font-normal">${tagCounts[tag]}</span></span>
+                        <span onclick="filterExploreByHashtag('${tag}')" class="cursor-pointer text-[11px] font-bold px-2.5 py-1 rounded-full border ${activeExploreFilterTag === tag ? 'bg-[#2563eb] border-[#3b82f6] text-white' : 'bg-slate-900 border-slate-800 text-[#60a5fa] hover:border-[#3b82f6]'}">${tag} <span class="text-slate-400 font-normal">${tagCounts[tag]}</span></span>
                     `).join('');
                 }
             }
@@ -6991,7 +6991,7 @@
             }
 
             if (items.length === 0) {
-                grid.innerHTML = `<div class="col-span-2 text-center text-xs text-slate-500 py-8">Nothing to show here yet.</div>`;
+                grid.innerHTML = `<div class="col-span-2 text-center text-xs text-slate-400 py-8">Nothing to show here yet.</div>`;
                 return;
             }
 
@@ -7002,9 +7002,9 @@
                     <div onclick="openPostDetailModal('${post.id}')" class="relative aspect-square rounded-xl overflow-hidden bg-slate-900 border border-slate-800 cursor-pointer group">
                         ${post.image_url
                             ? (isVideo ? `<video src="${post.image_url}" class="w-full h-full object-cover"></video>` : `<img src="${post.image_url}" class="w-full h-full object-cover">`)
-                            : `<div class="w-full h-full flex items-center justify-center p-2 text-[10px] text-slate-400 text-center">${post.content.slice(0, 60)}</div>`}
-                        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 flex items-center gap-1 text-[10px] text-white font-bold">
-                            <i class="fa-solid fa-heart text-[#ff4d8d]"></i> ${likeCount} <span class="text-slate-300 font-normal truncate">@${post.username}</span>
+                            : `<div class="w-full h-full flex items-center justify-center p-2 text-[11px] text-slate-400 text-center">${post.content.slice(0, 60)}</div>`}
+                        <div class="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/80 to-transparent p-1.5 flex items-center gap-1 text-[11px] text-white font-bold">
+                            <i class="fa-solid fa-heart text-[#60a5fa]"></i> ${likeCount} <span class="text-slate-300 font-normal truncate">@${post.username}</span>
                         </div>
                     </div>
                 `;
@@ -7043,10 +7043,10 @@
                     <div class="w-14 h-14 rounded-full p-[2px] ${byUser[currentUser] ? 'story-ring-unseen' : 'bg-slate-700'}">
                         <div class="w-full h-full rounded-full border-2 border-darker bg-slate-800 flex items-center justify-center overflow-hidden relative">
                             ${myAvatar ? `<img src="${myAvatar}" class="w-full h-full object-cover">` : `<span class="text-xs font-bold text-white">${currentUser ? currentUser.charAt(0).toUpperCase() : 'U'}</span>`}
-                            <button onclick="event.stopPropagation(); openStoryUploadModal()" class="absolute bottom-0 right-0 w-4 h-4 bg-[#ff4d8d] rounded-full flex items-center justify-center text-white text-[8px] border border-darker"><i class="fa-solid fa-plus"></i></button>
+                            <button onclick="event.stopPropagation(); openStoryUploadModal()" class="absolute bottom-0 right-0 w-4 h-4 bg-[#2563eb] rounded-full flex items-center justify-center text-white text-[11px] border border-darker"><i class="fa-solid fa-plus"></i></button>
                         </div>
                     </div>
-                    <span class="text-[9px] text-slate-400 font-semibold">Your Story</span>
+                    <span class="text-[11px] text-slate-400 font-semibold">Your Story</span>
                 </div>
             `;
 
@@ -7061,7 +7061,7 @@
                                 ${av ? `<img src="${av}" class="w-full h-full object-cover">` : `<span class="text-xs font-bold text-white">${username.charAt(0).toUpperCase()}</span>`}
                             </div>
                         </div>
-                        <span class="text-[9px] text-slate-400 font-semibold truncate max-w-[56px]">${username}</span>
+                        <span class="text-[11px] text-slate-400 font-semibold truncate max-w-[56px]">${username}</span>
                     </div>
                 `;
             });
@@ -7246,8 +7246,8 @@
                 const container = document.getElementById('inAppNotificationContainer');
                 if (container) {
                     const banner = document.createElement('div');
-                    banner.className = "pointer-events-auto w-full max-w-sm glass-panel bg-slate-900/95 border border-[#ff4d8d]/40 rounded-2xl p-2.5 shadow-2xl flex items-center space-x-2 animate-slide-down text-xs text-slate-200";
-                    banner.innerHTML = `<i class="fa-solid fa-paper-plane text-[#ff4d8d]"></i> <span>Reply sent to ${story.username}'s story</span>`;
+                    banner.className = "pointer-events-auto w-full max-w-sm glass-panel bg-slate-900/95 border border-[#3b82f6]/40 rounded-2xl p-2.5 shadow-2xl flex items-center space-x-2 animate-slide-down text-xs text-slate-200";
+                    banner.innerHTML = `<i class="fa-solid fa-paper-plane text-[#60a5fa]"></i> <span>Reply sent to ${story.username}'s story</span>`;
                     container.appendChild(banner);
                     setTimeout(() => { if (banner.parentNode) banner.remove(); }, 2500);
                 }
@@ -7357,8 +7357,8 @@
 
             if (myGroups.length === 0) {
                 container.innerHTML = q
-                    ? `<div class="p-6 text-center text-xs text-slate-500">No groups match "${groupsListSearchQuery}".</div>`
-                    : `<div class="p-6 text-center text-xs text-slate-500">No groups yet. Tap "New" to create one.</div>`;
+                    ? `<div class="p-6 text-center text-xs text-slate-400">No groups match "${groupsListSearchQuery}".</div>`
+                    : `<div class="p-6 text-center text-xs text-slate-400">No groups yet. Tap "New" to create one.</div>`;
                 return;
             }
 
@@ -7366,13 +7366,13 @@
                 const memberCount = globalGroupMembersCache.filter(m => String(m.group_id) === String(g.id)).length;
                 return `
                     <div onclick="openGroupChat('${g.id}')" class="p-3 flex items-center space-x-3 cursor-pointer hover:bg-slate-800/60 fast-transition">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden shrink-0">${g.avatar_url ? `<img src="${g.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid ${g.is_channel ? 'fa-bullhorn' : 'fa-users'}"></i>`}</div>
+                        <div class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden shrink-0">${g.avatar_url ? `<img src="${g.avatar_url}" class="w-full h-full object-cover">` : `<i class="fa-solid ${g.is_channel ? 'fa-bullhorn' : 'fa-users'}"></i>`}</div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-bold text-slate-200 truncate">${g.name} ${g.is_channel ? '<span class="text-[8px] font-bold text-[#ff4d8d] bg-[#ff4d8d]/10 border border-[#ff4d8d]/30 px-1.5 py-0.5 rounded-full ml-1">CHANNEL</span>' : ''} ${g.is_private ? '<span class="text-[8px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full ml-1"><i class="fa-solid fa-lock"></i></span>' : ''}</p>
-                            <p class="text-[10px] text-slate-500">${memberCount} ${g.is_channel ? 'subscribers' : 'members'}</p>
+                            <p class="text-xs font-bold text-slate-200 truncate">${g.name} ${g.is_channel ? '<span class="text-[11px] font-bold text-[#60a5fa] bg-[#2563eb]/10 border border-[#3b82f6]/30 px-1.5 py-0.5 rounded-full ml-1">CHANNEL</span>' : ''} ${g.is_private ? '<span class="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full ml-1"><i class="fa-solid fa-lock"></i></span>' : ''}</p>
+                            <p class="text-[11px] text-slate-400">${memberCount} ${g.is_channel ? 'subscribers' : 'members'}</p>
                         </div>
-                        <button onclick="event.stopPropagation(); openGroupInfoModal('${g.id}')" title="Group Options" class="text-slate-600 hover:text-[#ff4d8d] p-1.5 shrink-0"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
-                        <i class="fa-solid fa-chevron-right text-xs text-slate-600"></i>
+                        <button onclick="event.stopPropagation(); openGroupInfoModal('${g.id}')" title="Group Options" class="text-slate-400 hover:text-[#60a5fa] p-1.5 shrink-0"><i class="fa-solid fa-ellipsis-vertical text-xs"></i></button>
+                        <i class="fa-solid fa-chevron-right text-xs text-slate-400"></i>
                     </div>
                 `;
             }).join('');
@@ -7399,7 +7399,7 @@
             // are sorted to the top so they're the first thing you see.
             const allUsers = cachedAllUsers.filter(u => u !== currentUser);
             if (allUsers.length === 0) {
-                container.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">Koi user nahi mila.</p>`;
+                container.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-2">Koi user nahi mila.</p>`;
                 return;
             }
             const q = (query || '').trim().toLowerCase();
@@ -7410,14 +7410,14 @@
                 return a.localeCompare(b);
             });
             if (filtered.length === 0) {
-                container.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">Koi user nahi mila.</p>`;
+                container.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-2">Koi user nahi mila.</p>`;
                 return;
             }
             container.innerHTML = filtered.map(u => `
                 <label class="flex items-center gap-2 p-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-slate-200 cursor-pointer">
-                    <input type="checkbox" value="${u}" class="new-group-member-checkbox accent-[#ff4d8d]" ${newGroupSelectedMembers.has(u) ? 'checked' : ''} onchange="toggleNewGroupMemberSelection('${u}', this.checked)">
+                    <input type="checkbox" value="${u}" class="new-group-member-checkbox accent-[#3b82f6]" ${newGroupSelectedMembers.has(u) ? 'checked' : ''} onchange="toggleNewGroupMemberSelection('${u}', this.checked)">
                     <span class="flex-1 truncate">${u}</span>
-                    ${canMessageUser(u) ? `<span class="text-[8px] font-bold text-[#35c7ff] bg-[#35c7ff]/10 border border-[#35c7ff]/30 px-1.5 py-0.5 rounded-full shrink-0">Follow</span>` : ''}
+                    ${canMessageUser(u) ? `<span class="text-[11px] font-bold text-[#38bdf8] bg-[#38bdf8]/10 border border-[#38bdf8]/30 px-1.5 py-0.5 rounded-full shrink-0">Follow</span>` : ''}
                 </label>
             `).join('');
         }
@@ -7440,7 +7440,7 @@
             const pubBtn = document.getElementById('newGroupPublicBtn');
             const privBtn = document.getElementById('newGroupPrivateBtn');
             if (!pubBtn || !privBtn) return;
-            const activeCls = "flex-1 py-2 rounded-xl text-[11px] font-bold border transition bg-[#ff4d8d]/15 border-[#ff4d8d]/50 text-[#ff4d8d]";
+            const activeCls = "flex-1 py-2 rounded-xl text-[11px] font-bold border transition bg-[#2563eb]/15 border-[#3b82f6]/50 text-[#60a5fa]";
             const inactiveCls = "flex-1 py-2 rounded-xl text-[11px] font-bold border transition bg-slate-950 border-slate-800 text-slate-400";
             pubBtn.className = !newGroupIsPrivate ? activeCls : inactiveCls;
             privBtn.className = newGroupIsPrivate ? activeCls : inactiveCls;
@@ -7528,7 +7528,7 @@
             if (roomAvatar) {
                 roomAvatar.innerHTML = group && group.avatar_url
                     ? `<img src="${group.avatar_url}" class="w-full h-full object-cover">`
-                    : `<i class="fa-solid ${group && group.is_channel ? 'fa-bullhorn' : 'fa-users'} text-[10px]"></i>`;
+                    : `<i class="fa-solid ${group && group.is_channel ? 'fa-bullhorn' : 'fa-users'} text-[11px]"></i>`;
             }
 
             // FEATURE: CHANNELS — only the creator can post in a broadcast-only channel
@@ -7584,14 +7584,14 @@
                 const isAdmin = u === group.created_by;
                 return `
                     <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-900/60">
-                        <div class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-[10px] text-white shadow overflow-hidden relative shrink-0">
+                        <div class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center font-bold text-[11px] text-white shadow overflow-hidden relative shrink-0">
                             ${avatarUrl ? `<img src="${avatarUrl}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}
                             ${isOnline ? `<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>` : ''}
                         </div>
                         <div class="flex-1 min-w-0">
                             <p class="text-xs font-bold text-slate-200 truncate">${u}${u === currentUser ? ' (You)' : ''}</p>
                         </div>
-                        ${isAdmin ? `<span class="text-[9px] font-bold text-[#ff4d8d] bg-[#ff4d8d]/10 border border-[#ff4d8d]/30 px-2 py-0.5 rounded-full shrink-0">Admin</span>` : ''}
+                        ${isAdmin ? `<span class="text-[11px] font-bold text-[#60a5fa] bg-[#2563eb]/10 border border-[#3b82f6]/30 px-2 py-0.5 rounded-full shrink-0">Admin</span>` : ''}
                     </div>
                 `;
             }).join('');
@@ -7635,7 +7635,7 @@
             if (!dot || !btn) return;
             const isPrivate = !!group.is_private;
             dot.style.transform = isPrivate ? 'translateX(20px)' : 'translateX(0)';
-            btn.className = isPrivate ? 'w-10 h-5 rounded-full bg-[#ff4d8d] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
+            btn.className = isPrivate ? 'w-10 h-5 rounded-full bg-[#2563eb] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
         }
 
         async function toggleGroupPrivacy() {
@@ -7690,18 +7690,18 @@
             });
 
             if (addable.length === 0) {
-                container.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">Add karne layak koi naya user nahi hai.</p>`;
+                container.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-2">Add karne layak koi naya user nahi hai.</p>`;
                 return;
             }
             if (filtered.length === 0) {
-                container.innerHTML = `<p class="text-[10px] text-slate-500 text-center py-2">Koi user nahi mila.</p>`;
+                container.innerHTML = `<p class="text-[11px] text-slate-400 text-center py-2">Koi user nahi mila.</p>`;
                 return;
             }
             container.innerHTML = filtered.map(u => `
                 <label class="flex items-center gap-2 p-1.5 rounded-lg bg-slate-900 border border-slate-800 text-[11px] text-slate-200 cursor-pointer">
-                    <input type="checkbox" value="${u}" class="accent-[#35c7ff]" ${addGroupMembersSelected.has(u) ? 'checked' : ''} onchange="toggleAddGroupMemberSelection('${u}', this.checked)">
+                    <input type="checkbox" value="${u}" class="accent-[#38bdf8]" ${addGroupMembersSelected.has(u) ? 'checked' : ''} onchange="toggleAddGroupMemberSelection('${u}', this.checked)">
                     <span class="flex-1 truncate">${u}</span>
-                    ${canMessageUser(u) ? `<span class="text-[8px] font-bold text-[#35c7ff] bg-[#35c7ff]/10 border border-[#35c7ff]/30 px-1.5 py-0.5 rounded-full shrink-0">Follow</span>` : ''}
+                    ${canMessageUser(u) ? `<span class="text-[11px] font-bold text-[#38bdf8] bg-[#38bdf8]/10 border border-[#38bdf8]/30 px-1.5 py-0.5 rounded-full shrink-0">Follow</span>` : ''}
                 </label>
             `).join('');
         }
@@ -7780,7 +7780,7 @@
             if (!box) return;
 
             if (globalGroupMessagesCache.length === 0) {
-                box.innerHTML = `<div class="text-center text-xs text-slate-500 my-auto">No messages yet. Say hi to the group! 👋</div>`;
+                box.innerHTML = `<div class="text-center text-xs text-slate-400 my-auto">No messages yet. Say hi to the group! 👋</div>`;
                 updatePinnedBanner('group');
                 return;
             }
@@ -7801,14 +7801,14 @@
 
                 return `
                     <div class="flex flex-col ${isMe ? 'items-end' : 'items-start'} space-y-0.5">
-                        ${!isMe ? `<span class="text-[9px] font-bold text-[#ff4d8d] px-1">${msg.sender}</span>` : ''}
-                        <div class="max-w-[80%] p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#ff4d8d] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'} text-xs space-y-1.5 relative group" ondblclick="openReactionPicker(event, '${msg.id}', 'group')">
+                        ${!isMe ? `<span class="text-[11px] font-bold text-[#60a5fa] px-1">${msg.sender}</span>` : ''}
+                        <div class="max-w-[80%] p-2.5 rounded-2xl shadow ${isMe ? 'bg-[#2563eb] text-white rounded-br-none' : 'bg-slate-900 border border-slate-800 text-slate-200 rounded-bl-none'} text-xs space-y-1.5 relative group" ondblclick="openReactionPicker(event, '${msg.id}', 'group')">
                             ${groupBodyHtml}
-                            <button onclick="togglePinMessage('${msg.id}', 'group')" class="absolute -bottom-2 ${isMe ? '-right-2' : '-left-2'} ${msg.pinned_at ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-yellow-400'} p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="${msg.pinned_at ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>
-                            <button onclick="openReactionPicker(event, '${msg.id}', 'group')" class="absolute -bottom-2 ${isMe ? '-left-2' : 'left-2'} bg-slate-800 text-yellow-400 p-1 rounded-full text-[9px] shadow opacity-0 group-hover:opacity-100 transition" title="React"><i class="fa-solid fa-face-smile"></i></button>
+                            <button onclick="togglePinMessage('${msg.id}', 'group')" class="absolute -bottom-2 ${isMe ? '-right-2' : '-left-2'} ${msg.pinned_at ? 'bg-yellow-500 text-black' : 'bg-slate-800 text-yellow-400'} p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="${msg.pinned_at ? 'Unpin' : 'Pin'}"><i class="fa-solid fa-thumbtack"></i></button>
+                            <button onclick="openReactionPicker(event, '${msg.id}', 'group')" class="absolute -bottom-2 ${isMe ? '-left-2' : 'left-2'} bg-slate-800 text-yellow-400 p-1 rounded-full text-[11px] shadow opacity-0 group-hover:opacity-100 transition" title="React"><i class="fa-solid fa-face-smile"></i></button>
                         </div>
                         ${reactionsHtml}
-                        <span class="text-[9px] text-slate-500 px-1">${timeLabel}</span>
+                        <span class="text-[11px] text-slate-400 px-1">${timeLabel}</span>
                     </div>
                 `;
             }).join('');
@@ -8170,10 +8170,10 @@
                 const mutualCount = scores[u] || 0;
                 return `
                     <div class="shrink-0 w-24 bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-center space-y-1.5">
-                        <div onclick="handleUserClick('${u}')" class="w-10 h-10 mx-auto rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden cursor-pointer shadow">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
-                        <p class="text-[10px] font-bold text-slate-200 truncate">${u}</p>
-                        <p class="text-[8px] text-slate-500">${mutualCount > 0 ? mutualCount + ' mutual' + (mutualCount > 1 ? 's' : '') : 'Suggested'}</p>
-                        <button onclick="toggleFollowFromFeed('${u}')" class="w-full bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[9px] font-bold py-1 rounded-lg transition">Follow</button>
+                        <div onclick="handleUserClick('${u}')" class="w-10 h-10 mx-auto rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden cursor-pointer shadow">${av ? `<img src="${av}" class="w-full h-full object-cover">` : u.charAt(0).toUpperCase()}</div>
+                        <p class="text-[11px] font-bold text-slate-200 truncate">${u}</p>
+                        <p class="text-[11px] text-slate-400">${mutualCount > 0 ? mutualCount + ' mutual' + (mutualCount > 1 ? 's' : '') : 'Suggested'}</p>
+                        <button onclick="toggleFollowFromFeed('${u}')" class="w-full bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold py-1 rounded-lg transition">Follow</button>
                     </div>
                 `;
             }).join('');
@@ -8276,7 +8276,7 @@
             if (!dot || !btn) return;
             const isAway = !!myProfile.away_mode;
             dot.style.transform = isAway ? 'translateX(20px)' : 'translateX(0)';
-            btn.className = isAway ? 'w-10 h-5 rounded-full bg-[#9d7bff] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
+            btn.className = isAway ? 'w-10 h-5 rounded-full bg-[#0f766e] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
             document.getElementById('awayMessageInput').value = myProfile.away_message || '';
         }
 
@@ -8294,7 +8294,7 @@
             if (navIndicator) navIndicator.classList.toggle('hidden', !ghostModeEnabled);
             if (!dot || !btn) return;
             dot.style.transform = ghostModeEnabled ? 'translateX(20px)' : 'translateX(0)';
-            btn.className = ghostModeEnabled ? 'w-10 h-5 rounded-full bg-[#9d7bff] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
+            btn.className = ghostModeEnabled ? 'w-10 h-5 rounded-full bg-[#0f766e] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
         }
 
         // Small, cheap, standalone re-render for just the private-account switch — this is
@@ -8307,7 +8307,7 @@
             const toggleBtn = document.getElementById('privateAccountToggleBtn');
             if (dot && toggleBtn) {
                 dot.style.transform = isPrivate ? 'translateX(20px)' : 'translateX(0)';
-                toggleBtn.className = isPrivate ? 'w-10 h-5 rounded-full bg-[#ff4d8d] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
+                toggleBtn.className = isPrivate ? 'w-10 h-5 rounded-full bg-[#2563eb] relative transition shrink-0' : 'w-10 h-5 rounded-full bg-slate-700 relative transition shrink-0';
             }
         }
 
@@ -8390,7 +8390,7 @@
             const pending = globalFollowRequestsCache.filter(r => r.target === currentUser);
 
             if (pending.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">Koi pending follow request nahi hai.</p>`;
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">Koi pending follow request nahi hai.</p>`;
                 return;
             }
 
@@ -8399,12 +8399,12 @@
                 return `
                     <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl p-2.5">
                         <div class="flex items-center space-x-2 min-w-0">
-                            <div onclick="handleUserClick('${r.requester}')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden cursor-pointer shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : r.requester.charAt(0).toUpperCase()}</div>
+                            <div onclick="handleUserClick('${r.requester}')" class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden cursor-pointer shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : r.requester.charAt(0).toUpperCase()}</div>
                             <span class="text-xs font-bold text-slate-200 truncate">${r.requester}</span>
                         </div>
                         <div class="flex gap-1.5 shrink-0">
-                            <button onclick="approveFollowRequest('${r.id}', '${r.requester}')" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
-                            <button onclick="declineFollowRequest('${r.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Decline</button>
+                            <button onclick="approveFollowRequest('${r.id}', '${r.requester}')" class="bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
+                            <button onclick="declineFollowRequest('${r.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Decline</button>
                         </div>
                     </div>
                 `;
@@ -8556,7 +8556,7 @@
             const pending = globalGroupJoinRequestsCache.filter(r => myGroupIds.has(r.group_id));
 
             if (pending.length === 0) {
-                container.innerHTML = `<p class="text-center text-xs text-slate-500 py-6">Koi pending group join request nahi hai.</p>`;
+                container.innerHTML = `<p class="text-center text-xs text-slate-400 py-6">Koi pending group join request nahi hai.</p>`;
                 return;
             }
 
@@ -8566,15 +8566,15 @@
                 return `
                     <div class="flex items-center justify-between bg-slate-900 border border-slate-800 rounded-xl p-2.5">
                         <div class="flex items-center space-x-2 min-w-0">
-                            <div onclick="handleUserClick('${r.username}')" class="w-8 h-8 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white overflow-hidden cursor-pointer shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : r.username.charAt(0).toUpperCase()}</div>
+                            <div onclick="handleUserClick('${r.username}')" class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white overflow-hidden cursor-pointer shrink-0">${av ? `<img src="${av}" class="w-full h-full object-cover">` : r.username.charAt(0).toUpperCase()}</div>
                             <div class="min-w-0">
                                 <p class="text-xs font-bold text-slate-200 truncate">${r.username}</p>
-                                <p class="text-[9px] text-slate-500 truncate">wants to join "${group ? group.name : 'Group'}"</p>
+                                <p class="text-[11px] text-slate-400 truncate">wants to join "${group ? group.name : 'Group'}"</p>
                             </div>
                         </div>
                         <div class="flex gap-1.5 shrink-0">
-                            <button onclick="approveGroupJoinRequest('${r.id}', '${r.group_id}', '${r.username}')" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
-                            <button onclick="declineGroupJoinRequest('${r.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[10px] font-bold px-2.5 py-1.5 rounded-lg transition">Decline</button>
+                            <button onclick="approveGroupJoinRequest('${r.id}', '${r.group_id}', '${r.username}')" class="bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Accept</button>
+                            <button onclick="declineGroupJoinRequest('${r.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 text-[11px] font-bold px-2.5 py-1.5 rounded-lg transition">Decline</button>
                         </div>
                     </div>
                 `;
@@ -8621,7 +8621,7 @@
             const theirGroups = globalGroupsCache.filter(g => memberGroupIds.has(String(g.id)));
 
             if (theirGroups.length === 0) {
-                container.innerHTML = `<div class="text-center py-10 text-xs text-slate-500">${username === currentUser ? 'Aapne abhi tak koi group ya channel nahi banaya/join kiya.' : `${username} ka koi group ya channel nahi mila.`}</div>`;
+                container.innerHTML = `<div class="text-center py-10 text-xs text-slate-400">${username === currentUser ? 'Aapne abhi tak koi group ya channel nahi banaya/join kiya.' : `${username} ka koi group ya channel nahi mila.`}</div>`;
                 return;
             }
 
@@ -8631,18 +8631,18 @@
                 const requested = hasPendingGroupJoinRequest(g.id, currentUser);
                 let actionBtn;
                 if (iAmMember) {
-                    actionBtn = `<button onclick="event.stopPropagation(); openGroupChatFromProfile('${g.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[10px] font-bold px-3 py-1.5 rounded-lg transition shrink-0">Open</button>`;
+                    actionBtn = `<button onclick="event.stopPropagation(); openGroupChatFromProfile('${g.id}')" class="bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-bold px-3 py-1.5 rounded-lg transition shrink-0">Open</button>`;
                 } else if (requested) {
-                    actionBtn = `<button disabled class="bg-slate-800 text-slate-500 text-[10px] font-bold px-3 py-1.5 rounded-lg shrink-0 cursor-not-allowed">Requested</button>`;
+                    actionBtn = `<button disabled class="bg-slate-800 text-slate-400 text-[11px] font-bold px-3 py-1.5 rounded-lg shrink-0 cursor-not-allowed">Requested</button>`;
                 } else {
-                    actionBtn = `<button onclick="event.stopPropagation(); joinOrRequestGroup('${g.id}')" class="bg-[#ff4d8d] hover:bg-[#ff4d8d] text-white text-[10px] font-bold px-3 py-1.5 rounded-lg transition shrink-0">${g.is_private ? 'Request' : 'Join'}</button>`;
+                    actionBtn = `<button onclick="event.stopPropagation(); joinOrRequestGroup('${g.id}')" class="bg-[#2563eb] hover:bg-[#2563eb] text-white text-[11px] font-bold px-3 py-1.5 rounded-lg transition shrink-0">${g.is_private ? 'Request' : 'Join'}</button>`;
                 }
                 return `
                     <div class="flex items-center gap-2.5 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800">
-                        <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center text-xs text-white shadow shrink-0"><i class="fa-solid ${g.is_channel ? 'fa-bullhorn' : 'fa-users'}"></i></div>
+                        <div class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center text-xs text-white shadow shrink-0"><i class="fa-solid ${g.is_channel ? 'fa-bullhorn' : 'fa-users'}"></i></div>
                         <div class="flex-1 min-w-0">
-                            <p class="text-xs font-bold text-slate-200 truncate">${g.name} ${g.is_channel ? '<span class="text-[8px] font-bold text-[#ff4d8d] bg-[#ff4d8d]/10 border border-[#ff4d8d]/30 px-1.5 py-0.5 rounded-full ml-1">CHANNEL</span>' : ''} ${g.is_private ? '<span class="text-[8px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full ml-1"><i class="fa-solid fa-lock"></i></span>' : ''}</p>
-                            <p class="text-[9px] text-slate-500">${memberCount} ${g.is_channel ? 'subscribers' : 'members'}</p>
+                            <p class="text-xs font-bold text-slate-200 truncate">${g.name} ${g.is_channel ? '<span class="text-[11px] font-bold text-[#60a5fa] bg-[#2563eb]/10 border border-[#3b82f6]/30 px-1.5 py-0.5 rounded-full ml-1">CHANNEL</span>' : ''} ${g.is_private ? '<span class="text-[11px] font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-1.5 py-0.5 rounded-full ml-1"><i class="fa-solid fa-lock"></i></span>' : ''}</p>
+                            <p class="text-[11px] text-slate-400">${memberCount} ${g.is_channel ? 'subscribers' : 'members'}</p>
                         </div>
                         ${actionBtn}
                     </div>
@@ -8715,7 +8715,7 @@
                 .sort((a, b) => (b.type === 'request') - (a.type === 'request') || new Date(b.time || 0) - new Date(a.time || 0));
 
             if (all.length === 0) {
-                container.innerHTML = `<div class="text-center text-xs text-slate-500 py-14"><i class="fa-solid fa-bell-slash text-xl mb-2"></i><p>Koi notification abhi tak nahi hai.</p></div>`;
+                container.innerHTML = `<div class="text-center text-xs text-slate-400 py-14"><i class="fa-solid fa-bell-slash text-xl mb-2"></i><p>Koi notification abhi tak nahi hai.</p></div>`;
                 return;
             }
 
@@ -8727,25 +8727,25 @@
                 if (ev.type === 'like') {
                     return `
                         <div onclick="closeNotificationsModal(); handleUserClick('${ev.username}')" class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900/60 cursor-pointer transition">
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0">${avatarHtml}</div>
-                            <p class="flex-1 text-xs text-slate-300 min-w-0"><span class="font-bold text-slate-100">${ev.username}</span> ne tumhari post like ki <i class="fa-solid fa-heart text-[#ff4d8d] ml-0.5"></i></p>
-                            <span class="text-[9px] text-slate-500 shrink-0">${timeLabel}</span>
+                            <div class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0">${avatarHtml}</div>
+                            <p class="flex-1 text-xs text-slate-300 min-w-0"><span class="font-bold text-slate-100">${ev.username}</span> ne tumhari post like ki <i class="fa-solid fa-heart text-[#60a5fa] ml-0.5"></i></p>
+                            <span class="text-[11px] text-slate-400 shrink-0">${timeLabel}</span>
                         </div>`;
                 } else if (ev.type === 'follow') {
                     return `
                         <div onclick="closeNotificationsModal(); handleUserClick('${ev.username}')" class="flex items-center gap-2.5 p-2 rounded-xl hover:bg-slate-900/60 cursor-pointer transition">
-                            <div class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0">${avatarHtml}</div>
-                            <p class="flex-1 text-xs text-slate-300 min-w-0"><span class="font-bold text-slate-100">${ev.username}</span> ne tumhe follow kiya <i class="fa-solid fa-user-plus text-[#35c7ff] ml-0.5"></i></p>
-                            <span class="text-[9px] text-slate-500 shrink-0">${timeLabel}</span>
+                            <div class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0">${avatarHtml}</div>
+                            <p class="flex-1 text-xs text-slate-300 min-w-0"><span class="font-bold text-slate-100">${ev.username}</span> ne tumhe follow kiya <i class="fa-solid fa-user-plus text-[#38bdf8] ml-0.5"></i></p>
+                            <span class="text-[11px] text-slate-400 shrink-0">${timeLabel}</span>
                         </div>`;
                 } else {
                     return `
                         <div class="flex items-center gap-2.5 p-2 rounded-xl bg-slate-900/40 border border-slate-800">
-                            <div onclick="closeNotificationsModal(); handleUserClick('${ev.username}')" class="w-9 h-9 rounded-full bg-gradient-to-tr from-[#9d7bff] to-[#ff4d8d] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0 cursor-pointer">${avatarHtml}</div>
+                            <div onclick="closeNotificationsModal(); handleUserClick('${ev.username}')" class="w-9 h-9 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white overflow-hidden shrink-0 cursor-pointer">${avatarHtml}</div>
                             <p class="flex-1 text-xs text-slate-300 min-w-0"><span class="font-bold text-slate-100">${ev.username}</span> ne follow request bheji hai</p>
                             <div class="flex gap-1 shrink-0">
-                                <button onclick="approveFollowRequest('${ev.requestId}', '${ev.username}')" class="px-2.5 py-1 rounded-lg bg-[#ff4d8d] text-white text-[10px] font-bold">Accept</button>
-                                <button onclick="declineFollowRequest('${ev.requestId}')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[10px] font-bold">Decline</button>
+                                <button onclick="approveFollowRequest('${ev.requestId}', '${ev.username}')" class="px-2.5 py-1 rounded-lg bg-[#2563eb] text-white text-[11px] font-bold">Accept</button>
+                                <button onclick="declineFollowRequest('${ev.requestId}')" class="px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 text-[11px] font-bold">Decline</button>
                             </div>
                         </div>`;
                 }
@@ -8787,9 +8787,9 @@
         // to the original look. Purely cosmetic/local — no schema needed.
         // =====================================================================================
         const PAGE_CUSTOMIZE_KEYS = ['feed', 'chat', 'reels', 'calls', 'groups', 'explore', 'profile'];
-        const PAGE_ACCENT_SWATCHES = ['#ff4d8d', '#9d7bff', '#35c7ff', '#22c55e', '#f59e0b', '#ef4444', '#ec4899', '#06b6d4', '#a855f7', '#84cc16', '#e11d48', '#64748b', '#14b8a6'];
+        const PAGE_ACCENT_SWATCHES = ['#3b82f6', '#14b8a6', '#38bdf8', '#22c55e', '#f59e0b', '#ef4444', '#06b6d4', '#84cc16', '#64748b'];
         const THEME_OPTIONS = [
-            { key: 'dark', label: 'Midnight', preview: 'linear-gradient(135deg, #050509, #26263a)' },
+            { key: 'dark', label: 'Midnight', preview: 'linear-gradient(135deg, #0b0d10, #2a313a)' },
             { key: 'light', label: 'Light', preview: 'linear-gradient(135deg, #ffffff, #d8d5e3)' },
             { key: 'ocean', label: 'Ocean', preview: 'linear-gradient(135deg, #050a12, #16283a)' },
             { key: 'sunset', label: 'Sunset', preview: 'linear-gradient(135deg, #170d0a, #34190d)' },
@@ -8855,7 +8855,7 @@
             document.getElementById('pageCustomizeThemes').innerHTML = THEME_OPTIONS.map(t => `
                 <button onclick="applyThemeChoice('${t.key}')" class="flex flex-col items-center gap-1 shrink-0">
                     <span class="w-10 h-10 rounded-xl border-2 ${currentTheme === t.key ? 'border-white scale-105' : 'border-transparent'} transition block" style="background:${t.preview}"></span>
-                    <span class="text-[8px] font-bold ${currentTheme === t.key ? 'text-white' : 'text-slate-500'}">${t.label}</span>
+                    <span class="text-[11px] font-bold ${currentTheme === t.key ? 'text-white' : 'text-slate-400'}">${t.label}</span>
                 </button>
             `).join('');
 
@@ -8957,7 +8957,7 @@
                 if (!handle) {
                     handle = document.createElement('div');
                     handle.className = 'layout-drag-handle';
-                    handle.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:rgba(157,123,255,0.15);border:1px dashed #9d7bff;border-radius:10px;padding:6px 10px;margin-bottom:6px;font-size:10px;font-weight:bold;color:#c4b5fd;';
+                    handle.style.cssText = 'display:flex;align-items:center;justify-content:space-between;background:rgba(20,184,166,0.15);border:1px dashed #14b8a6;border-radius:10px;padding:6px 10px;margin-bottom:6px;font-size:10px;font-weight:bold;color:#c4b5fd;';
                     block.prepend(handle);
                 }
                 handle.innerHTML = `
@@ -8992,7 +8992,7 @@
                 bar.style.cssText = 'position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;gap:8px;padding:10px 14px;background:rgba(15,23,42,0.97);border-top:1px solid #334155;';
                 bar.innerHTML = `
                     <button onclick="resetLayoutOrder(layoutEditingPageKey)" class="flex-1 bg-slate-800 hover:bg-slate-700 font-bold py-2.5 rounded-xl text-xs text-slate-200 transition"><i class="fa-solid fa-rotate-left mr-1"></i> Default Order</button>
-                    <button onclick="exitLayoutEditMode()" class="flex-1 bg-gradient-to-r from-[#9d7bff] to-[#ff4d8d] font-bold py-2.5 rounded-xl text-xs text-white shadow transition"><i class="fa-solid fa-check mr-1"></i> Done, Save</button>
+                    <button onclick="exitLayoutEditMode()" class="flex-1 bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white shadow transition"><i class="fa-solid fa-check mr-1"></i> Done, Save</button>
                 `;
                 document.body.appendChild(bar);
             }
@@ -9075,22 +9075,22 @@
                 <div class="grid grid-cols-2 gap-2.5">
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
                         <p class="text-lg font-display font-bold text-emerald-400">${views.length}</p>
-                        <p class="text-[9px] text-slate-500 tracking-wide">Views</p>
+                        <p class="text-[11px] text-slate-400 tracking-wide">Views</p>
                     </div>
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
-                        <p class="text-lg font-display font-bold text-[#35c7ff]">${uniqueReach}</p>
-                        <p class="text-[9px] text-slate-500 tracking-wide">Reach</p>
+                        <p class="text-lg font-display font-bold text-[#38bdf8]">${uniqueReach}</p>
+                        <p class="text-[11px] text-slate-400 tracking-wide">Reach</p>
                     </div>
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
-                        <p class="text-lg font-display font-bold text-[#ff4d8d]">${likeCount}</p>
-                        <p class="text-[9px] text-slate-500 tracking-wide">Likes</p>
+                        <p class="text-lg font-display font-bold text-[#60a5fa]">${likeCount}</p>
+                        <p class="text-[11px] text-slate-400 tracking-wide">Likes</p>
                     </div>
                     <div class="bg-slate-900 border border-slate-800 rounded-xl p-3 text-center">
-                        <p class="text-lg font-display font-bold text-[#9d7bff]">${commentCount}</p>
-                        <p class="text-[9px] text-slate-500 tracking-wide">Comments</p>
+                        <p class="text-lg font-display font-bold text-[#2dd4bf]">${commentCount}</p>
+                        <p class="text-[11px] text-slate-400 tracking-wide">Comments</p>
                     </div>
                 </div>
-                <p class="text-[9px] text-slate-500 text-center pt-1">Views count how many times this post was opened or scrolled into view. Reach counts unique people.</p>
+                <p class="text-[11px] text-slate-400 text-center pt-1">Views count how many times this post was opened or scrolled into view. Reach counts unique people.</p>
             `;
             document.getElementById('postAnalyticsModal').classList.remove('hidden');
         }

@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Delete my data — SocialNexus</title>
+<meta name="robots" content="index,follow">
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site"><div class="bar">
+<a class="brand" href="index.html">SocialNexus</a>
+<nav aria-label="Legal pages"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms &amp; Conditions</a><a href="cookies.html">Cookie Policy</a><a href="refund.html">Refund Policy</a><a href="data-deletion.html" aria-current="page">Delete my data</a><a href="licenses.html">Licenses</a></nav>
+</div></header>
+<main id="content">
+<h1>Delete my data</h1>
+<p class="lede">Delete your account, or ask us to export or correct your data.</p>
+<p class="meta">Last updated: <span data-legal-date></span></p>
+
+<p>You can delete your account and everything linked to it, download a copy of your data first, or ask us to do it for you.</p>
+
+<h2>Option 1: delete it yourself in the app (fastest)</h2>
+<ol>
+<li>Log in, open your profile and tap the flip (rotate) button at the top of it.</li>
+<li>Optional: press <strong>Download My Data</strong> to save a JSON copy of your posts, messages, stories, follows and comments.</li>
+<li>Press <strong>Delete My Account</strong>, type <strong>DELETE</strong> to confirm.</li>
+</ol>
+<p>Your account, posts, stories, messages, follows and other data are removed immediately, with no waiting period. This cannot be undone.</p>
+
+<h2>Option 2: ask us to delete or export your data</h2>
+<p>Use this if you cannot log in. The form below opens an email to us; nothing is sent until you press send in your email app, and we keep the request only as long as it takes to handle it.</p>
+<div class="box" aria-label="Who runs SocialNexus"><dl>
+<dt>Operator</dt><dd><span data-legal="operatorName"></span> (<span data-legal="operatorType"></span>)</dd>
+<dt>Address</dt><dd><span data-legal="address"></span></dd>
+<dt>Contact email</dt><dd><span data-legal="contactEmail" data-mailto></span></dd>
+<div data-row style="display:contents"><dt>Phone</dt><dd><span data-legal="phone" data-optional></span></dd></div>
+<dt>Grievance Officer</dt><dd><span data-legal="grievanceOfficerName"></span>, <span data-legal="grievanceOfficerEmail" data-mailto></span></dd>
+</dl></div>
+<form class="req" id="delForm" novalidate>
+<label>Your username<input type="text" id="delUser" autocomplete="username" required></label>
+<label>What do you need?
+<select id="delType">
+<option value="delete my account and all my data">Delete my account and all my data</option>
+<option value="send me a copy of my data">Send me a copy of my data</option>
+<option value="correct my data">Correct my data</option>
+<option value="withdraw my consent">Withdraw my consent</option>
+</select></label>
+<label>Anything else we should know (optional)<textarea id="delNote" rows="3"></textarea></label>
+<label class="check"><input type="checkbox" id="delOk"><span>I understand that deleting an account cannot be undone, and that you may ask me to prove I own the account before acting.</span></label>
+<p id="delErr" role="alert" style="color:#fca5a5;margin:0" hidden></p>
+<button class="primary" type="submit">Prepare email</button>
+</form>
+<p><strong>Proving the account is yours:</strong> because we hold no email address for your account, we will reply with a one-time code and ask you to put it in your profile bio for a short time. We delete the account once we can see the code. We act within 30 days.</p>
+
+<h2>Files in your Google Drive</h2>
+<p>If you used Google Drive storage, your photos and videos are in the &ldquo;SocialNexus&rdquo; folder of your own Drive. We cannot reach them, so delete the folder there if you want them gone, and remove the app at <a href="https://myaccount.google.com/permissions" rel="noopener">Google account permissions</a>.</p>
+
+<h2>What may remain</h2>
+<ul>
+<li>Messages you already sent stay visible in the other person&rsquo;s chat only if they still exist there; account deletion removes your messages from our database.</li>
+<li>Our database provider&rsquo;s backups keep copies until they are overwritten in the normal cycle.</li>
+<li>Information we must keep to follow the law or to handle an unresolved abuse report.</li>
+</ul>
+<script>
+document.getElementById('delForm').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var u = document.getElementById('delUser').value.trim();
+    var err = document.getElementById('delErr');
+    err.hidden = true;
+    if (!u) { err.textContent = 'Please enter your username.'; err.hidden = false; return; }
+    if (!document.getElementById('delOk').checked) { err.textContent = 'Please tick the box to confirm.'; err.hidden = false; return; }
+    var to = (window.NEXUS_LEGAL && window.NEXUS_LEGAL.contactEmail) || '';
+    if (!to) { err.textContent = 'The site owner has not added a contact email yet (legal-config.js).'; err.hidden = false; return; }
+    var t = document.getElementById('delType').value, n = document.getElementById('delNote').value.trim();
+    var body = 'Username: ' + u + '\nRequest: Please ' + t + '.' + (n ? '\nNote: ' + n : '') + '\n\nI confirm I am the owner of this account.';
+    window.location.href = 'mailto:' + encodeURIComponent(to).replace('%40','@') + '?subject=' + encodeURIComponent('Data request: ' + u) + '&body=' + encodeURIComponent(body);
+});
+</script>
+
+<noscript><p class="config-warning">Operator details on this page need JavaScript. They are also available in the file legal-config.js.</p></noscript>
+</main>
+<footer class="site"><div class="bar">
+<span>&copy; <span data-legal="operatorName"></span></span>
+<a href="index.html">Back to the app</a>
+<a href="#content">Top of page</a>
+</div></footer>
+<script src="legal-config.js"></script>
+<script src="legal.js"></script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cookie Policy — SocialNexus</title>
+<meta name="robots" content="index,follow">
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site"><div class="bar">
+<a class="brand" href="index.html">SocialNexus</a>
+<nav aria-label="Legal pages"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms &amp; Conditions</a><a href="cookies.html" aria-current="page">Cookie Policy</a><a href="refund.html">Refund Policy</a><a href="data-deletion.html">Delete my data</a><a href="licenses.html">Licenses</a></nav>
+</div></header>
+<main id="content">
+<h1>Cookie Policy</h1>
+<p class="lede">What is stored on your device and what needs your consent.</p>
+<p class="meta">Last updated: <span data-legal-date></span></p>
+
+<p>SocialNexus does not use advertising or analytics cookies. This page lists what the app stores on your device and which optional services need your consent.</p>
+
+<h2>Your choices</h2>
+<p>When you first open the app a banner lets you accept or refuse the optional category with equally prominent buttons. You can change your mind at any time using <button type="button" class="primary" id="openCookieSettings" style="padding:6px 12px">Cookie settings</button> here or the &ldquo;Cookie settings&rdquo; link inside the app. Refusing optional services does not stop you from using the app.</p>
+
+<h2>Categories</h2>
+<table>
+<tr><th>Category</th><th>What it does</th><th>Consent</th></tr>
+<tr><td>Essential</td><td>Keeps you logged in, remembers your theme, language and chosen settings, and caches the last posts so the app opens fast and works offline. These are stored in your browser&rsquo;s local storage (not in tracking cookies).</td><td>Not required &ndash; the app cannot work without them.</td></tr>
+<tr><td>Google services (optional)</td><td>Loads Google&rsquo;s sign-in script so you can store photos and videos in your own Google Drive. Google may set its own cookies when you connect.</td><td>Off until you allow it.</td></tr>
+</table>
+
+<h2>What is stored on your device</h2>
+<table>
+<tr><th>Name</th><th>Purpose</th><th>Lifetime</th></tr>
+<tr><td>sb-&hellip;-auth-token</td><td>Your login session (set by the Supabase client)</td><td>Until you log out</td></tr>
+<tr><td>nexus_user, nexus_saved_accounts, nexus_previous_user</td><td>Which account(s) are signed in on this device (usernames only, never passwords)</td><td>Until you log out or clear data</td></tr>
+<tr><td>nexus_theme, nexus_lang, nexus_tab, nexus_page_accent_*</td><td>Your appearance, language and last open tab</td><td>Until you clear data</td></tr>
+<tr><td>nexus_notif_sound, nexus_reel_muted, nexus_ghost_mode, nexus_screenshot_alert, nexus_memory_fade_disabled, nexus_disappearing_chats, nexus_deleted_for_me, nexus_active_chat</td><td>Your in-app settings and chat view state</td><td>Until you clear data</td></tr>
+<tr><td>nexus_offline_feed_cache</td><td>The 50 latest posts, for offline use</td><td>Replaced on each refresh</td></tr>
+<tr><td>nexus_consent_v1</td><td>Remembers your choice on the consent banner</td><td>12 months, then we ask again</td></tr>
+<tr><td>nexus_drive_connected, nexus_drive_folder_id</td><td>Remember that you linked Google Drive and which folder is used (only if you opted in)</td><td>Until you disconnect or clear data</td></tr>
+</table>
+
+<h2>How to clear it</h2>
+<p>Log out in the app, or clear this site&rsquo;s data in your browser settings. To remove the Google connection also visit <a href="https://myaccount.google.com/permissions" rel="noopener">your Google account&rsquo;s app permissions</a>.</p>
+<script>document.getElementById('openCookieSettings').addEventListener('click', function () { if (window.NexusConsent) window.NexusConsent.open(); });</script>
+<script src="consent.js"></script>
+
+<noscript><p class="config-warning">Operator details on this page need JavaScript. They are also available in the file legal-config.js.</p></noscript>
+</main>
+<footer class="site"><div class="bar">
+<span>&copy; <span data-legal="operatorName"></span></span>
+<a href="index.html">Back to the app</a>
+<a href="#content">Top of page</a>
+</div></footer>
+<script src="legal-config.js"></script>
+<script src="legal.js"></script>
+</body>
+</html>

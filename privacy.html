@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Privacy Policy — SocialNexus</title>
+<meta name="robots" content="index,follow">
+<link rel="stylesheet" href="legal.css">
+</head>
+<body>
+<a class="skip-link" href="#content">Skip to content</a>
+<header class="site"><div class="bar">
+<a class="brand" href="index.html">SocialNexus</a>
+<nav aria-label="Legal pages"><a href="privacy.html" aria-current="page">Privacy Policy</a><a href="terms.html">Terms &amp; Conditions</a><a href="cookies.html">Cookie Policy</a><a href="refund.html">Refund Policy</a><a href="data-deletion.html">Delete my data</a><a href="licenses.html">Licenses</a></nav>
+</div></header>
+<main id="content">
+<h1>Privacy Policy</h1>
+<p class="lede">What we collect, why, and how you stay in control.</p>
+<p class="meta">Last updated: <span data-legal-date></span></p>
+
+<p>This policy explains what SocialNexus (&ldquo;we&rdquo;, &ldquo;the app&rdquo;) collects, why, who else receives it, and how you can access or delete it. It describes what the app actually does today. We do not sell your data and we do not run advertising or analytics trackers.</p>
+<div class="box" aria-label="Who runs SocialNexus"><dl>
+<dt>Operator</dt><dd><span data-legal="operatorName"></span> (<span data-legal="operatorType"></span>)</dd>
+<dt>Address</dt><dd><span data-legal="address"></span></dd>
+<dt>Contact email</dt><dd><span data-legal="contactEmail" data-mailto></span></dd>
+<div data-row style="display:contents"><dt>Phone</dt><dd><span data-legal="phone" data-optional></span></dd></div>
+<dt>Grievance Officer</dt><dd><span data-legal="grievanceOfficerName"></span>, <span data-legal="grievanceOfficerEmail" data-mailto></span></dd>
+</dl></div>
+
+<h2>1. Who is responsible</h2>
+<p>The operator named above decides why and how your data is processed (a &ldquo;data fiduciary&rdquo; under India&rsquo;s Digital Personal Data Protection Act, 2023, and a &ldquo;controller&rdquo; for other laws).</p>
+
+<h2>2. What we collect</h2>
+<table>
+<tr><th>Data</th><th>Why</th><th>Notes</th></tr>
+<tr><td>Username</td><td>To identify your account</td><td>Public to other users.</td></tr>
+<tr><td>Password, 2FA PIN, security question and answer</td><td>To log you in, protect the account and let you reset a forgotten password</td><td>Stored only as one-way hashes (bcrypt, computed in the database). We cannot read them. The security question and PIN are required at sign-up because the app has no email address to reset a password with.</td></tr>
+<tr><td>Profile details you choose to add (photo, bio, settings)</td><td>To show your profile</td><td>Optional.</td></tr>
+<tr><td>Content you create: posts, reels, stories, comments, likes, saved posts, reactions, messages (direct and group), voice notes, photos and videos</td><td>To provide the service</td><td>Messages are stored on our database so they can be delivered to the other person. They are <strong>not</strong> end-to-end encrypted.</td></tr>
+<tr><td>Social graph: follows, follow requests, blocks, close friends, reports</td><td>To control who sees what and to handle abuse</td><td></td></tr>
+<tr><td>Activity signals: post and story views, search history, read receipts, typing and online status</td><td>To show view counts, read receipts and presence, and to recall your recent searches</td><td>You can turn off some of these in your settings where the app offers it.</td></tr>
+<tr><td>Push notification subscription</td><td>To send notifications you asked for</td><td>Only if you allow notifications in your browser.</td></tr>
+<tr><td>Camera and microphone</td><td>Calls and voice notes</td><td>Used only while you are in a call or recording. Call audio and video go directly between devices and are not stored by us.</td></tr>
+</table>
+<p><strong>We do not collect:</strong> your real email address, phone number, contacts, precise location, advertising identifiers, or payment details.</p>
+<p>Technical data such as IP address and browser type is processed by our hosting and database providers when your device connects (see section 4). We do not use it to profile you.</p>
+
+<h2>3. Legal basis</h2>
+<p>We process your data because you consented when you created your account (you can withdraw consent by deleting your account) and because it is needed to deliver features you ask for. Optional services, such as Google Drive storage, run only after you opt in.</p>
+
+<h2>4. Who receives your data</h2>
+<table>
+<tr><th>Recipient</th><th>What they get</th><th>When</th></tr>
+<tr><td>Supabase (database, authentication, realtime and file storage)</td><td>All account data and content described above</td><td>Always &ndash; this is where the app&rsquo;s data lives.</td></tr>
+<tr><td>Google Drive (optional)</td><td>Photos, videos and voice notes you upload are stored in the &ldquo;SocialNexus&rdquo; folder of <em>your own</em> Google Drive and made viewable by anyone with the link, so other users can see them. We only receive the link. The app can access only files it created itself.</td><td>Only after you press &ldquo;Connect Google Drive&rdquo; and accept the cookie/consent banner for Google services.</td></tr>
+<tr><td>Library hosts: Cloudflare cdnjs, jsDelivr, Tailwind CDN</td><td>Your IP address and browser details, because the app&rsquo;s code libraries (Supabase client, Font Awesome icons, Cropper image editor, Tailwind CSS) are loaded from their servers</td><td>Each time the app loads.</td></tr>
+<tr><td>Call relay servers: Google STUN (stun.l.google.com) and Open Relay TURN (Metered)</td><td>Your IP address, to connect a call</td><td>Only during calls.</td></tr>
+<tr><td>soundhelix.com</td><td>Your IP address, to play a track from the sound library</td><td>Only when you preview or use a library track.</td></tr>
+<tr><td>Hosting provider of this website</td><td>Standard server logs</td><td>Always.</td></tr>
+</table>
+<p>Your posts, profile and messages are visible to the people you share them with according to your privacy settings. Media stored via a public link can be opened by anyone who has the link.</p>
+
+<h2>5. How long we keep data</h2>
+<ul>
+<li>Account data and content: until you delete it or your account.</li>
+<li>Stories: shown for 24 hours.</li>
+<li>When you delete your account in the app, your data is deleted immediately. Copies in our database provider&rsquo;s backups are overwritten on their normal backup cycle.</li>
+<li>Files in your own Google Drive stay there until you delete them from Drive (we cannot delete files in your Drive for you).</li>
+</ul>
+
+<h2>6. Your rights</h2>
+<p>You can: access and download your data (open your profile, tap the flip button at the top, then Data Export); correct it (edit your profile and posts); delete your account and content (same place: Delete My Account); withdraw consent; nominate someone to exercise your rights; and complain to us or to the Data Protection Board of India. See <a href="data-deletion.html">how to delete your data</a>. If you cannot log in, email us at the address above and we will help. We aim to answer rights requests within 30 days.</p>
+
+<h2>7. Children</h2>
+<p>SocialNexus is for people aged 18 and over. We ask you to confirm your age when you sign up. We do not knowingly collect data from anyone under 18; if we learn that we have, we delete the account.</p>
+
+<h2>8. Security</h2>
+<p>Passwords, PINs and security answers are hashed. Connections use HTTPS. Access to the database is restricted by row-level security rules. No system is perfectly secure; if a breach affects you we will notify you and the authorities as the law requires.</p>
+
+<h2>9. Cookies and local storage</h2>
+<p>See the <a href="cookies.html">Cookie Policy</a>. You can change your choices at any time with the &ldquo;Cookie settings&rdquo; link in the app.</p>
+
+<h2>10. Email</h2>
+<p>We do not collect your email address and we do not send marketing or newsletter emails, so there is nothing to unsubscribe from. If this ever changes, every email will carry a working unsubscribe link and we will ask for your consent first.</p>
+
+<h2>11. Changes</h2>
+<p>If we change this policy in a way that affects you, we will show a notice in the app before it takes effect. The date at the top shows the latest version.</p>
+
+<h2>12. Contact and grievances</h2>
+<p>Questions, requests and complaints: email the contact address or the Grievance Officer above. We acknowledge complaints within 24 hours and aim to resolve them within 15 days.</p>
+
+<noscript><p class="config-warning">Operator details on this page need JavaScript. They are also available in the file legal-config.js.</p></noscript>
+</main>
+<footer class="site"><div class="bar">
+<span>&copy; <span data-legal="operatorName"></span></span>
+<a href="index.html">Back to the app</a>
+<a href="#content">Top of page</a>
+</div></footer>
+<script src="legal-config.js"></script>
+<script src="legal.js"></script>
+</body>
+</html>
