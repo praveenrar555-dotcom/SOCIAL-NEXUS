@@ -108,18 +108,18 @@
         if (!isEnabled()) throw new Error('Google Drive is not configured');
         if (hasValidToken()) return accessToken;
         await initTokenClient(!!interactive);
-        if (wasConnected()) {
-            try { return await requestToken('none', 8000); } catch (e) { if (!interactive) throw e; }
-        }
-        return requestToken((interactive && !wasConnected()) ? 'consent' : '', 60000);
+        // Button tap: go straight to Google (no 'none' try first — waiting for it would use up the
+        // tap and the browser would then block the real popup). Google only shows a screen if it must.
+        if (interactive) return requestToken(wasConnected() ? '' : 'consent', 60000);
+        // Not a tap (e.g. uploading): only a quiet refresh, and only for people who connected before.
+        if (wasConnected()) return requestToken('none', 8000);
+        throw new Error('Google Drive is not connected');
     }
 
-    let refreshTimer = null;
-    function scheduleRefresh() {
-        clearTimeout(refreshTimer);
-        const ms = Math.max(60000, tokenExpiresAt - Date.now() - 5 * 60 * 1000);
-        refreshTimer = setTimeout(() => { silentRefresh(); }, ms);
-    }
+    // No background timers: browsers block Google's popup when it is opened without a tap and show a
+    // "popup blocked" notice. A fresh token is taken quietly at the moment you post something
+    // (that is a tap), or when you press the Drive button.
+    function scheduleRefresh() {}
     async function silentRefresh() {
         if (!isEnabled() || !wasConnected()) return false;
         try { await initTokenClient(false); await requestToken('none', 8000); return true; }
@@ -228,9 +228,9 @@
         if (!isEnabled() || !loggedIn()) { btn.style.display = 'none'; return; }
         btn.style.display = 'flex';
         const on = hasValidToken();
-        btn.innerHTML = on
+        btn.innerHTML = (on || wasConnected())
             ? '<span style="color:#34d399">●</span>&nbsp;Drive on'
-            : '<span style="color:#fbbf24">☁</span>&nbsp;' + (wasConnected() ? 'Reconnect Drive' : 'Connect Google Drive');
+            : '<span style="color:#fbbf24">☁</span>&nbsp;Connect Google Drive';
         btn.title = on ? 'Your photos/videos are saved to your own Google Drive (SocialNexus folder)'
                        : 'Save your photos/videos to your own Google Drive to keep the app fast';
     }
@@ -279,26 +279,4 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButton);
     else mountButton();
 
-    // Returning users: reconnect by themselves. Browsers often block the (invisible) Google
-    // popup when it is opened without a tap, so if the first silent try fails we retry ONCE on
-    // the user's very first tap/keypress — Google then answers instantly, with no screen.
-    let gestureArmed = false;
-    function armGesture() {
-        if (gestureArmed) return;
-        gestureArmed = true;
-        const evs = ['pointerdown', 'touchend', 'keydown'];
-        const handler = () => {
-            evs.forEach(t => document.removeEventListener(t, handler, true));
-            gestureArmed = false;
-            if (!hasValidToken()) silentRefresh();
-        };
-        evs.forEach(t => document.addEventListener(t, handler, { capture: true, passive: true }));
-    }
-    async function autoReconnect() {
-        if (!isEnabled() || !wasConnected() || hasValidToken()) return;
-        const ok = await silentRefresh();
-        if (!ok && !hasValidToken()) armGesture();
-    }
-    window.addEventListener('load', () => setTimeout(autoReconnect, 1000));
-    document.addEventListener('visibilitychange', () => { if (!document.hidden) autoReconnect(); });
 })();
