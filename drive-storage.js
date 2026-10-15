@@ -62,7 +62,8 @@
     async function initTokenClient(allowAsk) {
         if (tokenClient) return tokenClient;
         await loadGis(allowAsk);
-        tokenClient = google.accounts.oauth2.initTokenClient({
+        const hint = lsGet('nexus_google_email'); // known after "Continue with Google": skips the account chooser
+        tokenClient = google.accounts.oauth2.initTokenClient(Object.assign({
             client_id: clientId(),
             scope: SCOPE,
             callback: (resp) => {
@@ -81,7 +82,7 @@
                 if (pendingTokenReject) pendingTokenReject(new Error((err && err.type) || 'Google popup closed'));
                 pendingTokenResolve = pendingTokenReject = null;
             }
-        });
+        }, hint ? { hint } : {}));
         return tokenClient;
     }
 
@@ -278,8 +279,26 @@
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', mountButton);
     else mountButton();
 
-    // Returning users: reconnect by themselves, no click and no popup.
-    function autoReconnect() { if (wasConnected() && !hasValidToken()) silentRefresh(); }
-    window.addEventListener('load', () => setTimeout(autoReconnect, 1500));
+    // Returning users: reconnect by themselves. Browsers often block the (invisible) Google
+    // popup when it is opened without a tap, so if the first silent try fails we retry ONCE on
+    // the user's very first tap/keypress — Google then answers instantly, with no screen.
+    let gestureArmed = false;
+    function armGesture() {
+        if (gestureArmed) return;
+        gestureArmed = true;
+        const evs = ['pointerdown', 'touchend', 'keydown'];
+        const handler = () => {
+            evs.forEach(t => document.removeEventListener(t, handler, true));
+            gestureArmed = false;
+            if (!hasValidToken()) silentRefresh();
+        };
+        evs.forEach(t => document.addEventListener(t, handler, { capture: true, passive: true }));
+    }
+    async function autoReconnect() {
+        if (!isEnabled() || !wasConnected() || hasValidToken()) return;
+        const ok = await silentRefresh();
+        if (!ok && !hasValidToken()) armGesture();
+    }
+    window.addEventListener('load', () => setTimeout(autoReconnect, 1000));
     document.addEventListener('visibilitychange', () => { if (!document.hidden) autoReconnect(); });
 })();

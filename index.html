@@ -173,6 +173,34 @@
                     Create Account
                 </button>
             </form>
+
+            <!-- CONTINUE WITH GOOGLE (shown only when GOOGLE_CLIENT_ID is set) -->
+            <div id="googleAuthWrap" class="space-y-3 hidden">
+                <div class="flex items-center gap-3 text-[11px] text-slate-500"><span class="flex-1 h-px bg-slate-800"></span><span>or</span><span class="flex-1 h-px bg-slate-800"></span></div>
+                <div id="googleBtnHost" class="flex justify-center"></div>
+                <button type="button" id="googleFallbackBtn" class="w-full flex items-center justify-center gap-2 bg-white text-slate-900 font-bold py-2.5 rounded-xl text-xs shadow-sm active:scale-[0.98]">
+                    <svg width="16" height="16" viewBox="0 0 48 48" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.5 5.8c4.4-4.1 7.1-10.1 7.1-17.5z"/><path fill="#FBBC05" d="M10.5 28.7A14.5 14.5 0 0 1 9.5 24c0-1.6.3-3.2.8-4.7l-7.9-6.1A24 24 0 0 0 0 24c0 3.9.9 7.5 2.6 10.8l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.5-5.8c-2.1 1.4-4.9 2.3-8.4 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+                    <span>Continue with Google</span>
+                </button>
+                <p id="googleAuthError" class="text-[11px] text-red-400 text-center hidden"></p>
+            </div>
+
+            <!-- GOOGLE: first time here -> pick a username -->
+            <form id="googleUsernameForm" class="space-y-3 hidden">
+                <div class="text-center space-y-1">
+                    <p class="text-xs font-bold text-slate-200">Almost done</p>
+                    <p id="googleUsernameEmail" class="text-[11px] text-slate-400 break-all"></p>
+                </div>
+                <input type="text" id="googleUsernameInput" required minlength="3" maxlength="24" autocomplete="username" placeholder="Choose a username (letters, numbers, _ .)"
+                    class="w-full bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 text-xs focus:outline-none focus:border-[#3b82f6] text-slate-200">
+                <label class="flex items-start gap-2 text-[11px] text-slate-400">
+                    <input type="checkbox" id="googleAgreeLegal" required class="mt-0.5 accent-[#2563eb]">
+                    <span>I agree to the <a href="terms.html" target="_blank" class="text-[#38bdf8] underline">Terms</a> and <a href="privacy.html" target="_blank" class="text-[#38bdf8] underline">Privacy Policy</a>.</span>
+                </label>
+                <p id="googleUsernameError" class="text-[11px] text-red-400 hidden"></p>
+                <button type="submit" id="googleUsernameBtn" class="w-full bg-[#2563eb] hover:opacity-95 font-bold py-2.5 rounded-xl text-xs shadow-sm active:scale-[0.98]">Create my account</button>
+                <button type="button" id="googleUsernameCancel" class="w-full text-[11px] text-slate-400 hover:text-white">Cancel</button>
+            </form>
             <nav aria-label="Legal" class="flex flex-wrap justify-center gap-x-3 gap-y-1 text-[11px] text-slate-500 pt-1">
                 <a href="privacy.html" target="_blank" rel="noopener" class="hover:text-slate-300 underline-offset-2 hover:underline">Privacy Policy</a>
                 <a href="terms.html" target="_blank" rel="noopener" class="hover:text-slate-300 underline-offset-2 hover:underline">Terms &amp; Conditions</a>
@@ -1592,5 +1620,6 @@
     <script src="text-motion.js"></script>
     <script src="nav.js"></script>
     <script src="app.js"></script>
+    <script src="google-login.js"></script>
 </body>
 </html>
