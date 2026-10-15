@@ -99,6 +99,83 @@
         });
     }
 
+    // ------------------------------------------------------------------
+    // "Allow once, never again": the first Connect gives a long-lived refresh token to a small
+    // Supabase Edge Function (drive-token). After that every new 1-hour access token is fetched
+    // from that function with no popup and no tap. If the function is not deployed yet, the
+    // old popup-based flow below keeps working.
+    // ------------------------------------------------------------------
+    const LS_SERVER = 'nexus_drive_server';
+    let serverOk = null;          // null = not probed yet, true/false after probing
+    let probing = false;
+    function serverMode() { return lsGet(LS_SERVER) === '1'; }
+
+    async function fnCall(body) {
+        if (typeof SUPABASE_URL === 'undefined' || typeof supabaseClient === 'undefined') throw Object.assign(new Error('no_supabase'), { code: 'no_supabase' });
+        const { data } = await supabaseClient.auth.getSession();
+        const jwt = data && data.session && data.session.access_token;
+        if (!jwt) throw Object.assign(new Error('not_logged_in'), { code: 'not_logged_in' });
+        const res = await fetch(SUPABASE_URL + '/functions/v1/drive-token', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + jwt, apikey: (typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : '') },
+            body: JSON.stringify(body)
+        });
+        let j = {};
+        try { j = await res.json(); } catch (e) {}
+        if (!res.ok) throw Object.assign(new Error(j.error || ('function_' + res.status)), { code: j.error || ('function_' + res.status), status: res.status });
+        return j;
+    }
+
+    function setToken(j) {
+        accessToken = j.access_token;
+        tokenExpiresAt = Date.now() + (Number(j.expires_in || 3600) * 1000);
+        lsSet(LS_CONNECTED, '1');
+    }
+
+    let serverInflight = null;
+    function serverRefresh() {
+        if (serverInflight) return serverInflight;
+        serverInflight = (async () => {
+            try { const j = await fnCall({ action: 'refresh' }); setToken(j); return accessToken; }
+            catch (e) { if (e.code === 'revoked' || e.code === 'not_connected') lsDel(LS_SERVER); throw e; }
+            finally { serverInflight = null; }
+        })();
+        return serverInflight;
+    }
+
+    // Asks the function once (after login) whether it exists and whether this person is already linked.
+    async function probeServer() {
+        if (probing || serverOk !== null || !isEnabled() || !loggedIn()) return;
+        probing = true;
+        try {
+            const st = await fnCall({ action: 'status' });
+            serverOk = !!st.configured;
+            if (serverOk && st.connected) { lsSet(LS_SERVER, '1'); lsSet(LS_CONNECTED, '1'); try { await serverRefresh(); } catch (e) {} }
+            else if (serverOk && !st.connected) lsDel(LS_SERVER);
+        } catch (e) {
+            if (e.code !== 'not_logged_in') serverOk = false; // function missing -> use the old popup flow
+        } finally { probing = false; }
+    }
+
+    // Must run straight from a tap (opens Google's popup once, to hand over the long-lived permission).
+    async function serverConnect() {
+        await loadGis(true);
+        const hint = lsGet('nexus_google_email');
+        const code = await new Promise((resolve, reject) => {
+            const c = google.accounts.oauth2.initCodeClient(Object.assign({
+                client_id: clientId(), scope: SCOPE, ux_mode: 'popup',
+                callback: (r) => (r && r.code) ? resolve(r.code) : reject(new Error((r && r.error) || 'Google authorization failed')),
+                error_callback: (e) => reject(new Error((e && e.type) || 'Google popup closed'))
+            }, hint ? { login_hint: hint } : {}));
+            c.requestCode();
+        });
+        const j = await fnCall({ action: 'exchange', code });
+        setToken(j);
+        if (j.stored) lsSet(LS_SERVER, '1');
+        else alert('Drive connect ho gaya, par "hamesha ke liye" nahi. Ek baar myaccount.google.com/permissions me SocialNexus ka access hata do, phir "Drive on" button se dobara connect karo.');
+        return accessToken;
+    }
+
     // Google asks for permission only ONCE (the first "Connect"). After that this gets a fresh
     // access token silently (prompt:'none' = no popup, no consent screen) whenever the old one
     // is about to expire. Only if Google really needs the person (e.g. signed out of Google)
@@ -107,11 +184,18 @@
     async function ensureToken(interactive) {
         if (!isEnabled()) throw new Error('Google Drive is not configured');
         if (hasValidToken()) return accessToken;
+
+        // 1) Already linked to the server: new token with no popup at all.
+        if (serverMode()) {
+            try { return await serverRefresh(); }
+            catch (e) { if (!wasConnected()) throw e; /* revoked/not linked: fall through to the popup flow */ }
+        }
+        // 2) Button tap and the server function exists: one-time permission that never expires.
+        if (interactive && serverOk === true) return serverConnect();
+
+        // 3) Old flow (function not deployed): Google popup.
         await initTokenClient(!!interactive);
-        // Button tap: go straight to Google (no 'none' try first — waiting for it would use up the
-        // tap and the browser would then block the real popup). Google only shows a screen if it must.
         if (interactive) return requestToken(wasConnected() ? '' : 'consent', 60000);
-        // Not a tap (e.g. uploading): only a quiet refresh, and only for people who connected before.
         if (wasConnected()) return requestToken('none', 8000);
         throw new Error('Google Drive is not connected');
     }
@@ -226,6 +310,7 @@
 
     function paintButton(btn) {
         if (!isEnabled() || !loggedIn()) { btn.style.display = 'none'; return; }
+        probeServer();
         btn.style.display = 'flex';
         const on = hasValidToken();
         btn.innerHTML = (on || wasConnected())
@@ -272,7 +357,8 @@
         disconnect: () => {
             try { if (accessToken && window.google) google.accounts.oauth2.revoke(accessToken, () => {}); } catch (e) {}
             accessToken = null; tokenExpiresAt = 0; folderId = null;
-            lsDel(LS_CONNECTED); lsDel(LS_FOLDER);
+            lsDel(LS_CONNECTED); lsDel(LS_FOLDER); lsDel(LS_SERVER);
+            fnCall({ action: 'disconnect' }).catch(() => {});
         }
     };
 

@@ -116,11 +116,13 @@
         // (Post-persona, Twit-persona, Channel-persona), each with its own tone + bio.
         // Reuses the existing post "platform" field (Instagram/Twitter/Telegram) as the persona map.
         const PERSONAS = [
-            { key: 'post', label: 'Post-Persona', emoji: '📸', platform: 'Instagram', color: '#3b82f6' },
-            { key: 'twit', label: 'Twit-Persona', emoji: '🐦', platform: 'Twitter', color: '#38bdf8' },
-            { key: 'channel', label: 'Channel-Persona', emoji: '📢', platform: 'Telegram', color: '#14b8a6' }
+            { key: 'post', label: 'Post-Persona', emoji: '📸', icon: 'camera', platform: 'Instagram', color: '#3b82f6' },
+            { key: 'twit', label: 'Twit-Persona', emoji: '🐦', icon: 'feather-pointed', platform: 'Twitter', color: '#38bdf8' },
+            { key: 'channel', label: 'Channel-Persona', emoji: '📢', icon: 'bullhorn', platform: 'Telegram', color: '#14b8a6' }
         ];
         const PERSONA_TONE_PRESETS = ['Chill 😎', 'Funny 😂', 'Professional 💼', 'Aesthetic ✨', 'Motivational 🔥', 'Savage 😈', 'Wholesome 🌸'];
+        // Persona "faces" use the app's own SVG icons now (not emoji).
+        function personaIconHtml(p) { return `<i class="fa-solid fa-${(p && p.icon) || 'user'}"></i>`; }
         function personaForKey(key) { return PERSONAS.find(p => p.key === key) || PERSONAS[0]; }
         function personaKeyForPlatform(platform) {
             const p = PERSONAS.find(p => p.platform === platform);
@@ -253,6 +255,46 @@
                 { urls: 'turn:openrelay.metered.ca:443?transport=tcp', username: 'openrelayproject', credential: 'openrelayproject' }
             ]
         };
+        // Optional: put your own TURN server(s) in supabase-config.js as
+        //   const NEXUS_TURN_SERVERS = [{ urls: 'turn:...', username: '...', credential: '...' }];
+        // The free public "openrelay" relays above are often down; calls between two mobile-data
+        // networks usually need a working TURN relay (Metered / Cloudflare / Twilio all have free tiers).
+        if (typeof NEXUS_TURN_SERVERS !== 'undefined' && Array.isArray(NEXUS_TURN_SERVERS) && NEXUS_TURN_SERVERS.length) {
+            rtcConfig.iceServers = [rtcConfig.iceServers[0]].concat(NEXUS_TURN_SERVERS);
+        }
+        function callErrorText(err) {
+            const name = err && err.name;
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) return 'Call ke liye HTTPS (secure link) chahiye';
+            if (name === 'NotAllowedError' || name === 'SecurityError') return 'Camera/Mic permission band hai — browser settings me allow karo';
+            if (name === 'NotFoundError' || name === 'OverconstrainedError') return 'Camera ya mic nahi mila';
+            if (name === 'NotReadableError') return 'Camera/Mic kisi aur app me chal raha hai';
+            return (err && err.message) ? err.message : 'Unknown error';
+        }
+        // Ask for camera+mic; if the camera itself is missing/busy, fall back to a voice-only call.
+        async function getCallStream(type) {
+            const md = navigator.mediaDevices;
+            if (!md || !md.getUserMedia) throw Object.assign(new Error('no mediaDevices'), { name: 'SecurityError' });
+            try {
+                return await md.getUserMedia({ audio: true, video: type === 'video' ? { facingMode: currentFacingMode } : false });
+            } catch (e) {
+                if (type === 'video' && (e.name === 'NotFoundError' || e.name === 'OverconstrainedError' || e.name === 'NotReadableError')) {
+                    showAlertBanner('Camera nahi chala — sirf awaaz se call ho rahi hai.', 'warning');
+                    return await md.getUserMedia({ audio: true, video: false });
+                }
+                throw e;
+            }
+        }
+        function watchCallConnection(pc, statusText) {
+            pc.oniceconnectionstatechange = () => {
+                if (pc !== peerConnection) return;
+                if (pc.iceConnectionState === 'failed') {
+                    statusText.innerText = 'Connection fail — network is call ko block kar raha hai (TURN server chahiye)';
+                    try { pc.restartIce(); } catch (e) {}
+                } else if (pc.iceConnectionState === 'connected' || pc.iceConnectionState === 'completed') {
+                    statusText.innerText = 'Connected in Real-Time';
+                }
+            };
+        }
         // Queue for ICE candidates that arrive before the peerConnection (or its
         // remote description) is ready, so they no longer get silently dropped.
         let pendingIceCandidates = [];
@@ -402,7 +444,9 @@
             window.cancelLogin2fa = cancelLogin2fa;
 
             async function completeLogin(username, password) {
-                await ensureAuthSession(username, password);
+                // Drop any stale session from a previous login so the 2nd login doesn't clash.
+                try { await supabaseClient.auth.signOut({ scope: 'local' }); } catch (e) {}
+                try { await ensureAuthSession(username, password); } catch (e) { console.warn('ensureAuthSession', e); }
                 activateAccount(username);
             }
 
@@ -1958,6 +2002,9 @@
             if (previousTab === 'reels' && tab !== 'reels') {
                 pauseAllReels();
             }
+            if (tab === 'reels') {
+                document.querySelectorAll('#reelsStreamContainer .reel-video').forEach(v => { v.muted = reelSoundMuted; });
+            }
 
             ['feed', 'chat', 'reels', 'calls', 'groups', 'explore'].forEach(t => {
                 document.getElementById('section-' + t).classList.add('hidden');
@@ -2117,7 +2164,7 @@
                 const item = document.createElement('div');
                 item.className = `p-3 flex items-center space-x-3 cursor-pointer hover:bg-slate-800/60 fast-transition`;
                 item.innerHTML = `
-                    <div onclick="event.stopPropagation(); handleUserClick('${username}')" class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden relative">
+                    <div onclick="event.stopPropagation(); handleUserClick('${username}', 'chat')" class="w-8 h-8 rounded-full bg-[#334155] flex items-center justify-center font-bold text-xs text-white shadow overflow-hidden relative">
                         ${avatarUrl ? `<img src="${avatarUrl}" class="w-full h-full object-cover">` : username.charAt(0).toUpperCase()}
                         ${isOnline ? `<span class="absolute bottom-0 right-0 w-2 h-2 rounded-full bg-emerald-400 border border-slate-950"></span>` : ''}
                     </div>
@@ -2309,19 +2356,19 @@
 
             pendingIceCandidates = [];
             try {
-                activeCallStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: type === 'video' ? { facingMode: currentFacingMode } : false
-                });
+                activeCallStream = await getCallStream(type);
+                if (type === 'video' && activeCallStream.getVideoTracks().length === 0) { videoBtn.classList.add('hidden'); flipBtn.classList.add('hidden'); remoteVid.classList.add('hidden'); }
 
                 localVid.srcObject = activeCallStream;
 
                 peerConnection = new RTCPeerConnection(rtcConfig);
+                watchCallConnection(peerConnection, statusText);
                 activeCallStream.getTracks().forEach(track => peerConnection.addTrack(track, activeCallStream));
 
                 peerConnection.ontrack = event => {
                     if (event.streams && event.streams[0]) {
                         remoteVid.srcObject = event.streams[0];
+                        remoteVid.play().catch(() => {});
                         statusText.innerText = 'Connected in Real-Time';
                         bgOverlay.classList.add('hidden');
                         if (callNoAnswerTimeout) { clearTimeout(callNoAnswerTimeout); callNoAnswerTimeout = null; }
@@ -2424,7 +2471,9 @@
                 }, 45000);
 
             } catch (err) {
-                statusText.innerText = "Call Failed: Camera/Mic Permission Denied";
+                console.error('[startRealCall failed]', err);
+                statusText.innerText = 'Call Failed: ' + callErrorText(err);
+                setTimeout(() => { if (statusText.innerText.startsWith('Call Failed')) endCallUiOnly(); }, 3500);
             }
         }
 
@@ -2461,21 +2510,22 @@
                 remoteVid.classList.add('hidden');
             }
 
-            pendingIceCandidates = [];
+            // NOTE: do NOT clear pendingIceCandidates here — the caller's network candidates arrive
+            // while this phone is still ringing; wiping them was the main reason video calls never connected.
             try {
-                activeCallStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: incomingCallData.call_type === 'video' ? { facingMode: currentFacingMode } : false
-                });
+                activeCallStream = await getCallStream(incomingCallData.call_type);
+                if (incomingCallData.call_type === 'video' && activeCallStream.getVideoTracks().length === 0) { videoBtn.classList.add('hidden'); flipBtn.classList.add('hidden'); remoteVid.classList.add('hidden'); }
 
                 localVid.srcObject = activeCallStream;
 
                 peerConnection = new RTCPeerConnection(rtcConfig);
+                watchCallConnection(peerConnection, statusText);
                 activeCallStream.getTracks().forEach(track => peerConnection.addTrack(track, activeCallStream));
 
                 peerConnection.ontrack = event => {
                     if (event.streams && event.streams[0]) {
                         remoteVid.srcObject = event.streams[0];
+                        remoteVid.play().catch(() => {});
                         statusText.innerText = 'Connected in Real-Time';
                         bgOverlay.classList.add('hidden');
                     }
@@ -2513,7 +2563,9 @@
                 });
 
             } catch (err) {
-                statusText.innerText = "Call Connection Failed";
+                console.error('[acceptIncomingCall failed]', err);
+                statusText.innerText = 'Call Failed: ' + callErrorText(err);
+                setTimeout(() => { if (statusText.innerText.startsWith('Call Failed')) endCallUiOnly(); }, 3500);
             }
         }
 
@@ -2531,6 +2583,7 @@
                 }).then(({ error }) => { if (error) console.error('[decline signal failed]', error); });
             }
             incomingCallData = null;
+            pendingIceCandidates = [];
         }
 
         function toggleCallMute() {
@@ -2749,15 +2802,15 @@
             }, 900);
         }
 
-        function handleUserClick(username) {
+        function handleUserClick(username, context) {
             if (username === currentUser) {
                 openProfile(currentUser);
             } else {
-                openUserActionModal(username);
+                openUserActionModal(username, context);
             }
         }
 
-        function openUserActionModal(username) {
+        function openUserActionModal(username, context) {
             document.getElementById('actionModalUsername').innerText = username;
             const av = globalProfilesCache[username];
             document.getElementById('actionModalAvatar').innerHTML = av ? `<img src="${av}" class="w-full h-full object-cover">` : username.charAt(0).toUpperCase();
@@ -2776,6 +2829,8 @@
             const isBlocked = globalBlockedCache.some(b => b.blocker === currentUser && b.blocked === username);
             document.getElementById('actionBlockBtnLabel').innerText = isBlocked ? 'Unblock' : 'Block';
             document.getElementById('actionBlockBtn').onclick = () => toggleBlockUser(username);
+            // Chat: no Block shortcut here (it stays available on the person's profile).
+            document.getElementById('actionBlockBtn').classList.toggle('hidden', context === 'chat');
             document.getElementById('actionReportBtn').onclick = () => openReportUserModal(username);
 
             document.getElementById('userActionModal').classList.remove('hidden');
@@ -3246,6 +3301,7 @@
                 </div>
                 <button onclick="openTwoFactorSetupModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#2dd4bf] transition"><i class="fa-solid fa-shield-halved mr-1"></i> ${twoFaOn ? 'Change 2FA PIN' : 'Set Up 2FA'}</button>
                 <button onclick="openChangePasswordModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#38bdf8] transition"><i class="fa-solid fa-key mr-1"></i> Change Password</button>
+                <button onclick="openChangeUsernameModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-[#38bdf8] transition"><i class="fa-solid fa-at mr-1"></i> Change Username</button>
                 ${!hasSecurityQ ? `<button onclick="openSecurityQuestionSetupModal()" class="w-full bg-slate-800 hover:bg-slate-700 font-bold py-2 rounded-xl text-xs text-slate-300 transition"><i class="fa-solid fa-circle-question mr-1"></i> Set Security Question (for password reset)</button>` : `<p class="text-[11px] text-slate-400 px-1"><i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i>Security question set — password reset ready.</p>`}
             `;
         }
@@ -3319,6 +3375,56 @@
         window.openChangePasswordModal = openChangePasswordModal;
         window.closeChangePasswordModal = closeChangePasswordModal;
         window.submitChangePassword = submitChangePassword;
+
+        // ===== FEATURE: CHANGE USERNAME =====
+        // The database renames the username everywhere at once (rpc_change_username, see
+        // supabase-username-change.sql); here we only collect the new name + password and then
+        // switch this device over to the new name.
+        function openChangeUsernameModal() {
+            document.getElementById('cuNewUsername').value = '';
+            document.getElementById('cuPassword').value = '';
+            document.getElementById('cuError').classList.add('hidden');
+            document.getElementById('changeUsernameModal').classList.remove('hidden');
+            document.getElementById('changeUsernameModal').classList.add('flex');
+        }
+        function closeChangeUsernameModal() {
+            document.getElementById('changeUsernameModal').classList.add('hidden');
+            document.getElementById('changeUsernameModal').classList.remove('flex');
+        }
+        async function submitChangeUsername() {
+            const errEl = document.getElementById('cuError');
+            const btn = document.getElementById('cuSubmitBtn');
+            const newName = document.getElementById('cuNewUsername').value.trim();
+            const password = document.getElementById('cuPassword').value;
+            const fail = (m) => { errEl.innerText = m; errEl.classList.remove('hidden'); };
+            errEl.classList.add('hidden');
+            if (!/^[A-Za-z0-9_.]{3,24}$/.test(newName)) return fail('Username 3-24 characters ka ho: letters, numbers, _ ya .');
+            if (newName === currentUser) return fail('Ye to pehle se hi aapka username hai.');
+            if (!password) return fail('Confirm karne ke liye current password daalo.');
+            btn.disabled = true;
+            try {
+                const { data: res, error } = await supabaseClient.rpc('rpc_change_username', { p_old: currentUser, p_password: password, p_new: newName });
+                if (error) { console.warn(error); return fail('Setup baaki hai — supabase-username-change.sql ko Supabase me run karo.'); }
+                if (!res || !res.ok) {
+                    const m = { bad_password: 'Password galat hai.', username_taken: 'Ye username pehle se liya ja chuka hai.', invalid_username: 'Username 3-24 characters ka ho: letters, numbers, _ ya .', locked: 'Bahut saare galat attempts — 5 minute baad try karo.' };
+                    return fail(m[res && res.error] || ('Username change nahi ho paya' + (res && res.detail ? ': ' + res.detail : '.')));
+                }
+                // switch this device over to the new name
+                const old = currentUser;
+                try {
+                    persistSavedAccounts(getSavedAccounts().map(u => u === old ? newName : u));
+                    if (localStorage.getItem('nexus_previous_user') === old) localStorage.setItem('nexus_previous_user', newName);
+                    localStorage.setItem('nexus_user', newName);
+                    localStorage.removeItem('nexus_active_chat');
+                } catch (e) {}
+                closeChangeUsernameModal();
+                showAlertBanner('Username badal gaya: @' + newName, 'success');
+                setTimeout(() => location.reload(), 700);
+            } finally { btn.disabled = false; }
+        }
+        window.openChangeUsernameModal = openChangeUsernameModal;
+        window.closeChangeUsernameModal = closeChangeUsernameModal;
+        window.submitChangeUsername = submitChangeUsername;
 
         function openSecurityQuestionSetupModal() {
             document.getElementById('sqSetupQuestion').value = '';
@@ -4445,17 +4551,10 @@
         window.closeConstellationModal = closeConstellationModal;
 
         // =====================================================================================
-        // FEATURE: HANDSHAKE CONNECT — two phones near each other, both tap "Start Handshake",
-        // and get matched instantly with an AI-generated icebreaker.
-        //
-        // HONEST LIMITATION: the Web Bluetooth call below is used as a genuine "there really is
-        // a device nearby" nearby-check (it opens the real OS device chooser) — but browsers
-        // don't allow one arbitrary web page to open a private GATT data channel to another
-        // random phone's browser, so real profile data can't actually travel over Bluetooth here.
-        // The instant profile-swap itself travels over a Supabase Realtime presence "lobby" —
-        // which is why this currently pairs whichever two people tap the button around the same
-        // time, not strictly whichever two are physically closest. Wiring this to a purpose-built
-        // native/BLE-mesh layer would be the way to make proximity itself the matching signal.
+        // FEATURE: HANDSHAKE CONNECT — two people who are together type the SAME 4-digit code and are
+        // connected to each other. The code names a private realtime lobby, so only people who typed
+        // that code can ever be matched (before, any two strangers tapping at the same time were paired).
+        // Nothing here measures physical distance, and the UI no longer claims it does.
         // =====================================================================================
         let handshakeState = null; // { channel, matched, timeoutId, myTs }
         let handshakeMatchedUser = null;
@@ -4470,41 +4569,39 @@
             matched.classList.toggle('flex', view === 'matched');
         }
 
+        function newHandshakeCode() {
+            const input = document.getElementById('handshakeCodeInput');
+            input.value = String(Math.floor(1000 + Math.random() * 9000));
+            document.getElementById('handshakeCodeError').classList.add('hidden');
+        }
+        window.newHandshakeCode = newHandshakeCode;
+
         function openHandshakeModal() {
             const modal = document.getElementById('handshakeModal');
             modal.classList.remove('hidden'); modal.classList.add('flex');
             showHandshakeView('idle');
-            const note = document.getElementById('handshakeBluetoothNote');
-            note.innerText = navigator.bluetooth
-                ? 'Nearby-check ke liye ek Bluetooth device chooser khulega'
-                : 'Yeh browser Web Bluetooth support nahi karta — seedha nearby-lobby se match karenge';
+            document.getElementById('handshakeCodeInput').value = '';
+            document.getElementById('handshakeCodeError').classList.add('hidden');
         }
         window.openHandshakeModal = openHandshakeModal;
 
         async function startHandshakeSearch() {
-            showHandshakeView('searching');
-            document.getElementById('handshakeStatusText').innerText = 'Nearby Nexus users dhoond rahe hain...';
-            const btStatus = document.getElementById('handshakeBluetoothStatus');
-
-            if (navigator.bluetooth) {
-                btStatus.innerText = 'Bluetooth se nearby device check ho raha hai...';
-                try {
-                    await navigator.bluetooth.requestDevice({ acceptAllDevices: true });
-                    btStatus.innerText = '📶 Nearby device confirm — ab match dhoond rahe hain';
-                } catch (e) {
-                    btStatus.innerText = 'Bluetooth skip ho gaya — seedha lobby se match kar rahe hain';
-                }
-            } else {
-                btStatus.innerText = 'Bluetooth support nahi mila — seedha lobby se match kar rahe hain';
+            const code = document.getElementById('handshakeCodeInput').value.trim();
+            if (!/^\d{4}$/.test(code)) {
+                document.getElementById('handshakeCodeError').classList.remove('hidden');
+                return;
             }
-
-            beginHandshakeLobby();
+            showHandshakeView('searching');
+            document.getElementById('handshakeStatusText').innerText = 'Aapke dost ka intezaar... (code ' + code + ')';
+            const btStatus = document.getElementById('handshakeBluetoothStatus');
+            if (btStatus) btStatus.innerText = 'Dost bhi yahi code daal ke Start dabaye';
+            beginHandshakeLobby(code);
         }
         window.startHandshakeSearch = startHandshakeSearch;
 
-        function beginHandshakeLobby() {
+        function beginHandshakeLobby(code) {
             handshakeState = { channel: null, matched: false, timeoutId: null, myTs: Date.now() + Math.random() };
-            const channel = supabaseClient.channel('handshake_lobby', { config: { presence: { key: currentUser } } });
+            const channel = supabaseClient.channel('handshake_code_' + code, { config: { presence: { key: currentUser } } });
             handshakeState.channel = channel;
 
             channel.on('presence', { event: 'sync' }, () => handleHandshakePresenceSync(channel));
@@ -4521,7 +4618,7 @@
 
             handshakeState.timeoutId = setTimeout(() => {
                 if (handshakeState && !handshakeState.matched) {
-                    document.getElementById('handshakeStatusText').innerText = 'Koi nearby nahi mila — dubara try karo';
+                    document.getElementById('handshakeStatusText').innerText = 'Dost ne ye code nahi daala — dubara try karo';
                     setTimeout(() => { if (handshakeState && !handshakeState.matched) cancelHandshakeSearch(); }, 1800);
                 }
             }, 25000);
@@ -4654,7 +4751,7 @@
                     return `
                         <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5" style="border-left:3px solid ${p.color}">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs font-bold text-slate-200">${p.emoji} ${p.label}</span>
+                                <span class="text-xs font-bold text-slate-200">${personaIconHtml(p)} ${p.label}</span>
                                 <span class="text-[11px] text-slate-400 shrink-0">${faceFollowerCount} following this face</span>
                             </div>
                             <select id="personaToneInput-${p.key}" class="w-full bg-slate-950 border border-slate-800 rounded-lg px-2 py-1 text-[11px] text-slate-200 focus:outline-none focus:border-[#14b8a6]">
@@ -4677,7 +4774,7 @@
                     return `
                         <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5" style="border-left:3px solid ${p.color}">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="text-xs font-bold text-slate-200">${p.emoji} ${p.label}</span>
+                                <span class="text-xs font-bold text-slate-200">${personaIconHtml(p)} ${p.label}</span>
                                 <button ${hasPendingRequest ? 'disabled' : `onclick="togglePersonaFollow('${username}','${p.key}')"`} class="shrink-0 text-[11px] px-2.5 py-1 rounded-lg border font-bold transition ${btnClass}">${btnLabel}</button>
                             </div>
                             <p class="text-[11px] text-slate-400 italic"><i class="fa-solid fa-lock mr-1"></i>Follow to see bio</p>
@@ -4689,7 +4786,7 @@
                     <div class="bg-slate-900/60 rounded-xl p-2.5 space-y-1.5" style="border-left:3px solid ${p.color}">
                         <div class="flex items-center justify-between gap-2">
                             <div class="min-w-0 truncate">
-                                <span class="text-xs font-bold text-slate-200">${p.emoji} ${p.label}</span>
+                                <span class="text-xs font-bold text-slate-200">${personaIconHtml(p)} ${p.label}</span>
                                 ${tone ? `<span class="ml-1.5 text-[11px] px-1.5 py-0.5 rounded-full bg-slate-800 text-slate-300">${tone}</span>` : ''}
                             </div>
                             <button ${hasPendingRequest ? 'disabled' : `onclick="togglePersonaFollow('${username}','${p.key}')"`} class="shrink-0 text-[11px] px-2.5 py-1 rounded-lg border font-bold transition ${btnClass}">${btnLabel}</button>
@@ -5073,7 +5170,7 @@
                 users.forEach(u => {
                     const av = globalProfilesCache[u];
                     const personaKeys = grouped.get(u);
-                    const personaBadges = PERSONAS.filter(p => personaKeys.has(p.key)).map(p => `<span title="${p.label}">${p.emoji}</span>`).join('');
+                    const personaBadges = PERSONAS.filter(p => personaKeys.has(p.key)).map(p => `<span title="${p.label}">${personaIconHtml(p)}</span>`).join('');
                     const div = document.createElement('div');
                     div.className = "flex items-center justify-between bg-slate-900 border border-slate-800 p-2 rounded-xl text-xs cursor-pointer hover:bg-slate-800 transition";
                     div.innerHTML = `
@@ -5274,6 +5371,7 @@
                 localStorage.setItem('nexus_active_chat', username);
             }
             
+            pauseAllReels();
             document.getElementById('mainNavbar').classList.add('hidden');
             document.getElementById('chatUsersView').classList.add('hidden');
             document.getElementById('chatRoomView').classList.remove('hidden');
@@ -6242,10 +6340,10 @@
                                 ${posterAvatar ? `<img src="${posterAvatar}" class="w-full h-full object-cover">` : post.username.charAt(0).toUpperCase()}
                             </div>
                             <span onclick="handleUserClick('${post.username}')" class="font-bold text-slate-200 cursor-pointer hover:text-[#60a5fa] transition flex items-center gap-1">${post.username} ${verifiedBadgeHtml(post.username)} ${adminBadgeHtml(post.username)}</span>
-                            ${post.username !== currentUser ? `<button onclick="togglePersonaFollow('${post.username}','${postPersona.key}')" title="Follow just this face — not the whole account" class="ml-1 text-[11px] px-2 py-0.5 rounded-lg border ${isFollowingPersona ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-[#2563eb] border-[#3b82f6] text-white font-bold'} transition">${isFollowingPersona ? `Following ${postPersona.emoji}` : `Follow ${postPersona.emoji}`}</button>` : ''}
+                            ${post.username !== currentUser ? `<button onclick="togglePersonaFollow('${post.username}','${postPersona.key}')" title="Follow just this face — not the whole account" class="ml-1 text-[11px] px-2 py-0.5 rounded-lg border ${isFollowingPersona ? 'bg-slate-800 border-slate-700 text-slate-300' : 'bg-[#2563eb] border-[#3b82f6] text-white font-bold'} transition">${isFollowingPersona ? `Following ${personaIconHtml(postPersona)}` : `Follow ${personaIconHtml(postPersona)}`}</button>` : ''}
                         </div>
                         <div class="flex items-center space-x-2">
-                            <span class="text-[11px] px-2 py-0.5 rounded-full border bg-[#2563eb]/10 to-[#3b82f6]/10 text-[#60a5fa] border-[#3b82f6]/20 flex items-center gap-1" title="${postPersona.label}">${postPersona.emoji} ${postPersona.label}</span>
+                            <span class="text-[11px] px-2 py-0.5 rounded-full border bg-[#2563eb]/10 to-[#3b82f6]/10 text-[#60a5fa] border-[#3b82f6]/20 flex items-center gap-1" title="${postPersona.label}">${personaIconHtml(postPersona)} ${postPersona.label}</span>
                             ${post.pinned ? `<span class="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/30 flex items-center gap-1" title="Pinned"><i class="fa-solid fa-thumbtack text-[11px]"></i></span>` : ''}
                             ${post.username === currentUser ? `<button onclick="togglePinPost('${post.id}')" class="text-slate-400 hover:text-amber-400 text-xs transition" title="${post.pinned ? 'Unpin' : 'Pin to profile'}"><i class="fa-solid fa-thumbtack ${post.pinned ? 'text-amber-400' : ''}"></i></button>` : ''}
                             ${post.username === currentUser ? `<button onclick="deletePost('${post.id}')" class="text-slate-400 hover:text-red-400 text-xs transition" title="Delete"><i class="fa-solid fa-trash"></i></button>` : ''}
@@ -6368,6 +6466,8 @@
                     const video = entry.target.querySelector('.reel-video');
                     if (!video) return;
                     if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+                        if (!reelsMayPlay()) return;
+                        video.muted = reelSoundMuted;
                         if (video.paused) video.play().catch(() => {}); // autoplay can be blocked before any user interaction — harmless if so
                     } else if (!video.paused || video.currentTime > 0) {
                         video.pause();
@@ -6382,14 +6482,19 @@
         // FEATURE: stop ALL reel sound the moment you leave the Reels section (switch tabs),
         // instead of letting whichever reel was in view keep quietly playing in the background.
         function pauseAllReels() {
-            document.querySelectorAll('#reelsStreamContainer .reel-video').forEach(v => v.pause());
+            document.querySelectorAll('#reelsStreamContainer .reel-video').forEach(v => { v.pause(); v.muted = true; });
         }
+        // Reels may only make sound while the Reels tab is open and the page is visible.
+        function reelsMayPlay() { return currentTab === 'reels' && !document.hidden; }
+        document.addEventListener('visibilitychange', () => { if (document.hidden) pauseAllReels(); });
+        window.addEventListener('pagehide', pauseAllReels);
 
         // FEATURE: REEL SOUND TOGGLE — tapping a reel (or its speaker icon) unmutes/mutes it,
         // and that choice is remembered (localStorage) and applied to every other reel too,
         // so scrolling to the next reel doesn't silently revert back to muted.
         function toggleReelSound(videoEl) {
             if (!videoEl) return;
+            if (videoEl.paused && reelsMayPlay()) { videoEl.muted = reelSoundMuted; videoEl.play().catch(() => {}); return; }
             applyReelSoundState(!videoEl.muted);
         }
 
@@ -7187,9 +7292,29 @@
 
             const mediaContainer = document.getElementById('storyMediaContainer');
             const revealStyle = ' class="max-w-full max-h-full object-contain"';
+            mediaContainer.style.position = 'relative';
             mediaContainer.innerHTML = story.media_type === 'video'
-                ? `<video src="${story.media_url}"${revealStyle} autoplay playsinline muted></video>`
+                ? `<video id="storyVideoEl" src="${story.media_url}"${revealStyle} autoplay playsinline></video>
+                   <button type="button" id="storySoundBtn" onclick="event.stopPropagation(); toggleStorySound()" title="Sound" style="position:absolute;right:12px;top:72px;width:36px;height:36px;border-radius:999px;background:rgba(0,0,0,.55);color:#fff;display:flex;align-items:center;justify-content:center;z-index:5"><i class="fa-solid fa-volume-high"></i></button>`
                 : `<img src="${story.media_url}"${revealStyle}>`;
+            if (story.media_type === 'video') {
+                // Stories play WITH sound for you and for every viewer. Opening a story is a tap, so
+                // browsers allow it; if one still refuses, fall back to muted and show the speaker button.
+                const sv = document.getElementById('storyVideoEl');
+                sv.muted = !!storySoundOff;
+                sv.play().catch(() => { sv.muted = true; updateStorySoundIcon(); sv.play().catch(() => {}); });
+                updateStorySoundIcon();
+                sv.addEventListener('loadedmetadata', () => {
+                    // let the whole clip (up to 30s) play instead of cutting the voice at 5s
+                    if (isFinite(sv.duration) && sv.duration > 0 && storyQueue[storyQueueIndex] === story) {
+                        const ms = Math.min(Math.max(sv.duration * 1000, 3000), 30000);
+                        if (storyProgressTimer) clearTimeout(storyProgressTimer);
+                        storyProgressTimer = setTimeout(storyNavNext, ms);
+                        const fill = document.getElementById('storyBarFill-' + storyQueueIndex);
+                        if (fill) { fill.style.animation = 'none'; void fill.offsetWidth; fill.style.animation = `storyProgress ${ms}ms linear forwards`; }
+                    }
+                }, { once: true });
+            }
 
             // Progress bars: one segment per story in the queue
             const barsContainer = document.getElementById('storyProgressBarsContainer');
@@ -7205,6 +7330,21 @@
             storyProgressTimer = setTimeout(storyNavNext, STORY_DURATION_MS);
         }
 
+        let storySoundOff = false; // speaker button state for story videos (per session)
+        function updateStorySoundIcon() {
+            const sv = document.getElementById('storyVideoEl'), btn = document.getElementById('storySoundBtn');
+            if (sv && btn) btn.innerHTML = `<i class="fa-solid ${sv.muted ? 'fa-volume-xmark' : 'fa-volume-high'}"></i>`;
+        }
+        function toggleStorySound() {
+            const sv = document.getElementById('storyVideoEl');
+            if (!sv) return;
+            sv.muted = !sv.muted;
+            storySoundOff = sv.muted;
+            if (!sv.muted && sv.paused) sv.play().catch(() => {});
+            updateStorySoundIcon();
+        }
+        window.toggleStorySound = toggleStorySound;
+
         function storyNavNext() {
             storyQueueIndex++;
             renderCurrentStory();
@@ -7218,6 +7358,8 @@
 
         function closeStoryViewer() {
             if (storyProgressTimer) clearTimeout(storyProgressTimer);
+            const mc = document.getElementById('storyMediaContainer');
+            if (mc) { mc.querySelectorAll('video').forEach(v => { v.pause(); v.removeAttribute('src'); v.load(); }); mc.innerHTML = ''; } // stop the story's sound
             document.getElementById('storyViewerModal').classList.add('hidden');
             document.getElementById('storyViewerModal').classList.remove('flex');
             storyQueue = [];
@@ -7229,6 +7371,7 @@
             if (storyProgressTimer) { clearTimeout(storyProgressTimer); storyProgressTimer = null; }
             const bar = document.getElementById(`storyBarFill-${storyQueueIndex}`);
             if (bar) bar.style.animationPlayState = 'paused';
+            const sv = document.getElementById('storyVideoEl'); if (sv) sv.pause();
         }
 
         function resumeStoryTimer() {
@@ -7236,14 +7379,17 @@
             // exact elapsed time, so a paused progress bar restarts cleanly.
             if (storyQueueIndex >= storyQueue.length) return;
             const bar = document.getElementById(`storyBarFill-${storyQueueIndex}`);
+            const sv = document.getElementById('storyVideoEl');
+            const dur = (sv && isFinite(sv.duration) && sv.duration > 0) ? Math.min(Math.max(sv.duration * 1000, 3000), 30000) : STORY_DURATION_MS;
+            if (sv) sv.play().catch(() => {});
             if (bar) {
                 bar.style.animationPlayState = 'running';
                 bar.style.animation = 'none';
                 void bar.offsetWidth;
-                bar.style.animation = `storyProgress ${STORY_DURATION_MS}ms linear forwards`;
+                bar.style.animation = `storyProgress ${dur}ms linear forwards`;
             }
             if (storyProgressTimer) clearTimeout(storyProgressTimer);
-            storyProgressTimer = setTimeout(storyNavNext, STORY_DURATION_MS);
+            storyProgressTimer = setTimeout(storyNavNext, dur);
         }
 
         async function sendStoryReply() {
@@ -8350,6 +8496,12 @@
 
                 if (error) throw error;
 
+                if (!error && (!data || data.length === 0)) {
+                    try {
+                        const { data: ok } = await supabaseClient.rpc('rpc_set_private', { p_username: currentUser, p_private: !isPrivate });
+                        if (ok) { globalProfilesFullCache[currentUser] = Object.assign({}, myProfile, { is_private: !isPrivate }); renderPrivateAccountToggle(); updateFollowRequestsBadge(); fetchAllData(); return; }
+                    } catch (e) {}
+                }
                 if (!data || data.length === 0) {
                     // Update ran but 0 rows were affected -> almost always an RLS UPDATE
                     // policy on the "profiles" table blocking this user from updating

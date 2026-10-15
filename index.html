@@ -637,7 +637,7 @@
                         <div class="w-9 h-9 rounded-xl bg-[#2563eb]/20 text-[#60a5fa] flex items-center justify-center text-base shrink-0"><i class="fa-solid fa-handshake-simple"></i></div>
                         <div class="flex-1 min-w-0">
                             <p class="text-[11px] font-bold text-slate-200">Handshake Connect</p>
-                            <p class="text-[11px] text-slate-400">Paas mein koi Nexus khole to instant profile-swap + AI icebreaker</p>
+                            <p class="text-[11px] text-slate-400">Dost ke saath same code daalo &mdash; dono turant connect + AI icebreaker</p>
                         </div>
                         <i class="fa-solid fa-chevron-right text-slate-400 text-xs"></i>
                     </button>
@@ -751,6 +751,21 @@
             <input type="password" id="cpNewPasswordConfirm" minlength="4" placeholder="Confirm new password" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
             <p id="cpError" class="text-[11px] text-red-400 hidden"></p>
             <button onclick="submitChangePassword()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Update Password</button>
+        </div>
+    </div>
+
+    <!-- FEATURE: CHANGE USERNAME -->
+    <div id="changeUsernameModal" class="fixed inset-0 z-[210] bg-black/90 backdrop-blur-md hidden items-center justify-center p-5">
+        <div class="glass-panel max-w-xs w-full rounded-3xl p-5 space-y-3 border border-[#38bdf8]/30">
+            <div class="flex items-center justify-between">
+                <p class="text-xs font-bold text-slate-200 flex items-center gap-1.5"><i class="fa-solid fa-at text-[#38bdf8]"></i> Change Username</p>
+                <button onclick="closeChangeUsernameModal()" class="text-slate-400 hover:text-white text-xs bg-slate-800 p-1.5 rounded-full"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <p class="text-[11px] text-slate-400">Aapki saari posts, chats aur followers naye naam ke saath chalte rahenge.</p>
+            <input type="text" id="cuNewUsername" maxlength="24" autocomplete="off" placeholder="New username (letters, numbers, _ .)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
+            <input type="password" id="cuPassword" placeholder="Current password (confirm)" class="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-xs text-slate-200 focus:outline-none focus:border-[#38bdf8]">
+            <p id="cuError" class="text-[11px] text-red-400 hidden"></p>
+            <button id="cuSubmitBtn" onclick="submitChangeUsername()" class="w-full bg-[#2563eb] font-bold py-2.5 rounded-xl text-xs text-white transition">Change Username</button>
         </div>
     </div>
 
@@ -985,12 +1000,9 @@
         </div>
     </div>
 
-    <!-- FEATURE: HANDSHAKE CONNECT — two phones near each other, both open this at (roughly) the
-         same time, and get matched instantly with a live-generated AI icebreaker. Uses Bluetooth
-         (where the browser supports Web Bluetooth) purely as a "yes there's really a phone right
-         next to me" nearby-check, plus a live Supabase realtime lobby to actually swap profiles —
-         real GATT-level data exchange between two arbitrary phones' browsers isn't something the
-         web platform allows, so the realtime lobby is what actually carries the handshake. -->
+    <!-- FEATURE: HANDSHAKE CONNECT — two people who are together type the SAME 4-digit code and are
+         connected to each other (live Supabase realtime lobby per code). Nothing here checks physical
+         distance; the shared code is what makes sure only those two are matched. -->
     <div id="handshakeModal" class="fixed inset-0 z-[210] bg-black hidden flex-col">
         <div class="h-12 px-4 border-b border-slate-800 flex items-center justify-between bg-slate-900/90 shrink-0">
             <span class="text-xs font-bold text-slate-200"><i class="fa-solid fa-handshake-simple text-[#60a5fa] mr-1.5"></i> Handshake Connect</span>
@@ -1002,11 +1014,20 @@
             <div id="handshakeIdleView" class="space-y-4">
                 <div class="glass-panel rounded-2xl p-4 text-center space-y-2">
                     <i class="fa-solid fa-tower-broadcast text-[#60a5fa] text-lg"></i>
-                    <p class="text-xs font-bold text-slate-200">Dono phone paas laao aur dono "Start Handshake" dabao</p>
-                    <p class="text-[11px] text-slate-400">Hum ek chhota nearby-check (Bluetooth) karte hain, phir turant profile-swap + ek AI icebreaker line generate karte hain.</p>
+                    <p class="text-xs font-bold text-slate-200">Dono log ek hi 4-digit code daalo</p>
+                    <p class="text-[11px] text-slate-400">Ek banda code banaye aur doosre ko bol de. Jab dono "Start Handshake" dabate hain, bas wahi dono connect hote hain &mdash; koi random insaan match nahi hota.</p>
+                </div>
+                <div class="space-y-1.5">
+                    <label for="handshakeCodeInput" class="text-[11px] font-semibold text-slate-400 px-1">Handshake code</label>
+                    <div class="flex gap-2">
+                        <input id="handshakeCodeInput" type="text" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" autocomplete="off" placeholder="0000"
+                            class="flex-1 text-center tracking-[10px] text-lg font-bold bg-slate-900 border border-slate-800 rounded-xl px-3 py-2.5 focus:outline-none focus:border-[#3b82f6] text-slate-100">
+                        <button type="button" onclick="newHandshakeCode()" class="px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-bold text-slate-200"><i class="fa-solid fa-rotate mr-1"></i> New code</button>
+                    </div>
+                    <p id="handshakeCodeError" class="hidden text-[11px] text-red-400 px-1">4 digit ka code daalo.</p>
                 </div>
                 <button onclick="startHandshakeSearch()" class="w-full bg-[#2563eb] font-bold py-3 rounded-xl text-sm text-white shadow"><i class="fa-solid fa-hand-sparkles mr-1.5"></i> Start Handshake</button>
-                <p id="handshakeBluetoothNote" class="text-[11px] text-center text-slate-400"></p>
+                <p id="handshakeBluetoothNote" class="text-[11px] text-center text-slate-400">Code sirf 25 second ke liye chalta hai.</p>
             </div>
 
             <!-- Step 2: searching -->
@@ -1019,7 +1040,7 @@
                     </div>
                 </div>
                 <div class="text-center space-y-1">
-                    <p id="handshakeStatusText" class="text-xs font-bold text-slate-200">Nearby Nexus users dhoond rahe hain...</p>
+                    <p id="handshakeStatusText" class="text-xs font-bold text-slate-200">Aapke dost ka intezaar...</p>
                     <p id="handshakeBluetoothStatus" class="text-[11px] text-slate-400"></p>
                 </div>
                 <button onclick="cancelHandshakeSearch()" class="text-[11px] font-bold text-slate-400 hover:text-white bg-slate-800 px-4 py-2 rounded-xl transition">Cancel</button>
