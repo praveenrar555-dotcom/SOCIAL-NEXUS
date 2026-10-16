@@ -660,6 +660,11 @@
             return DriveStore.isConnectedBefore() ? await DriveStore.tryReady() : false;
         }
 
+        function supabaseStorageAllowed() {
+            if (window.NEXUS_ALLOW_SUPABASE_STORAGE === true) return true;
+            return !(window.DriveStore && DriveStore.isEnabled());
+        }
+
         async function uploadMediaFile(fileName, file, opts = {}) {
             if (await driveAvailable()) {
                 try {
@@ -668,6 +673,11 @@
                 } catch (driveErr) {
                     console.warn('[Drive] upload failed, falling back to Supabase:', driveErr);
                 }
+            }
+            // Supabase Storage is OFF by default when Google Drive is configured (it used up the
+            // free egress quota). Set window.NEXUS_ALLOW_SUPABASE_STORAGE = true to re-enable.
+            if (!supabaseStorageAllowed()) {
+                return { url: null, error: { message: 'Pehle Google Drive connect karo (Drive button), phir upload karo.' }, via: 'none' };
             }
             const { error } = await supabaseClient.storage.from('media')
                 .upload(fileName, file, opts.contentType ? { contentType: opts.contentType } : undefined);
@@ -6633,6 +6643,11 @@
                         console.warn('[Drive] reel upload failed, falling back to Supabase:', driveErr);
                         videoUrl = null;
                     }
+                }
+                if (!videoUrl && !supabaseStorageAllowed()) {
+                    document.getElementById('reelUploadProgressBadge').classList.add('hidden');
+                    showAlertBanner('Reel upload ke liye pehle Google Drive connect karo (Drive button).', 'error');
+                    return;
                 }
                 if (!videoUrl) {
                 const { data: sessionData } = await supabaseClient.auth.getSession();
