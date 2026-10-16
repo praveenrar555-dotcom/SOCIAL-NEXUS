@@ -6,8 +6,8 @@
 // NEVER put the "service_role" key in any file that goes to
 // GitHub or is served to the browser — that key bypasses RLS.
 // ============================================================
-const SUPABASE_URL = "https://znhyjuibgbcmrcqijtpi.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_hMMTzT2Jojy2ZQfpxlLy-A_UR4V86BM";
+const SUPABASE_URL = "https://lwyzvbgfvaauckxqcsmk.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_5z1yv-tAEMvfqZCnEtvbGQ_kCg62Rig";
 
 const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
